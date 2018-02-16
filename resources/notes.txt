@@ -1,0 +1,221 @@
+Deliverable:
+-------------
+
+1. Print prompt '$>' on begin and on completion of each query.
+2. Process CREATE table requests and generate schema in Java.
+3. Load data from CSV file in table generated above.
+4. Implement SELECT queries and nested queries.
+5. Implement AS feature.
+6. Extensible model to support future changes like aggregate functions and joins.
+7. Use tools provided to identify query type, fields, operators and tables.
+8. Parse input query into RA tree. 
+
+Info:
+1. Data present in CSV
+2. Use '|' as delimiter,  Dates are stored in YYYY-MM-DD form.
+
+Q. From where to load CSV files ?
+   The project document says that CSV file will be used to load data but it doesn't
+   explain how the CSV file name be provided, will it be passed from cmd arguments,
+   do we need to assume table name as CSV file name and try auto loading it ?
+ Ans. "That means that the data directory contains a data file called 'R.dat' that might look like this "
+
+
+Q. Are we using Set RA or Bag RA?   
+Ans.   Bag RA
+   
+Q. What does A + B signitfy?
+
+   
+Design Notes:
+-------------
+1. Design should be modular and extensible.
+2. It should support pluggable features like indexes (multi-layer cache, optimization features,
+   Support for future enhancements, etc...
+   
+3. We need to return results in sorted fashion, this requires deciding whether to
+   store data in sorted fashion or just sort the results.
+      -- If we plan to store data in sorted fashion, it would mean sorting data
+         every time an input happens which may be costly with large data sizes.
+         The output results may be a smaller subset.
+         However, data accessing costs may increase unless we employ indexes.
+         
+   Sneha:  Natural order is required only.    
+   Gokhan: Sorting when with oprt  
+         
+         
+4. As per class discussion, in future multiple data sources will be provided, these will
+   represent our persistent storage.
+   
+   a). We need to assign a unique id to each record. Based on example input data,
+       there is no unique field. This field will help us in indexing.
+   b). This field will also represent the line number for each row.    
+   
+   - Indexing data can help us reduce response time. We can index data such that
+     we can store the line range of each record. (Applicable only when input is 
+     very large, I assume this in later checkpoints.)
+   - Indexes will stay in memory for quick access.  
+        
+      --   We can do a pre-computation and generate indexes
+           which can generate a hash of the primary key chosen in each table and 
+           segment the entire data in virtual segments formed based on line numbers
+           within each document, identified by field Lno.
+           Example:  If we wish to access record of employee ID 123
+           - We can get the segment range of the employee ID 123 say Lno (20-40).
+           - We can then load these 20 lines in memory and work on record with
+             employee ID 123.
+         
+          Pros:
+          1. This approach will reduce the index size as we will be holding              
+          
+          Cons:
+          1. Its not applicable when searching data by other fields
+   
+   Chunk retrieval:
+   Rather than using volcano approach of fetching 1 record we can use the second 
+   approach of retrieving multiple records in one iteration to balance I/O reads.
+   
+   Out of scope  
+   This applies only when we are responsible for deciding tables.
+   Normalization: Normalizing the data can help us in efficient retrieval and reduce
+   the number of fields in each record.This will add the complexity of creating multiple tables.
+    
+   Q. How to do indexing? 
+
+CREATE Table:
+CREATE TABLE R (A int, B date, C string, ... )
+
+App1:
+1. On getting the given query, we parse the query using the parser and identify the
+   Table name, field names and corresponding java types.
+2. Create a class with name of table and said fields such that this class represents
+   one row of the table.
+   
+   
+ Q. How to spawn a class at runtime?
+    Maybe reflection: https://stackoverflow.com/questions/2320404/creating-classes-dynamically-with-java
+    
+ Q. How to implement foreign key reference in the record?
+ 
+TODO: Identify operation with joins and other scenarios
+TODO: Identify extensibility
+
+Gokhan: not suitable
+
+Pros:
+Modular
+
+Cons:
+Mandatory type conversion for each record field during load.
+
+ 
+App2:
+We parse create query and create a mapping
+such that the key is an object of type Column
+ColumnX{
+  String colName;
+  class type;
+  Foreign key
+  
+}
+
+
+Map<Column, Value>, this includes unnecessary heat
+Map<Column, List<Value>>
+
+
+So a representation of table holding say 100 records in memory.
+chunk_size = 1 or 100
+Gokhan: simple, 1
+
+
+N
+TableX_Chunk{
+   String name;
+   Map<ColumnX, List<Value>>
+}
+ 
+TODO: Identify operation with joins and other scenarios
+TODO: Identify extensibility
+ 
+Pros:
+1. Quick access
+2. Type conversion on demand.
+
+
+Approach 3:
+
+Store table schema in data structure
+
+Map< tableName, TableData>
+
+TableData{
+  String tableName
+  List<ColumnDef>
+}  
+  
+1. For now we are holding the column definitions in a list and not a map, so
+   that we don't lose the natural order of the column names.
+2. This means that we have to iterate the column def list to find a particular 
+   column.
+   For now, it seems ok, if issues arise we can change it in future.   
+
+
+ScannerObj
+1. This class is responsible for reading data from file.
+2. It will accept a table name and table schema and return a List of Objects.
+3. It will read a chunk of rows from file, chunk defaults to 1, then parse each
+   column value as per column definition and then store it in a list of objects.
+4. It will then send this list to its caller who using the column defintion will
+   type cast each column value.
+   We expect typecasting cost to be less than string parsing at each level  
+
+
+Q. How to convert from column definition to Java type a particular String.
+
+
+
+
+Caching:
+LRU
+
+TODO: How to create execution plan
+Approach1:
+Create a Binary tree where each node contains the Operator (parent class for each
+operator type). It holds left and right child based on its subtypes as per slide
+Once tree is created, its root is passed for processing where each node operator
+calls its child and so on till we reach leaf node. 
+
+Data is processed at each level and then passed to parent.
+
+Pros:
+1. We can process data at no added cost then approach2
+2. We can use this model later for rebalancing RA for optimization.
+3. Allows us to identify atomic operations like two children of one node and 
+   can try using multi threading for performance.
+   
+Cons:
+Complex design, may turn out to be a futile effort.   
+
+Approach 2:
+We process the statment by breaking it into parts and calling simultaneously
+
+Pros:
+Simple design
+
+Cons:
+Will bite us once we introduce optimization.
+
+
+
+
+
+TODO: How to use eval Lib
+
+ 
+Execution Plan (RA)
+Q. How to create RA tree? 
+Q. How to analyze the RA tree and minimize it??
+
+
+             
