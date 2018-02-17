@@ -188,6 +188,55 @@ calls its child and so on till we reach leaf node.
 
 Data is processed at each level and then passed to parent.
 
+Example: SELECT A, B, ... FROM R
+Here the select is actually a Projection of columns A and B from table R
+A tree will be created which will identify the operator as Projection and Scanner
+
+  Project (A, B)
+    |
+  Scanner (R)   
+
+Once the tree is created, it will be passed to the query processor
+This will invoke the root of the tree and do say process()
+The root operator here is Project, this will first invoke its left and right
+child nodes. 
+Here it has only one child - Scanner. Scanner will find that it has no children
+and will start processing data, one line at a time.
+The project will receive this data and do a projection of column A and B
+Q. The node has operator, operator type and children, where will the node get the
+   query?
+   Each node's operator will hold that info. Each operator will have query and 
+   know its specific attributes to work on.
+   Like Project operator is designed such that it holds a list of columns it needs
+   to project
+   
+Example 2: SELECT R.A, ... FROM R WHERE R.A > 5
+Here we have three operators, 
+   Project (R.A)
+     |   
+   Select (R.A > 5)
+     |
+   Scanner (R)
+   
+Example 3: SELECT Q.C, ... FROM (SELECT A, C, ... FROM R) Q WHERE ...
+
+      Project (Q.C)
+        |
+      Select (Where)
+        |
+      Project(A, C)
+        |
+      Scanner(R)        
+   
+Here we see that column definitions are changing, which means once we return
+a result of inner query, we need to update the column definitions to reflect
+changes   
+
+
+
+
+
+
 Pros:
 1. We can process data at no added cost then approach2
 2. We can use this model later for rebalancing RA for optimization.
@@ -210,12 +259,16 @@ Will bite us once we introduce optimization.
 
 
 
+
+
+
 TODO: How to use eval Lib
 
  
 Execution Plan (RA)
 Q. How to create RA tree? 
 Q. How to analyze the RA tree and minimize it??
+
 
 
              
