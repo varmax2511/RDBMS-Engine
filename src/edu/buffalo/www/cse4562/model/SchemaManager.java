@@ -63,7 +63,7 @@ public class SchemaManager {
       colName2Id.put(colDefinitions.get(i).getColumnName(), colCount);
       colCount++;
     } // for
-    tableId2ColName2Id.put(tableCount, colName2Id);
+    tableId2ColName2Id.put(tableCount - 1 , colName2Id);
   }
 
   /**

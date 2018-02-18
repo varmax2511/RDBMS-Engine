@@ -50,7 +50,7 @@ public class TestQueryProcessor {
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
 
-    parser = new CCJSqlParser(new StringReader("SELECT B, C FROM R;"));
+    parser = new CCJSqlParser(new StringReader("SELECT * FROM R;"));
     Select selectStatement = (Select) parser.Statement();
 
     assertEquals(10, QueryProcessor.processSelectQuery(selectStatement).size());
