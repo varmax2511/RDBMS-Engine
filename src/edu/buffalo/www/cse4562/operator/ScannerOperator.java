@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.print.DocFlavor.READER;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -20,22 +22,28 @@ import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
-import net.sf.jsqlparser.statement.select.FromItem;
 
 /**
  * This class contains the implementation of the Scanner operator which is
  * responsible for fetching data from file on disk.
  *
  */
-public class ScannerOperator implements Operator {
+public class ScannerOperator implements Operator, TupleIterator {
 
   private final Table table;
   private final String dataParentPath;
   private Iterator<CSVRecord> recordIterator;
   private final String tableName;
   private Reader reader;
+  private CSVParser csvParser;
   private int chunkSize = 1;
 
+  /**
+   * 
+   * @param table
+   *           !null
+   * @param dataParentPath
+   */
   public ScannerOperator(Table table, String dataParentPath) {
     Validate.notNull(table);
 
@@ -51,14 +59,21 @@ public class ScannerOperator implements Operator {
     this.tableName = tableName;
   }
 
+  @Override
   public void open() throws IOException {
     reader = Files.newBufferedReader(
         Paths.get(this.dataParentPath + this.tableName + ".csv"));
-    CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
+    csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
     Iterable<CSVRecord> csvRecords = csvParser.getRecords();
     recordIterator = csvRecords.iterator();
   }
 
+  /**
+   * 
+   * @return
+   * @throws IOException
+   */
+  @Override
   public Collection<Tuple> getNext() throws IOException {
 
     List<Tuple> tuples = new ArrayList<>();
@@ -66,7 +81,13 @@ public class ScannerOperator implements Operator {
     return tuples;
   }
 
-  public Tuple process() throws IOException {
+  /**
+   * process the request.
+   * 
+   * @return
+   * @throws IOException
+   */
+  private Tuple process() throws IOException {
 
     // if method invoked first time without connection being opened
     if (null == reader) {
@@ -85,6 +106,7 @@ public class ScannerOperator implements Operator {
 
       // no value to iterate
       if (!recordIterator.hasNext()) {
+        close();
         break;
       }
 
@@ -103,12 +125,27 @@ public class ScannerOperator implements Operator {
     return new Tuple(columnCells);
   }
 
+  /**
+   * Close the {@link CSVParser} and {@link READER}.
+   * 
+   * @throws IOException
+   */
+  @Override
   public void close() throws IOException {
     if (null == reader) {
       return;
     }
 
-    reader.close();
+    try {
+      csvParser.close();
+      reader.close();
+    } catch (IOException e) {
+
+      // re-attempt
+      csvParser.close();
+      reader.close();
+    }
+
   }
 
   @Override

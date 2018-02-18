@@ -9,6 +9,12 @@ import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
+/**
+ * This {@link Operator} does the projection of selected columns.
+ * 
+ * @author varunjai
+ *
+ */
 public class ProjectionOperator implements Operator {
 
   private final Collection<SelectItem> selectItems;
@@ -25,14 +31,13 @@ public class ProjectionOperator implements Operator {
   @Override
   public Collection<Tuple> process(Collection<Tuple> tuples) {
 
-    
     List<Tuple> projectOutput = new ArrayList<>();
     for (Tuple tuple : tuples) {
-      
-      if(tuple.isEmpty()){
+
+      if (tuple.isEmpty()) {
         continue;
       }
-      
+
       List<ColumnCell> columnCells = new ArrayList<>();
       for (ColumnCell columnCell : tuple.getColumnCells()) {
         for (SelectItem selectItem : selectItems) {
