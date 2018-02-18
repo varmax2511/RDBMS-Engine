@@ -25,8 +25,9 @@ import net.sf.jsqlparser.statement.select.Union;
  */
 public class TreeGenerator {
 
-  public TreeGenerator() {
-    // TODO Auto-generated constructor stub
+  private final Config config;
+  public TreeGenerator(Config config) {
+    this.config = config;
   }
 
   public Node evaluateSelect(Select selectQuery) {
@@ -66,21 +67,21 @@ public class TreeGenerator {
     if (where != null) {
       final Node node = new Node(new SelectionOperator(where),
           SelectionOperator.class);
-      currentNode.setLeft(node);
+      currentNode.addChild(node);
       currentNode = node;
     }
 
     // nested query
     if (fromItem instanceof SubSelect) {
       Node node = evaluateSelect((Select) fromItem);
-      currentNode.setLeft(node);
+      currentNode.addChild(node);
       currentNode = node;;
     } else {
       // Scanner
       final Node node = new Node(
-          new ScannerOperator((Table)fromItem, ApplicationConstants.DATA_DIR_PATH),
+          new ScannerOperator((Table) fromItem, config.getDataDirPath()),
           ScannerOperator.class);
-      currentNode.setLeft(node);
+      currentNode.addChild(node);
       currentNode = node;
     }
 
@@ -89,5 +90,28 @@ public class TreeGenerator {
 
   private Node evaluateUnion() {
     return null;
+  }
+
+  /**
+   * Configuration class for {@link TreeGenerator}.
+   * 
+   * @author varunjai
+   *
+   */
+  public static class Config {
+    private String dataDirPath = ApplicationConstants.DATA_DIR_PATH;;
+
+    public Config(String dataDirPath) {
+      this.dataDirPath = dataDirPath;
+    }
+
+    public String getDataDirPath() {
+      return dataDirPath;
+    }
+
+    public void setDataDirPath(String dataDirPath) {
+      this.dataDirPath = dataDirPath;
+    }
+
   }
 }

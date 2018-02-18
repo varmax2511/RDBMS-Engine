@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import edu.buffalo.www.cse4562.operator.Operator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
-import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 
 /**
@@ -25,17 +24,28 @@ import net.sf.jsqlparser.statement.create.table.ColDataType;
 public class Tuple {
 
   private final Collection<ColumnCell> columnCells;
+
+  /**
+   * 
+   * @param columnCells
+   *          can be empty.
+   */
   public Tuple(Collection<ColumnCell> columnCells) {
-  //  Validate.notEmpty(columnCells);
+    // Validate.notEmpty(columnCells);
     this.columnCells = columnCells;
   }
 
   public Collection<ColumnCell> getColumnCells() {
     return columnCells;
   }
-  
-  public boolean isEmpty(){
-    if(CollectionUtils.isEmpty(columnCells)){
+
+  /**
+   * Check if tuple is empty or not.
+   * 
+   * @return
+   */
+  public boolean isEmpty() {
+    if (CollectionUtils.isEmpty(columnCells)) {
       return true;
     }
     return false;
@@ -52,6 +62,13 @@ public class Tuple {
     private final ColDataType colDataType;
     private String columnName;
 
+    /**
+     * 
+     * @param cellValue
+     *          can be null.
+     * @param colDataType
+     *          can be null.
+     */
     public ColumnCell(String cellValue, ColDataType colDataType) {
       this.cellValue = cellValue;
       this.colDataType = colDataType;
@@ -74,6 +91,5 @@ public class Tuple {
     }
 
   }
-  
-  
+
 }

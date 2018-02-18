@@ -1,6 +1,5 @@
 package edu.buffalo.www.cse4562.operator;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import edu.buffalo.www.cse4562.model.Tuple;

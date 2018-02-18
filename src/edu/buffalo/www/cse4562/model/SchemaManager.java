@@ -17,10 +17,23 @@ public class SchemaManager {
 
   private static Map<String, TableSchema> tableName2Schema = new HashMap<>();
 
+  /**
+   * Add table schema entry.
+   * 
+   * @param tableName
+   * @param tableSchema
+   */
   public static void addTableSchema(String tableName, TableSchema tableSchema) {
     tableName2Schema.put(tableName, tableSchema);
   }
 
+  /**
+   * Get the {@link TableSchema} by table name.
+   * 
+   * @param tableName
+   *          !blank.
+   * @return
+   */
   public static TableSchema getTableSchema(String tableName) {
 
     Validate.notBlank(tableName);
