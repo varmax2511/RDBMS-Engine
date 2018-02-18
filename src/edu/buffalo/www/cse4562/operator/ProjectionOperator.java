@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Validate;
@@ -41,7 +42,8 @@ public class ProjectionOperator implements Operator {
       List<ColumnCell> columnCells = new ArrayList<>();
       for (ColumnCell columnCell : tuple.getColumnCells()) {
         for (SelectItem selectItem : selectItems) {
-          if (selectItem.toString().equals(columnCell.getColumnName())) {
+          if (SchemaManager.getColumnIdByTableId(columnCell.getTableId(),
+              selectItem.toString()) == columnCell.getColumnId()) {
             columnCells.add(columnCell);
           } // if
         } // for

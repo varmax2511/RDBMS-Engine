@@ -36,6 +36,8 @@ public class QueryProcessor {
     // add to Schema Manager
     SchemaManager.addTableSchema(tableName,
         new TableSchema(tableName, createStatement.getColumnDefinitions()));
+    
+    
   }
 
   /**

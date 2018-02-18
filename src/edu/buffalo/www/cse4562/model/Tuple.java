@@ -60,7 +60,8 @@ public class Tuple {
   public static class ColumnCell {
     private final String cellValue;
     private final ColDataType colDataType;
-    private String columnName;
+    private Integer tableId;
+    private Integer columnId;
 
     /**
      * 
@@ -78,16 +79,24 @@ public class Tuple {
       return cellValue;
     }
 
-    public String getColumnName() {
-      return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-      this.columnName = columnName;
-    }
-
     public ColDataType getColDataType() {
       return colDataType;
+    }
+
+    public Integer getTableId() {
+      return tableId;
+    }
+
+    public void setTableId(Integer tableId) {
+      this.tableId = tableId;
+    }
+
+    public Integer getColumnId() {
+      return columnId;
+    }
+
+    public void setColumnId(Integer columnId) {
+      this.columnId = columnId;
     }
 
   }

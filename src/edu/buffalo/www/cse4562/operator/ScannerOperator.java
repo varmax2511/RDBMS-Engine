@@ -39,16 +39,16 @@ public class ScannerOperator implements Operator, TupleIterator {
   private int chunkSize = 1;
 
   /**
-   * 
+   *
    * @param table
-   *           !null
+   *          !null
    * @param dataParentPath
    */
   public ScannerOperator(Table table, String dataParentPath) {
     Validate.notNull(table);
 
     // validate table name
-    String tableName = table.getName();
+    final String tableName = table.getName();
 
     if (null == SchemaManager.getTableSchema(tableName)) {
       throw new IllegalArgumentException(
@@ -64,26 +64,26 @@ public class ScannerOperator implements Operator, TupleIterator {
     reader = Files.newBufferedReader(
         Paths.get(this.dataParentPath + this.tableName + ".csv"));
     csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
-    Iterable<CSVRecord> csvRecords = csvParser.getRecords();
+    final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
     recordIterator = csvRecords.iterator();
   }
 
   /**
-   * 
+   *
    * @return
    * @throws IOException
    */
   @Override
   public Collection<Tuple> getNext() throws IOException {
 
-    List<Tuple> tuples = new ArrayList<>();
+    final List<Tuple> tuples = new ArrayList<>();
     tuples.add(process());
     return tuples;
   }
 
   /**
    * process the request.
-   * 
+   *
    * @return
    * @throws IOException
    */
@@ -100,8 +100,9 @@ public class ScannerOperator implements Operator, TupleIterator {
       return new Tuple(new ArrayList<>());
     }
 
-    List<ColumnCell> columnCells = new ArrayList<>();
-    TableSchema tableSchema = SchemaManager.getTableSchema(tableName);
+    final List<ColumnCell> columnCells = new ArrayList<>();
+    final TableSchema tableSchema = SchemaManager.getTableSchema(tableName);
+    final Integer tableId = SchemaManager.getTableId(tableName);
     l1 : for (int i = 0; i < chunkSize; i++) {
 
       // no value to iterate
@@ -114,20 +115,23 @@ public class ScannerOperator implements Operator, TupleIterator {
       final String[] values = recordIterator.next().get(0).split("\\|");
 
       l2 : for (int j = 0; j < values.length; j++) {
-        ColumnDefinition colDefinition = tableSchema.getColumnDefinitions()
-            .get(j);
-        ColumnCell colCell = new ColumnCell(values[j],
+        final ColumnDefinition colDefinition = tableSchema
+            .getColumnDefinitions().get(j);
+        final ColumnCell colCell = new ColumnCell(values[j],
             colDefinition.getColDataType());
-        colCell.setColumnName(colDefinition.getColumnName());
+        colCell.setTableId(tableId);
+        colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+            colDefinition.getColumnName()));
         columnCells.add(colCell);
       } // for
-    }
+    }// for
+    
     return new Tuple(columnCells);
   }
 
   /**
    * Close the {@link CSVParser} and {@link READER}.
-   * 
+   *
    * @throws IOException
    */
   @Override
@@ -139,7 +143,7 @@ public class ScannerOperator implements Operator, TupleIterator {
     try {
       csvParser.close();
       reader.close();
-    } catch (IOException e) {
+    } catch (final IOException e) {
 
       // re-attempt
       csvParser.close();
