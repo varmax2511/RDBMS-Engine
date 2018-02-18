@@ -76,4 +76,12 @@ public class ProjectionOperator implements Operator {
     return projectOutput;
   }
 
+  public boolean isAllColFlag() {
+    return allColFlag;
+  }
+
+  public void setAllColFlag(boolean allColFlag) {
+    this.allColFlag = allColFlag;
+  }
+
 }

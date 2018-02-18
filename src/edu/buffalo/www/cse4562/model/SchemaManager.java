@@ -35,9 +35,9 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 public class SchemaManager {
 
   private static int tableCount = 1;
-  private static Map<String, TableSchema> tableName2Schema = new HashMap<>();
-  private static Map<String, Integer> tableName2Id = new HashMap<>();
-  private static Map<Integer, Map<String, Integer>> tableId2ColName2Id = new HashMap<>();
+  private static final Map<String, TableSchema> tableName2Schema = new HashMap<>();
+  private static final Map<String, Integer> tableName2Id = new HashMap<>();
+  private static final Map<Integer, Map<String, Integer>> tableId2ColName2Id = new HashMap<>();
 
   /**
    * Add table schema entry. Assign a table id to the table name and assign
@@ -63,7 +63,7 @@ public class SchemaManager {
       colName2Id.put(colDefinitions.get(i).getColumnName(), colCount);
       colCount++;
     } // for
-    tableId2ColName2Id.put(tableCount - 1 , colName2Id);
+    tableId2ColName2Id.put(tableCount - 1, colName2Id);
   }
 
   /**

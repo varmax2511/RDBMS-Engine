@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+package edu.buffalo.www.cse4562.query;
 
 import java.util.List;
 
@@ -9,6 +9,8 @@ import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.ExpressionVisitor;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -95,8 +97,9 @@ public class TreeGenerator {
       currentNode = subSelectNode;
     } else {
       // Scanner
+      Table table = (Table) fromItem;
       final Node node = new Node(
-          new ScannerOperator((Table) fromItem, config.getDataDirPath()),
+          new ScannerOperator(table.getName(), config.getDataDirPath()),
           ScannerOperator.class);
       currentNode.addChild(node);
       currentNode = node;
@@ -105,9 +108,16 @@ public class TreeGenerator {
     return root;
   }
 
+  /**
+   * 
+   * @param where
+   * @return
+   */
   private Node evaluateWhere(Expression where) {
+
     final Node node = new Node(new SelectionOperator(where),
         SelectionOperator.class);
+
     return node;
   }
 
@@ -124,6 +134,10 @@ public class TreeGenerator {
   public static class Config {
     private String dataDirPath = ApplicationConstants.DATA_DIR_PATH;;
 
+    /**
+     * 
+     * @param dataDirPath
+     */
     public Config(String dataDirPath) {
       this.dataDirPath = dataDirPath;
     }

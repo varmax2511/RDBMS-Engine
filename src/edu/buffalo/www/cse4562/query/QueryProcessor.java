@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+package edu.buffalo.www.cse4562.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,6 +7,7 @@ import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
+import edu.buffalo.www.cse4562.query.TreeGenerator.Config;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Select;
@@ -26,6 +27,7 @@ public class QueryProcessor {
    * @param createStatement
    *          !null.
    */
+  @Deprecated
   public static void processCreateQuery(CreateTable createStatement) {
     // null check
     if (createStatement == null || createStatement.getTable() == null) {
@@ -36,8 +38,7 @@ public class QueryProcessor {
     // add to Schema Manager
     SchemaManager.addTableSchema(tableName,
         new TableSchema(tableName, createStatement.getColumnDefinitions()));
-    
-    
+
   }
 
   /**
@@ -48,11 +49,33 @@ public class QueryProcessor {
    * @return
    * @throws Throwable
    */
+  @Deprecated
   public static Collection<Tuple> processSelectQuery(Select statement)
       throws Throwable {
     final Node root = new TreeGenerator(
         new TreeGenerator.Config(ApplicationConstants.DATA_DIR_PATH))
             .evaluateSelect(statement);
+    Collection<Tuple> tuples = root.getNext();
+    final Collection<Tuple> output = new ArrayList<>();
+
+    // move iteratively
+    while (!tuples.isEmpty()) {
+      output.addAll(tuples);
+      tuples = root.getNext();
+    } // while
+
+    return output;
+  }
+
+  /**
+   * Process the Tree.
+   * 
+   * @param root
+   *           !null.
+   * @return
+   * @throws Throwable
+   */
+  public static Collection<Tuple> processTree(Node root) throws Throwable {
     Collection<Tuple> tuples = root.getNext();
     final Collection<Tuple> output = new ArrayList<>();
 

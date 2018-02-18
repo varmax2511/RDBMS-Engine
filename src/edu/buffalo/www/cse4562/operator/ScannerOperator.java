@@ -20,7 +20,6 @@ import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Validate;
-import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
@@ -30,7 +29,6 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  */
 public class ScannerOperator implements Operator, TupleIterator {
 
-  private final Table table;
   private final String dataParentPath;
   private Iterator<CSVRecord> recordIterator;
   private final String tableName;
@@ -44,17 +42,14 @@ public class ScannerOperator implements Operator, TupleIterator {
    *          !null
    * @param dataParentPath
    */
-  public ScannerOperator(Table table, String dataParentPath) {
-    Validate.notNull(table);
-
-    // validate table name
-    final String tableName = table.getName();
+  public ScannerOperator(String tableName, String dataParentPath) {
+    Validate.notBlank(tableName);
 
     if (null == SchemaManager.getTableSchema(tableName)) {
       throw new IllegalArgumentException(
           "Table with name: " + tableName + "does not exist!");
     }
-    this.table = table;
+   
     this.dataParentPath = dataParentPath;
     this.tableName = tableName;
   }
