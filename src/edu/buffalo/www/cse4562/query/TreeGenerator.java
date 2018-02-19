@@ -26,6 +26,7 @@ import net.sf.jsqlparser.statement.select.Union;
  * @author varunjai
  *
  */
+@Deprecated
 public class TreeGenerator {
 
   private final Config config;
