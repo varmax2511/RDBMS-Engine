@@ -99,29 +99,27 @@ public class ProjectionOperator extends Eval
       Operator,
       ExpressionVisitor {
 
+  /**
+   * Helper variable to track {@link ColumnCell} for column names.
+   */
   private Map<String, ColumnCell> column2ColumnCell = new TreeMap<>();
   /**
    * flag to indicate that columns have been requested, hence no projection
    */
   private boolean allColFlag = false;
-  private List<AllTableColumns> allTableColumns;
-  private List<SelectExpressionItem> expressions;
-  private Tuple currentTuple = null;
   /**
-   * To be used only when the query involves only one expression and that is
-   * display all columns SELECT * FROM R;
+   * List of {@link AllTableColumns}
    */
-  public ProjectionOperator() {
-
-  }
-
-  public ProjectionOperator(List<AllTableColumns> allTableColumns,
-      List<SelectExpressionItem> expressions) {
-
-    this.allTableColumns = allTableColumns;
-    this.expressions = expressions;
-  }
-
+  private List<AllTableColumns> allTableColumns;
+  /**
+   * List of {@link SelectExpressionItem}
+   */
+  private List<SelectExpressionItem> expressions;
+  /**
+   * Helper variable to keep track current {@link Tuple} under process.
+   */
+  private Tuple currentTuple = null;
+  
   @Override
   public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {
 
