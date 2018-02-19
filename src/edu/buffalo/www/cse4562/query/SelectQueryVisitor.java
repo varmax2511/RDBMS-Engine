@@ -102,7 +102,7 @@ public class SelectQueryVisitor
       return;
     }
 
-    projectionOpr.addExpression(expression);
+    projectionOpr.addSelectExpressionItems(expression);
   }
 
   @Override
