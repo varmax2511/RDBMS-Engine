@@ -13,15 +13,18 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
   private Node root;
   @Override
   public void visit(Table table) {
+    // if table
     root = new Node(new ScannerOperator(table.getName(),
         ApplicationConstants.DATA_DIR_PATH), ScannerOperator.class);
     
   }
 
   @Override
-  public void visit(SubSelect arg0) {
-    // TODO Auto-generated method stub
-
+  public void visit(SubSelect subSelect) {
+    // if subselect
+    SelectQueryVisitor selectQueryVisitor = new SelectQueryVisitor();
+    subSelect.getSelectBody().accept(selectQueryVisitor);
+    root = selectQueryVisitor.getRoot();
   }
 
   @Override
