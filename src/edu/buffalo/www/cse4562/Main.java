@@ -5,6 +5,7 @@ import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.query.QueryProcessor;
 import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 

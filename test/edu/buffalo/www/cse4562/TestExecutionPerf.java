@@ -1,6 +1,5 @@
 package edu.buffalo.www.cse4562;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
@@ -14,34 +13,25 @@ import edu.buffalo.www.cse4562.query.QueryVisitor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
-/**
- * Test cases for {@link QueryProcessor}.
- * 
- * @author varunjai
- *
- */
-public class TestQueryProcessor {
+public class TestExecutionPerf {
 
-  
   @Test
-  public void testCreateQuery1() throws ParseException {
+  public void testTableCreationPerf() throws ParseException {
+
+    long startTime = System.currentTimeMillis();
     final CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
     final QueryVisitor queryVisitor = new QueryVisitor();
     parser.Statement().accept(queryVisitor);
-
-    assertTrue(SchemaManager.getTableSchema("R") != null);
-
+    long endTime = System.currentTimeMillis();
+    
+    assertTrue(endTime - startTime < 50);
   }
-
-  /**
-   * Test simple select query w/o where clause.
-   * 
-   * @throws Throwable
-   */
+  
   @Test
-  public void testSimpleSelect1() throws Throwable {
+  public void testPlainSelectPerf() throws Throwable {
+
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
@@ -49,16 +39,15 @@ public class TestQueryProcessor {
     parser.Statement().accept(queryVisitor);
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
-
+    
+    long startTime = System.currentTimeMillis();
     parser = new CCJSqlParser(new StringReader("SELECT A + B FROM R;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
     final Node root = queryVisitor.getRoot();
-
-    
-    assertEquals(10, QueryProcessor.processTree(root).size());
-
+    QueryProcessor.processTree(root);
+    long endTime = System.currentTimeMillis();
+    assertTrue(endTime - startTime < 200);
   }
-  
 }

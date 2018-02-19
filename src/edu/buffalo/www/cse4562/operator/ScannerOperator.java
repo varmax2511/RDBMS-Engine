@@ -19,6 +19,7 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
@@ -41,6 +42,7 @@ public class ScannerOperator implements Operator, TupleIterator {
    * @param table
    *          !null
    * @param dataParentPath
+   *          !blank
    */
   public ScannerOperator(String tableName, String dataParentPath) {
     Validate.notBlank(tableName);
@@ -49,7 +51,7 @@ public class ScannerOperator implements Operator, TupleIterator {
       throw new IllegalArgumentException(
           "Table with name: " + tableName + "does not exist!");
     }
-   
+
     this.dataParentPath = dataParentPath;
     this.tableName = tableName;
   }
@@ -112,15 +114,18 @@ public class ScannerOperator implements Operator, TupleIterator {
       l2 : for (int j = 0; j < values.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
-        final ColumnCell colCell = new ColumnCell(values[j],
-            colDefinition.getColDataType());
+
+        // create a ColumnCell, convert value to Primitive Value
+        final ColumnCell colCell = new ColumnCell(
+            PrimitiveTypeConverter.getPrimitiveValueByColDataType(
+                colDefinition.getColDataType(), values[j]));
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
             colDefinition.getColumnName()));
         columnCells.add(colCell);
       } // for
-    }// for
-    
+    } // for
+
     return new Tuple(columnCells);
   }
 

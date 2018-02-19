@@ -79,7 +79,7 @@ public class TreeGenerator {
     /*
      * This needs to be worked out for later use of aggregate operations
      */
-    final Node root = new Node(new ProjectionOperator(selectItems),
+    final Node root = new Node(new ProjectionOperator(),
         ProjectionOperator.class);
     Node currentNode = root;
 

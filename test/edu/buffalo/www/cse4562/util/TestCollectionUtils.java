@@ -10,14 +10,14 @@ import org.junit.Test;
 
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
-import net.sf.jsqlparser.statement.create.table.ColDataType;
+import net.sf.jsqlparser.expression.LongValue;
 
 public class TestCollectionUtils {
 
   @Test
   public void testAreTuplesEmptyNegative() {
     final Collection<Tuple> tuples = new ArrayList<>();
-    final ColumnCell colCell = new ColumnCell("", new ColDataType());
+    final ColumnCell colCell = new ColumnCell(new LongValue(1));
     final List<ColumnCell> cells = new ArrayList<>();
     cells.add(colCell);
     tuples.add(new Tuple(cells));

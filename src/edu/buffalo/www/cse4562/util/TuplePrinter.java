@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+package edu.buffalo.www.cse4562.util;
 
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;

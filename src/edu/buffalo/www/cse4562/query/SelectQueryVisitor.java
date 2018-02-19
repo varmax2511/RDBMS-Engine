@@ -15,7 +15,12 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
-
+/**
+ * Visit and process a select query
+ * 
+ * @author varunjai
+ *
+ */
 public class SelectQueryVisitor
     implements
       SqlVisitor,
@@ -28,38 +33,38 @@ public class SelectQueryVisitor
   @Override
   public void visit(PlainSelect plainSelect) {
 
+    // null check
     if (null == plainSelect) {
       return;
     }
 
     final List<SelectItem> selectItems = plainSelect.getSelectItems();
-    FromItem fromItem = plainSelect.getFromItem();
-    Expression where = plainSelect.getWhere();
+    final FromItem fromItem = plainSelect.getFromItem();
+    final Expression where = plainSelect.getWhere();
 
     // project
     /*
-     * This needs to be worked out for later use of union, aggregate operations
+     * TODO: This needs to be worked out for later use of union, aggregate
+     * operations
      */
-
-    projectionOpr = new ProjectionOperator(selectItems);
-    Iterator<SelectItem> selectItemItr = selectItems.iterator();
+    projectionOpr = new ProjectionOperator();
+    final Iterator<SelectItem> selectItemItr = selectItems.iterator();
     while (selectItemItr.hasNext()) {
       selectItemItr.next().accept(this);
     }
-   
+
     root = new Node(projectionOpr, ProjectionOperator.class);
-    
-    
-    // process WHERE 
-    /*QueryExpressionVisitor whereVisitor = new QueryExpressionVisitor();
-    where.accept(whereVisitor);
-    */
-    
-    
+
+    // process WHERE
+    /*
+     * QueryExpressionVisitor whereVisitor = new QueryExpressionVisitor();
+     * where.accept(whereVisitor);
+     */
+
     // process FROM
-    QueryFromItemVisitor fromIemVisitor = new QueryFromItemVisitor();
+    final QueryFromItemVisitor fromIemVisitor = new QueryFromItemVisitor();
     fromItem.accept(fromIemVisitor);
-    if(fromIemVisitor.getRoot() != null){
+    if (fromIemVisitor.getRoot() != null) {
       root.addChild(fromIemVisitor.getRoot());
     }
   }
@@ -83,15 +88,21 @@ public class SelectQueryVisitor
   }
 
   @Override
-  public void visit(AllTableColumns arg0) {
-    if (null == arg0) {
+  public void visit(AllTableColumns allTableColumns) {
+    if (null == allTableColumns) {
       return;
     }
+
+    projectionOpr.addAllTableColumns(allTableColumns);
   }
 
   @Override
-  public void visit(SelectExpressionItem arg0) {
-    
+  public void visit(SelectExpressionItem expression) {
+    if (null == expression) {
+      return;
+    }
+
+    projectionOpr.addExpression(expression);
   }
 
   @Override
