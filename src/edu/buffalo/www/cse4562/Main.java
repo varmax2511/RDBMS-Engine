@@ -11,7 +11,9 @@ import net.sf.jsqlparser.statement.Statement;
 public class Main {
 
   public static void main(String[] args) throws Throwable {
+    // prompt
     System.out.println(ApplicationConstants.BASH);
+    System.out.flush();
 
     final CCJSqlParser parser = new CCJSqlParser(System.in);
     Statement statement = parser.Statement();
@@ -29,11 +31,14 @@ public class Main {
       if (null != root) {
 
         for (final Tuple tuple : QueryProcessor.processTree(root)) {
-          System.out.println(tuple);
+          TuplePrinter.printTuple(tuple);
         }
       }// if
 
+      // prompt
       System.out.println(ApplicationConstants.BASH);
+      System.out.flush();
+      
       statement = parser.Statement();
 
     }// while

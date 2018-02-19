@@ -57,7 +57,8 @@ public class SchemaManager {
 
     final Map<String, Integer> colName2Id = new HashMap<>();
     int colCount = 1;
-    final List<ColumnDefinition> colDefinitions = new ArrayList<>();
+    final List<ColumnDefinition> colDefinitions = tableSchema
+        .getColumnDefinitions();
 
     for (int i = 0; i < colDefinitions.size(); i++) {
       colName2Id.put(colDefinitions.get(i).getColumnName(), colCount);
