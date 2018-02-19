@@ -83,8 +83,11 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * operator creates a tuple from the values in {@link #column2ColumnCell}.
  * {@link #column2ColumnCell} is a {@link TreeMap} to retain the natural order
  * of the occurrence of columns, since the number of columns is not expected to
- * be large (Gokhan), rebalancing cost shouldn't be high.
+ * be large (Gokhan), re-balancing cost shouldn't be high.
  * 
+ * TODO: Prevent removal of columns during evaluation which are also part of selection.
+ * TODO: Support for Alias
+ * TODO: Support for processing of AllTableColumns
  * 
  * </pre>
  * 
@@ -118,7 +121,6 @@ public class ProjectionOperator extends Eval
     this.allTableColumns = allTableColumns;
     this.expressions = expressions;
   }
-
 
   @Override
   public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {

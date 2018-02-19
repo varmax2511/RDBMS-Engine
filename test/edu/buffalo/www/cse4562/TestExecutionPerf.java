@@ -48,6 +48,29 @@ public class TestExecutionPerf {
     final Node root = queryVisitor.getRoot();
     QueryProcessor.processTree(root);
     long endTime = System.currentTimeMillis();
+
     assertTrue(endTime - startTime < 200);
+  }
+  
+  @Test
+  public void testPlainSelectLargePerf() throws Throwable {
+
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE X(A int, B int, C decimal, D varchar);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("X") != null);
+    
+    long startTime = System.currentTimeMillis();
+    parser = new CCJSqlParser(new StringReader("SELECT A + B FROM X;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+    QueryProcessor.processTree(root);
+    long endTime = System.currentTimeMillis();
+    assertTrue(endTime - startTime < 500);
   }
 }

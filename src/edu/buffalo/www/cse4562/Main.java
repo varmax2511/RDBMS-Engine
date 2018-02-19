@@ -1,5 +1,7 @@
 package edu.buffalo.www.cse4562;
 
+import java.util.Iterator;
+
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.query.QueryProcessor;
@@ -31,18 +33,21 @@ public class Main {
       // if a SELECT
       if (null != root) {
 
-        for (final Tuple tuple : QueryProcessor.processTree(root)) {
-          TuplePrinter.printTuple(tuple);
-        }
-      }// if
+        final Iterator<Tuple> tupleItr = QueryProcessor.processTree(root)
+            .iterator();
+        while (tupleItr.hasNext()) {
+          TuplePrinter.printTuple(tupleItr.next());
+        } // while
+
+      } // if
 
       // prompt
       System.out.println(ApplicationConstants.BASH);
       System.out.flush();
-      
+
       statement = parser.Statement();
 
-    }// while
+    } // while
   }
 
 }
