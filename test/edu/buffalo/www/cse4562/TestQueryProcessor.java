@@ -7,11 +7,12 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
+import edu.buffalo.www.cse4562.query.QueryProcessor;
+import edu.buffalo.www.cse4562.query.QueryVisitor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
-import net.sf.jsqlparser.statement.create.table.CreateTable;
-import net.sf.jsqlparser.statement.select.Select;
 
 /**
  * Test cases for {@link QueryProcessor}.
@@ -21,19 +22,17 @@ import net.sf.jsqlparser.statement.select.Select;
  */
 public class TestQueryProcessor {
 
-  /**
-   * Test the create query.
-   * 
-   * @throws ParseException
-   */
+  
   @Test
-  public void testCreateQuery() throws ParseException {
+  public void testCreateQuery1() throws ParseException {
     final CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
-    CreateTable createStatement = (CreateTable) parser.Statement();
-    QueryProcessor.processCreateQuery(createStatement);
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
+
   }
 
   /**
@@ -42,18 +41,24 @@ public class TestQueryProcessor {
    * @throws Throwable
    */
   @Test
-  public void testSimpleSelect() throws Throwable {
+  public void testSimpleSelect1() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
-    CreateTable createStatement = (CreateTable) parser.Statement();
-    QueryProcessor.processCreateQuery(createStatement);
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
 
-    parser = new CCJSqlParser(new StringReader("SELECT B, C FROM R;"));
-    Select selectStatement = (Select) parser.Statement();
+    parser = new CCJSqlParser(new StringReader("SELECT A + B FROM R;"));
+    parser.Statement().accept(queryVisitor);
 
-    assertEquals(10, QueryProcessor.processSelectQuery(selectStatement).size());
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    
+    assertEquals(10, QueryProcessor.processTree(root).size());
 
   }
+  
 }

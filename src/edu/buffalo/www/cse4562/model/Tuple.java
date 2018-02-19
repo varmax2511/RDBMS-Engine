@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import edu.buffalo.www.cse4562.operator.Operator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
-import net.sf.jsqlparser.statement.create.table.ColDataType;
+import net.sf.jsqlparser.expression.PrimitiveValue;
 
 /**
  * This class represents a container for a single record returned by any
@@ -58,10 +58,9 @@ public class Tuple {
    *
    */
   public static class ColumnCell {
-    private final String cellValue;
-    private final ColDataType colDataType;
-    private String columnName;
-
+    private Integer tableId;
+    private Integer columnId;
+    private PrimitiveValue cellValue;
     /**
      * 
      * @param cellValue
@@ -69,25 +68,32 @@ public class Tuple {
      * @param colDataType
      *          can be null.
      */
-    public ColumnCell(String cellValue, ColDataType colDataType) {
+    public ColumnCell(PrimitiveValue cellValue) {
       this.cellValue = cellValue;
-      this.colDataType = colDataType;
     }
 
-    public String getCellValue() {
+    public Integer getTableId() {
+      return tableId;
+    }
+
+    public void setTableId(Integer tableId) {
+      this.tableId = tableId;
+    }
+
+    public Integer getColumnId() {
+      return columnId;
+    }
+
+    public void setColumnId(Integer columnId) {
+      this.columnId = columnId;
+    }
+
+    public PrimitiveValue getCellValue() {
       return cellValue;
     }
 
-    public String getColumnName() {
-      return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-      this.columnName = columnName;
-    }
-
-    public ColDataType getColDataType() {
-      return colDataType;
+    public void setCellValue(PrimitiveValue cellValue) {
+      this.cellValue = cellValue;
     }
 
   }
