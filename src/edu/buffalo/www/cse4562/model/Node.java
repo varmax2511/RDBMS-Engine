@@ -1,10 +1,12 @@
 package edu.buffalo.www.cse4562.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.Operator;
+import edu.buffalo.www.cse4562.operator.TupleIterator;
 import edu.buffalo.www.cse4562.util.Validate;
 
 /**
@@ -28,15 +30,13 @@ import edu.buffalo.www.cse4562.util.Validate;
  *      Node(Scanner)
  * 
  * 
- * A node contains children, presently two children, a left child and a right child.
- * Ideally each node will have only one child but this shall change in scenario
- * for Cartesian Product and Union.
+ * A node contains a list of children.
  *  
- *  TODO:
  *  Q. Why create two child, why not create an array of children for each node?
- *     An array gives more flexibility than a fixed left and right child.
+ *     An array gives more flexibility than a fixed left and right child to create
+ *     an n-ary tree.
  *     It avoids checking left and then right child, rather just iterate array,
- *     makes code simpler.
+ *     makes code simpler. So, its better to implement children as an array
  * 
  * 
  * 
@@ -95,12 +95,26 @@ public class Node {
     this.operator = operator;
   }
 
-  /*
-   * public Node getLeft() { return left; } public void setLeft(Node left) {
-   * this.isLeaf = false; this.left = left; } public Node getRight() { return
-   * right; } public void setRight(Node right) { this.isLeaf = false; this.right
-   * = right; }
+  /**
+   * Works similar to the hasNext for an iterator. It checks all the way down to
+   * the leaf whether it has any more records.
+   * 
+   * @return
+   * @throws IOException
    */
+  public boolean hasNext() throws IOException {
+    if (!isLeaf) {
+      return this.children.get(0).hasNext();
+    }
+
+    if (operator instanceof TupleIterator) {
+      TupleIterator tupleItr = (TupleIterator) operator;
+      return tupleItr.hasNext();
+    }
+
+    return false;
+  }
+
   /**
    * This method is invoked to start execution for this node.
    * 

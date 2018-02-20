@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+package edu.buffalo.www.cse4562.query;
 
 import java.util.List;
 
@@ -7,7 +7,10 @@ import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.operator.ScannerOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.ExpressionVisitor;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -23,25 +26,43 @@ import net.sf.jsqlparser.statement.select.Union;
  * @author varunjai
  *
  */
+@Deprecated
 public class TreeGenerator {
 
   private final Config config;
+  /**
+   * 
+   * @param config
+   *          !null.
+   */
   public TreeGenerator(Config config) {
+    Validate.notNull(config);
     this.config = config;
   }
 
+  /**
+   * Evaluate the select Query.
+   * 
+   * @param selectQuery
+   *          !null.
+   * @return
+   */
   public Node evaluateSelect(Select selectQuery) {
 
     final SelectBody selectBody = selectQuery.getSelectBody();
     Node root = null;
     if (selectBody instanceof PlainSelect) {
-      root = evaluatePlainSelect((PlainSelect) selectBody);
+      return evaluatePlainSelect((PlainSelect) selectBody);
 
     } else if (selectBody instanceof Union) {
       // add union operations here
     }
 
     return root;
+  }
+
+  private Node evaluateUnion() {
+    return null;
   }
 
   /**
@@ -59,27 +80,27 @@ public class TreeGenerator {
     /*
      * This needs to be worked out for later use of aggregate operations
      */
-    final Node root = new Node(new ProjectionOperator(selectItems),
+    final Node root = new Node(new ProjectionOperator(),
         ProjectionOperator.class);
     Node currentNode = root;
 
-    // select
-    if (where != null) {
-      final Node node = new Node(new SelectionOperator(where),
-          SelectionOperator.class);
-      currentNode.addChild(node);
-      currentNode = node;
+    // WHERE clause
+    if (null != where) {
+      Node whereNode = evaluateWhere(where);
+      currentNode.addChild(whereNode);
+      currentNode = whereNode;
     }
 
     // nested query
     if (fromItem instanceof SubSelect) {
-      Node node = evaluateSelect((Select) fromItem);
-      currentNode.addChild(node);
-      currentNode = node;;
+      Node subSelectNode = evaluateSubSelect((SubSelect) fromItem);
+      currentNode.addChild(subSelectNode);
+      currentNode = subSelectNode;
     } else {
       // Scanner
+      Table table = (Table) fromItem;
       final Node node = new Node(
-          new ScannerOperator((Table) fromItem, config.getDataDirPath()),
+          new ScannerOperator(table.getName(), config.getDataDirPath()),
           ScannerOperator.class);
       currentNode.addChild(node);
       currentNode = node;
@@ -88,7 +109,20 @@ public class TreeGenerator {
     return root;
   }
 
-  private Node evaluateUnion() {
+  /**
+   * 
+   * @param where
+   * @return
+   */
+  private Node evaluateWhere(Expression where) {
+
+    final Node node = new Node(new SelectionOperator(where),
+        SelectionOperator.class);
+
+    return node;
+  }
+
+  private Node evaluateSubSelect(SubSelect subSelect) {
     return null;
   }
 
@@ -101,6 +135,10 @@ public class TreeGenerator {
   public static class Config {
     private String dataDirPath = ApplicationConstants.DATA_DIR_PATH;;
 
+    /**
+     * 
+     * @param dataDirPath
+     */
     public Config(String dataDirPath) {
       this.dataDirPath = dataDirPath;
     }

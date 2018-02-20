@@ -270,5 +270,74 @@ Q. How to create RA tree?
 Q. How to analyze the RA tree and minimize it??
 
 
+Identifying and evaluating an expression
+-------------------------------------------
+JSQLParser provides several visitor interfaces which can be implemented such that
+a type of visitor will invoke the particular method or query type that qualifies
+
+Query: Select A, B from R;
+In this example, we pass this query through a Statement Visitor which identifies it
+as a select query and invokes the corresponding method.
+Now within this method, we invoke call to a Select Visitor which is also a SelectItem Visitor.
+This identifies that the query is a PlainSelect and not a Union.
+
+In the PlainSelect we presently try to find out 3 components
+                      ---------
+1. SelectItems
+2. FromItems
+3. Where/Expression
+
+SelectItems
+-----------
+Here each select item is a SelectExpressionItem, such that they have an expression,
+a string alias, a table
+In our case for the example query, the expression in the SelectExpressionItem is
+an instance of column, which contains the column name
+
+However, an expression can be a subselect or maybe an arithmetic expression
+example: SELECT A + B FROM R;
+
+Presently we pass the list of select items to the Projection Operator, assuming that
+each SELECTItem is a column expression.
+Q. Should the ProjectionOperator be passed the expressions in each select item
+   and the operator may itself be made as an expression visitor?
+   This levies 2 responsibilities on the Projection operator to identify the expression
+   type and the do projection over it
+   But it allows it to decide what and how to project
+
+Q. What if the expression in the projection is itself a subselect?
+   Ideally at the time of tree generation we should concretely identify the operator
+   to be used at each step and not at execution level.
+   This means that a projection operator should be assigned an expression when
+   we know it is something in the realm of projection only.
+   
+One thing that can be done is that, we can check each expression and see if its
+instance of subselect, function. If this is the case we can invoke a new instance
+of SelectQueryVisitor and call its getRoot and append it to the root of the current
+SelectQueryVisitor.
+If its not instance of subselect or function, we can add it to the list of expression
+for Projection. In projection, when evaluating an expression, it will check each
+expression type and process it accordingly.
+Say it has two expressions, A, (A + B)
+Then projection will select column A and add another column (A+B) which will have
+the addition evaluation performed on the value A and B.
+
+The same can be followed for SELECT or WHERE, here also if its a simple evaluation
+it will be passed to the operator who will process it accordingly or passed to
+a new instance to generate a new node.
+        
+   
+   
+   
+   
+ 
+
+
+
+
+
+
+
+
 
              
