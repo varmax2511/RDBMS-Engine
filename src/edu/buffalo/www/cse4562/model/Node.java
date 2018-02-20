@@ -30,15 +30,13 @@ import edu.buffalo.www.cse4562.util.Validate;
  *      Node(Scanner)
  * 
  * 
- * A node contains children, presently two children, a left child and a right child.
- * Ideally each node will have only one child but this shall change in scenario
- * for Cartesian Product and Union.
+ * A node contains a list of children.
  *  
- *  TODO:
  *  Q. Why create two child, why not create an array of children for each node?
- *     An array gives more flexibility than a fixed left and right child.
+ *     An array gives more flexibility than a fixed left and right child to create
+ *     an n-ary tree.
  *     It avoids checking left and then right child, rather just iterate array,
- *     makes code simpler.
+ *     makes code simpler. So, its better to implement children as an array
  * 
  * 
  * 
@@ -116,12 +114,7 @@ public class Node {
 
     return false;
   }
-  /*
-   * public Node getLeft() { return left; } public void setLeft(Node left) {
-   * this.isLeaf = false; this.left = left; } public Node getRight() { return
-   * right; } public void setRight(Node right) { this.isLeaf = false; this.right
-   * = right; }
-   */
+
   /**
    * This method is invoked to start execution for this node.
    * 

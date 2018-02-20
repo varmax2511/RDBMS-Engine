@@ -9,18 +9,18 @@ import org.junit.Test;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
-import edu.buffalo.www.cse4562.query.QueryProcessor;
 import edu.buffalo.www.cse4562.query.QueryVisitor;
+import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
 /**
- * Test cases for {@link QueryProcessor}.
+ * Test cases for {@link TreeProcessor}.
  * 
  * @author varunjai
  *
  */
-public class TestQueryProcessor {
+public class TestTreeProcessor {
 
   @Test
   public void testCreateQuery() throws ParseException {
@@ -55,7 +55,7 @@ public class TestQueryProcessor {
     // get the tree
     final Node root = queryVisitor.getRoot();
 
-    assertEquals(10, QueryProcessor.processTree(root).size());
+    assertEquals(10, TreeProcessor.processTree(root).size());
 
   }
 
@@ -81,7 +81,7 @@ public class TestQueryProcessor {
     // get the tree
     final Node root = queryVisitor.getRoot();
 
-    assertEquals(1, QueryProcessor.processTree(root).size());
+    assertEquals(1, TreeProcessor.processTree(root).size());
 
   }
 

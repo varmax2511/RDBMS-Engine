@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562.query;
+package edu.buffalo.www.cse4562.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +12,7 @@ import edu.buffalo.www.cse4562.model.Tuple;
  * @author varunjai
  *
  */
-public class QueryProcessor {
+public class TreeProcessor {
 
   /**
    * Process the Tree.
