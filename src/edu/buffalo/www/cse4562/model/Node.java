@@ -1,10 +1,12 @@
 package edu.buffalo.www.cse4562.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.Operator;
+import edu.buffalo.www.cse4562.operator.TupleIterator;
 import edu.buffalo.www.cse4562.util.Validate;
 
 /**
@@ -95,6 +97,25 @@ public class Node {
     this.operator = operator;
   }
 
+  /**
+   * Works similar to the hasNext for an iterator. It checks all the way down to
+   * the leaf whether it has any more records.
+   * 
+   * @return
+   * @throws IOException
+   */
+  public boolean hasNext() throws IOException {
+    if (!isLeaf) {
+      return this.children.get(0).hasNext();
+    }
+
+    if (operator instanceof TupleIterator) {
+      TupleIterator tupleItr = (TupleIterator) operator;
+      return tupleItr.hasNext();
+    }
+
+    return false;
+  }
   /*
    * public Node getLeft() { return left; } public void setLeft(Node left) {
    * this.isLeaf = false; this.left = left; } public Node getRight() { return

@@ -1,6 +1,7 @@
 package edu.buffalo.www.cse4562.query;
 
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BooleanValue;
@@ -46,165 +47,162 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * @author varunjai
  *
  */
-public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor{
+public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   private Node root;
- 
+
   @Override
   public void visit(NullValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(Function arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(InverseExpression arg0) {
     // TODO Auto-generated method stub
-   
+
   }
 
   @Override
   public void visit(JdbcParameter arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(DoubleValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(LongValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(DateValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(TimeValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(TimestampValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(BooleanValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(StringValue arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
-  public void visit(Addition arg0) {
-    // TODO Auto-generated method stub
-    
+  public void visit(Addition addition) {
+    root = new Node(new SelectionOperator(addition), SelectionOperator.class);
   }
 
   @Override
   public void visit(Division arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(Multiplication arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(Subtraction arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
-  public void visit(AndExpression arg0) {
-    // TODO Auto-generated method stub
-   
-    
+  public void visit(AndExpression andExpression) {
+    root = new Node(new SelectionOperator(andExpression),
+        SelectionOperator.class);
   }
 
   @Override
-  public void visit(OrExpression arg0) {
-    // TODO Auto-generated method stub
-    
+  public void visit(OrExpression orExpression) {
+    root = new Node(new SelectionOperator(orExpression),
+        SelectionOperator.class);
   }
 
   @Override
   public void visit(Between arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(EqualsTo equalsTo) {
-        
+    root = new Node(new SelectionOperator(equalsTo), SelectionOperator.class);
   }
 
   @Override
-  public void visit(GreaterThan arg0) {
-    
-    // TODO Auto-generated method stub
-    
+  public void visit(GreaterThan greaterThan) {
+    root = new Node(new SelectionOperator(greaterThan),
+        SelectionOperator.class);
   }
 
   @Override
-  public void visit(GreaterThanEquals arg0) {
-    // TODO Auto-generated method stub
-    
+  public void visit(GreaterThanEquals greaterThanEquals) {
+    root = new Node(new SelectionOperator(greaterThanEquals),
+        SelectionOperator.class);
   }
 
   @Override
   public void visit(InExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(IsNullExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(LikeExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(MinorThan arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(MinorThanEquals arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -214,80 +212,81 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor{
 
   @Override
   public void visit(Column column) {
-    // TODO Auto-generated method stub
-    System.out.println("column");
+   
   }
 
   @Override
-  public void visit(SubSelect arg0) {
-        
+  public void visit(SubSelect subSelect) {
+    // if subselect
+    SelectQueryVisitor selectQueryVisitor = new SelectQueryVisitor();
+    subSelect.getSelectBody().accept(selectQueryVisitor);
+    root = selectQueryVisitor.getRoot();
   }
 
   @Override
   public void visit(CaseExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(WhenClause arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(ExistsExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(AllComparisonExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(AnyComparisonExpression arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(Concat arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(Matches arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(BitwiseAnd arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(BitwiseOr arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void visit(BitwiseXor arg0) {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public Node getRoot() {
-    
+
     return root;
   }
 
-  
 }

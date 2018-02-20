@@ -22,9 +22,8 @@ import net.sf.jsqlparser.parser.ParseException;
  */
 public class TestQueryProcessor {
 
-  
   @Test
-  public void testCreateQuery1() throws ParseException {
+  public void testCreateQuery() throws ParseException {
     final CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
@@ -41,7 +40,7 @@ public class TestQueryProcessor {
    * @throws Throwable
    */
   @Test
-  public void testSimpleSelect1() throws Throwable {
+  public void testSimpleSelect() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
@@ -56,9 +55,34 @@ public class TestQueryProcessor {
     // get the tree
     final Node root = queryVisitor.getRoot();
 
-    
     assertEquals(10, QueryProcessor.processTree(root).size());
 
   }
-  
+
+  /**
+   * Test simple select query w/o where clause.
+   * 
+   * @throws Throwable
+   */
+  @Test
+  public void testSimpleSelectWhere() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT A,B FROM R WHERE A > 4 AND B > 1;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(1, QueryProcessor.processTree(root).size());
+
+  }
+
 }

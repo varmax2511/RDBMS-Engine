@@ -204,15 +204,59 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(AndExpression arg0) {
-    // TODO Auto-generated method stub
+  public void visit(AndExpression andExpression) {
+    andExpression.getLeftExpression().accept(this);
+    andExpression.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(andExpression);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // TODO: how to set aliases???
+    this.column2ColumnCell.put(andExpression.getStringExpression(),
+        new ColumnCell(cellValue));
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 
   @Override
-  public void visit(OrExpression arg0) {
-    // TODO Auto-generated method stub
+  public void visit(OrExpression orExpression) {
 
+    orExpression.getLeftExpression().accept(this);
+    orExpression.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(orExpression);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // TODO: how to set aliases???
+    this.column2ColumnCell.put(orExpression.getStringExpression(),
+        new ColumnCell(cellValue));
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
   }
 
   @Override
@@ -222,20 +266,86 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(EqualsTo arg0) {
-    // TODO Auto-generated method stub
+  public void visit(EqualsTo equalsTo) {
+
+    equalsTo.getLeftExpression().accept(this);
+    equalsTo.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(equalsTo);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // TODO: how to set aliases???
+    this.column2ColumnCell.put(equalsTo.getStringExpression(),
+        new ColumnCell(cellValue));
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
+  }
+
+  @Override
+  public void visit(GreaterThan greaterThan) {
+    greaterThan.getLeftExpression().accept(this);
+    greaterThan.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(greaterThan);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // TODO: how to set aliases???
+    this.column2ColumnCell.put(greaterThan.getStringExpression(),
+        new ColumnCell(cellValue));
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 
   @Override
-  public void visit(GreaterThan arg0) {
-    // TODO Auto-generated method stub
+  public void visit(GreaterThanEquals greaterThanEquals) {
+    greaterThanEquals.getLeftExpression().accept(this);
+    greaterThanEquals.getRightExpression().accept(this);
 
-  }
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(greaterThanEquals);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
 
-  @Override
-  public void visit(GreaterThanEquals arg0) {
-    // TODO Auto-generated method stub
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // TODO: how to set aliases???
+    this.column2ColumnCell.put(greaterThanEquals.getStringExpression(),
+        new ColumnCell(cellValue));
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 
