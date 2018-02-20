@@ -16,7 +16,7 @@ public class TreeProcessor {
 
   /**
    * Process the Tree.
-   * 
+   *
    * @param root
    *          !null.
    * @return
@@ -29,6 +29,10 @@ public class TreeProcessor {
     // move iteratively
     while (root.hasNext()) {
       tuples = root.getNext();
+      
+      if(tuples.isEmpty()){
+        continue;
+      }
       output.addAll(tuples);
     } // while
 
