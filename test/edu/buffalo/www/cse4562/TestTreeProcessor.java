@@ -84,5 +84,68 @@ public class TestTreeProcessor {
     assertEquals(1, TreeProcessor.processTree(root).size());
 
   }
+  
+  @Test
+  public void testSimpleTableAlias() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT P.A, P.B FROM R P WHERE P.A > 4 AND P.B > 1;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(1, TreeProcessor.processTree(root).size());
+
+  }
+  
+  @Test
+  public void testRenamingAlias() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT A+B AS C FROM R WHERE A=4;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(4, TreeProcessor.processTree(root).size());
+
+  }
+  
+  @Test
+  public void testSubQueryWithAlias() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT P.A, P.B FROM (SELECT A, B FROM R WHERE B>1) P WHERE P.A=4;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(3, TreeProcessor.processTree(root).size());
+
+  }
 
 }

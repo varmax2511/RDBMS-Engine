@@ -68,10 +68,10 @@ public class SelectQueryVisitor
     }
 
     // process FROM
-    final QueryFromItemVisitor fromIemVisitor = new QueryFromItemVisitor();
-    fromItem.accept(fromIemVisitor);
-    if (fromIemVisitor.getRoot() != null) {
-      final Node node = fromIemVisitor.getRoot();
+    final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
+    fromItem.accept(fromItemVisitor);
+    if (fromItemVisitor.getRoot() != null) {
+      final Node node = fromItemVisitor.getRoot();
       currentNode.addChild(node);
       currentNode = node;
     } // if
