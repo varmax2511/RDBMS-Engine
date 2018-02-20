@@ -17,7 +17,7 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
 /**
  * Visit and process a select query
- * 
+ *
  * @author varunjai
  *
  */
@@ -29,7 +29,7 @@ public class SelectQueryVisitor
 
   private Node root;
   private ProjectionOperator projectionOpr;
-
+  private Node currentNode;
   @Override
   public void visit(PlainSelect plainSelect) {
 
@@ -54,24 +54,31 @@ public class SelectQueryVisitor
     }
 
     root = new Node(projectionOpr, ProjectionOperator.class);
+    currentNode = root;
 
     // process WHERE
-    /*
-     * QueryExpressionVisitor whereVisitor = new QueryExpressionVisitor();
-     * where.accept(whereVisitor);
-     */
+    if (null != where) {
+      final QueryExpressionVisitor whereVisitor = new QueryExpressionVisitor();
+      where.accept(whereVisitor);
+      if (null != whereVisitor.getRoot()) {
+        final Node node = whereVisitor.getRoot();
+        currentNode.addChild(node);
+        currentNode = node;
+      } // if
+    }
 
     // process FROM
     final QueryFromItemVisitor fromIemVisitor = new QueryFromItemVisitor();
     fromItem.accept(fromIemVisitor);
     if (fromIemVisitor.getRoot() != null) {
-      root.addChild(fromIemVisitor.getRoot());
-    }
+      final Node node = fromIemVisitor.getRoot();
+      currentNode.addChild(node);
+      currentNode = node;
+    } // if
   }
 
   @Override
   public void visit(Union union) {
-    System.out.println("union");
     if (null == union) {
       return;
     }
@@ -102,7 +109,7 @@ public class SelectQueryVisitor
       return;
     }
 
-    projectionOpr.addExpression(expression);
+    projectionOpr.addSelectExpressionItems(expression);
   }
 
   @Override

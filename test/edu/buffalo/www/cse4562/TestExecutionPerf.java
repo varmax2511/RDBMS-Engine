@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
-import edu.buffalo.www.cse4562.query.QueryProcessor;
 import edu.buffalo.www.cse4562.query.QueryVisitor;
+import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
@@ -46,7 +46,7 @@ public class TestExecutionPerf {
 
     // get the tree
     final Node root = queryVisitor.getRoot();
-    QueryProcessor.processTree(root);
+    TreeProcessor.processTree(root);
     long endTime = System.currentTimeMillis();
 
     assertTrue(endTime - startTime < 200);
@@ -69,7 +69,7 @@ public class TestExecutionPerf {
 
     // get the tree
     final Node root = queryVisitor.getRoot();
-    QueryProcessor.processTree(root);
+    TreeProcessor.processTree(root);
     long endTime = System.currentTimeMillis();
     assertTrue(endTime - startTime < 500);
   }

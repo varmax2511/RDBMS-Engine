@@ -4,15 +4,21 @@ import java.util.Iterator;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
-import edu.buffalo.www.cse4562.query.QueryProcessor;
 import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.TreeProcessor;
 import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 
 public class Main {
 
+  /**
+   * Entry
+   * 
+   * @param args
+   * @throws Throwable
+   */
   public static void main(String[] args) throws Throwable {
     // prompt
     System.out.println(ApplicationConstants.BASH);
@@ -33,7 +39,7 @@ public class Main {
       // if a SELECT
       if (null != root) {
 
-        final Iterator<Tuple> tupleItr = QueryProcessor.processTree(root)
+        final Iterator<Tuple> tupleItr = TreeProcessor.processTree(root)
             .iterator();
         while (tupleItr.hasNext()) {
           TuplePrinter.printTuple(tupleItr.next());

@@ -158,4 +158,13 @@ public class ScannerOperator implements Operator, TupleIterator {
     return getNext();
   }
 
+  @Override
+  public boolean hasNext() throws IOException {
+    // if method invoked first time without connection being opened
+    if (null == reader) {
+      open();
+    }
+    return this.recordIterator.hasNext();
+  }
+
 }
