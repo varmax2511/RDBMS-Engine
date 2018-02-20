@@ -68,6 +68,11 @@ public class ProjectionOperator implements Operator {
       // process expressions
       final List<ColumnCell> columnCells = new ArrayList<>();
       for (final SelectExpressionItem expressionItem : selectExpressionItems) {
+        
+        //TODO later in the project if the renaming is required as output this can be used by setting as a column name
+        //for now we don't need to output the column name or the rename(alias)
+        //String alias = expressionItem.getAlias();
+        
         final ColumnCell columnCell = opVisitor.getValue(tuple,
             expressionItem.getExpression());
         if (null != columnCell) {
