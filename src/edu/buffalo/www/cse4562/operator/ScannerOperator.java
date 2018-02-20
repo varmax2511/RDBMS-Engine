@@ -100,7 +100,7 @@ public class ScannerOperator implements Operator, TupleIterator {
     final List<ColumnCell> columnCells = new ArrayList<>();
     final TableSchema tableSchema = SchemaManager.getTableSchema(tableName);
     final Integer tableId = SchemaManager.getTableId(tableName);
-    l1 : for (int i = 0; i < chunkSize; i++) {
+    for (int i = 0; i < chunkSize; i++) {
 
       // no value to iterate
       if (!recordIterator.hasNext()) {
@@ -111,7 +111,7 @@ public class ScannerOperator implements Operator, TupleIterator {
       // fetch a row
       final String[] values = recordIterator.next().get(0).split("\\|");
 
-      l2 : for (int j = 0; j < values.length; j++) {
+      for (int j = 0; j < values.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 

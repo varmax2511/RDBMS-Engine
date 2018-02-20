@@ -223,8 +223,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(andExpression.getStringExpression(),
-        new ColumnCell(cellValue));
+//    this.column2ColumnCell.put(andExpression.getStringExpression(),
+//        new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -252,8 +252,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(orExpression.getStringExpression(),
-        new ColumnCell(cellValue));
+//    this.column2ColumnCell.put(orExpression.getStringExpression(),
+//        new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -286,8 +286,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(equalsTo.getStringExpression(),
-        new ColumnCell(cellValue));
+//    this.column2ColumnCell.put(equalsTo.getStringExpression(),
+//        new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -313,8 +313,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(greaterThan.getStringExpression(),
-        new ColumnCell(cellValue));
+//    this.column2ColumnCell.put(greaterThan.getStringExpression(),
+//        new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -341,8 +341,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(greaterThanEquals.getStringExpression(),
-        new ColumnCell(cellValue));
+//    this.column2ColumnCell.put(greaterThanEquals.getStringExpression(),
+//        new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -387,6 +387,11 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(Column column) {
+    
+    // to flush out any previous entry, and set null if not record is found for a column.
+    //e.g columns B and C are required for a table which only has entries of columns A and B
+    this.outputColumnCell = null;
+    
     // return null
     if (this.currentTuple.isEmpty()) {
       return;
@@ -399,7 +404,8 @@ public class OperatorExpressionVisitor
 
       if (SchemaManager.getColumnIdByTableId(tableId,
           column.getColumnName()) == columnCell.getColumnId()) {
-        this.column2ColumnCell.put(column.getWholeColumnName(), columnCell);
+        //changed from column.getWholeColumnName() to column.getColumnName() to fix problems of alias
+        this.column2ColumnCell.put(column.getColumnName(), columnCell);
         this.outputColumnCell = columnCell;
       } // if
     } // for
