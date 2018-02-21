@@ -21,6 +21,15 @@ public class PrimitiveTypeConverter {
     dataType2Primitive.put("string", PrimitiveType.STRING);
     dataType2Primitive.put("decimal", PrimitiveType.DOUBLE);
     dataType2Primitive.put("date", PrimitiveType.DATE);
+    dataType2Primitive.put("INT", PrimitiveType.LONG);
+    dataType2Primitive.put("CHAR", PrimitiveType.STRING);
+    dataType2Primitive.put("VARCHAR", PrimitiveType.STRING);
+    dataType2Primitive.put("STRING", PrimitiveType.STRING);
+    dataType2Primitive.put("DECIMAL", PrimitiveType.DOUBLE);
+    dataType2Primitive.put("DATE", PrimitiveType.DATE);
+    dataType2Primitive.put("boolean", PrimitiveType.BOOL);
+    dataType2Primitive.put("BOOLEAN", PrimitiveType.BOOL);
+
   }
 
   public static PrimitiveValue getPrimitiveValueByColDataType(
@@ -28,7 +37,7 @@ public class PrimitiveTypeConverter {
 
     // unknown value
     if (!dataType2Primitive.containsKey(colDataType.getDataType())) {
-      throw new IllegalArgumentException("Unknown data type, not supported!!!");
+      throw new IllegalArgumentException("Unknown data type, not supported: "+colDataType.getDataType());
     }
 
     final PrimitiveType primitiveType = dataType2Primitive
