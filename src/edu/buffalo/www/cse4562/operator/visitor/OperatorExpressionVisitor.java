@@ -376,20 +376,79 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(MinorThan arg0) {
-    // TODO Auto-generated method stub
+  public void visit(MinorThan minorThan) {
+
+    minorThan.getLeftExpression().accept(this);
+    minorThan.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(minorThan);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 
   @Override
-  public void visit(MinorThanEquals arg0) {
-    // TODO Auto-generated method stub
+  public void visit(MinorThanEquals minorThanEquals) {
+    minorThanEquals.getLeftExpression().accept(this);
+    minorThanEquals.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(minorThanEquals);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 
   @Override
-  public void visit(NotEqualsTo arg0) {
-    // TODO Auto-generated method stub
+  public void visit(NotEqualsTo notEqualsTo) {
+
+    notEqualsTo.getLeftExpression().accept(this);
+    notEqualsTo.getRightExpression().accept(this);
+
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(notEqualsTo);
+    } catch (final SQLException e) {
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    // creating new instance, as we will be destroying map and wasn't sure if
+    // it will destroy the object as well
+    this.outputColumnCell = new ColumnCell(cellValue);
 
   }
 

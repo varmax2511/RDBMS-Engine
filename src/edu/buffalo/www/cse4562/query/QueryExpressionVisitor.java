@@ -194,21 +194,23 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
   }
 
   @Override
-  public void visit(MinorThan arg0) {
-    // TODO Auto-generated method stub
+  public void visit(MinorThan minorThan) {
+    root = new Node(new SelectionOperator(minorThan),
+        SelectionOperator.class);
 
   }
 
   @Override
-  public void visit(MinorThanEquals arg0) {
-    // TODO Auto-generated method stub
-
+  public void visit(MinorThanEquals minorThanEquals) {
+    root = new Node(new SelectionOperator(minorThanEquals),
+        SelectionOperator.class);
   }
 
   @Override
-  public void visit(NotEqualsTo arg0) {
-    // TODO Auto-generated method stub
-  }
+  public void visit(NotEqualsTo notEquals) {
+    root = new Node(new SelectionOperator(notEquals),
+        SelectionOperator.class);
+    }
 
   @Override
   public void visit(Column column) {
