@@ -24,40 +24,37 @@ public class Main {
     System.out.println(ApplicationConstants.BASH);
     System.out.flush();
 
-    try {
-      final CCJSqlParser parser = new CCJSqlParser(System.in);
-      Statement statement = parser.Statement();
+    final CCJSqlParser parser = new CCJSqlParser(System.in);
+    Statement statement = parser.Statement();
 
-      while (statement != null) {
+    while (statement != null) {
 
-        // process query to generate Tree
-        final QueryVisitor queryVisitor = new QueryVisitor();
-        statement.accept(queryVisitor);
+      // process query to generate Tree
+      final QueryVisitor queryVisitor = new QueryVisitor();
+      statement.accept(queryVisitor);
 
-        // get the tree
-        final Node root = queryVisitor.getRoot();
+      // get the tree
+      final Node root = queryVisitor.getRoot();
 
-        // if a SELECT
-        if (null != root) {
+      // if a SELECT
+      if (null != root) {
 
-          final Iterator<Tuple> tupleItr = TreeProcessor.processTree(root)
-              .iterator();
-          while (tupleItr.hasNext()) {
-            TuplePrinter.printTuple(tupleItr.next());
-          } // while
+        final Iterator<Tuple> tupleItr = TreeProcessor.processTree(root)
+            .iterator();
+        while (tupleItr.hasNext()) {
+          TuplePrinter.printTuple(tupleItr.next());
+        } // while
 
-        } // if
+      } // if
 
-        // prompt
-        System.out.println(ApplicationConstants.BASH);
-        System.out.flush();
+      // prompt
+      System.out.println(ApplicationConstants.BASH);
+      System.out.flush();
 
-        statement = parser.Statement();
+      statement = parser.Statement();
 
-      } // while
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
+    } // while
+
   }
 
 }

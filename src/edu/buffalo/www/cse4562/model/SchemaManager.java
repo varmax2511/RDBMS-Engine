@@ -121,12 +121,11 @@ public class SchemaManager {
 
   /**
    * Returns the column name against a given table id and column id. This is an
-   * expensive operation as all columns are iterated and should be used as
-   * minimum as possible.
+   * O(n) call where n is the number of columns in the table.
    * 
    * @param tableId
    * @param columnId
-   * @return
+   * @return null when no match found
    */
   public static String getColumnNameById(Integer tableId, Integer columnId) {
 
@@ -144,6 +143,13 @@ public class SchemaManager {
     return null;
   }
 
+  /**
+   * Get the table name corresponding to a tableid. This is O(n) call where n is
+   * the number of tables in the system.
+   * 
+   * @param tableId
+   * @return null when no match found
+   */
   public static String getTableName(Integer tableId) {
 
     if (!tableId2ColName2Id.containsKey(tableId)) {
