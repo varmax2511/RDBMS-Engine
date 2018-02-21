@@ -27,7 +27,9 @@ public class PrimitiveTypeConverter {
     dataType2Primitive.put("STRING", PrimitiveType.STRING);
     dataType2Primitive.put("DECIMAL", PrimitiveType.DOUBLE);
     dataType2Primitive.put("DATE", PrimitiveType.DATE);
-    //dataType2Primitive.put("boolean", PrimitiveType.BOOL);
+    dataType2Primitive.put("boolean", PrimitiveType.BOOL);
+    dataType2Primitive.put("BOOLEAN", PrimitiveType.BOOL);
+
   }
 
   public static PrimitiveValue getPrimitiveValueByColDataType(
