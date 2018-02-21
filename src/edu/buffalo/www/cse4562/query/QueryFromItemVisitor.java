@@ -2,7 +2,9 @@ package edu.buffalo.www.cse4562.query;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.ScannerOperator;
+import edu.buffalo.www.cse4562.operator.SubSelectOperator;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.StringUtils;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
@@ -16,15 +18,27 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
     // if table
     root = new Node(new ScannerOperator(table.getName(),
         ApplicationConstants.DATA_DIR_PATH), ScannerOperator.class);
-    
+
   }
 
   @Override
   public void visit(SubSelect subSelect) {
-    // if subselect
+
+    // if sub-select
     SelectQueryVisitor selectQueryVisitor = new SelectQueryVisitor();
+    // we are only sending the subselect not the alias that may be associated
+    // with it.
     subSelect.getSelectBody().accept(selectQueryVisitor);
-    root = selectQueryVisitor.getRoot();
+
+    if (StringUtils.isBlank(subSelect.getAlias())) {
+      root = selectQueryVisitor.getRoot();
+      return;
+    }
+
+    // if an alias is present pass, it SubSelect operator
+    root = new Node(new SubSelectOperator(subSelect.getAlias()),
+        SubSelectOperator.class);
+    root.addChild(selectQueryVisitor.getRoot());
   }
 
   @Override

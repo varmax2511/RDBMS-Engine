@@ -84,7 +84,7 @@ public class TestTreeProcessor {
     assertEquals(1, TreeProcessor.processTree(root).size());
 
   }
-  
+
   @Test
   public void testSimpleTableAlias() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -95,8 +95,8 @@ public class TestTreeProcessor {
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
 
-    parser = new CCJSqlParser(
-        new StringReader("SELECT P.A, P.B FROM R P WHERE P.A > 4 AND P.B > 1;"));
+    parser = new CCJSqlParser(new StringReader(
+        "SELECT P.A, P.B FROM R P WHERE P.A > 4 AND P.B > 1;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
@@ -105,7 +105,7 @@ public class TestTreeProcessor {
     assertEquals(1, TreeProcessor.processTree(root).size());
 
   }
-  
+
   @Test
   public void testRenamingAlias() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -126,7 +126,7 @@ public class TestTreeProcessor {
     assertEquals(4, TreeProcessor.processTree(root).size());
 
   }
-  
+
   @Test
   public void testSubQueryWithAlias() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -137,14 +137,56 @@ public class TestTreeProcessor {
 
     assertTrue(SchemaManager.getTableSchema("R") != null);
 
-    parser = new CCJSqlParser(
-        new StringReader("SELECT P.A, P.B FROM (SELECT A, B FROM R WHERE B>1) P WHERE P.A=4;"));
+    parser = new CCJSqlParser(new StringReader(
+        "SELECT P.A, P.B FROM (SELECT A, B FROM R WHERE B>1) P WHERE P.A=4;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
     final Node root = queryVisitor.getRoot();
 
     assertEquals(3, TreeProcessor.processTree(root).size());
+
+  }
+  
+  @Test
+  public void testSubQueryWithAlias2() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(new StringReader(
+        "SELECT Q.D FROM (SELECT B AS D FROM R) Q;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(10, TreeProcessor.processTree(root).size());
+
+  }
+  
+  @Test
+  public void testSubQueryWithAlias3() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(new StringReader(
+        "SELECT Q.D FROM (SELECT A+B AS D FROM R) Q;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(10, TreeProcessor.processTree(root).size());
 
   }
 

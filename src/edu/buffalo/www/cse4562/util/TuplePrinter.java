@@ -34,6 +34,11 @@ public class TuplePrinter {
       stringBuidler.append("|");
     }
 
+    // if empty
+    if(stringBuidler.length() == 0){
+      return;
+    }
+    
     System.out.println(stringBuidler.substring(0, stringBuidler.length() - 1));
   }
 }
