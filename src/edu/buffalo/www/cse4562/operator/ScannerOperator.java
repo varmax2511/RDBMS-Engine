@@ -19,6 +19,7 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -49,7 +50,7 @@ public class ScannerOperator implements Operator, TupleIterator {
 
     if (null == SchemaManager.getTableSchema(tableName)) {
       throw new IllegalArgumentException(
-          "Table with name: " + tableName + "does not exist!");
+          "Table with name: " + tableName + " does not exist!");
     }
 
     this.dataParentPath = dataParentPath;
@@ -59,7 +60,7 @@ public class ScannerOperator implements Operator, TupleIterator {
   @Override
   public void open() throws IOException {
     reader = Files.newBufferedReader(
-        Paths.get(this.dataParentPath + this.tableName + ".csv"));
+        Paths.get(this.dataParentPath + this.tableName + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
     csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
     final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
     recordIterator = csvRecords.iterator();

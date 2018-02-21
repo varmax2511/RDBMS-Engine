@@ -1,6 +1,5 @@
 package edu.buffalo.www.cse4562.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,18 +54,31 @@ public class SchemaManager {
     tableName2Id.put(tableName, tableCount);
     tableCount++;
 
+    addColumnIds(tableCount - 1, tableSchema);
+  }
+
+  /**
+   * Add new columns to existing tables.
+   * 
+   * @param tableId
+   * @param tableSchema
+   */
+  private static void addColumnIds(Integer tableId, TableSchema tableSchema) {
     final Map<String, Integer> colName2Id = new HashMap<>();
-    int colCount = 1;
     final List<ColumnDefinition> colDefinitions = tableSchema
         .getColumnDefinitions();
 
     for (int i = 0; i < colDefinitions.size(); i++) {
-      colName2Id.put(colDefinitions.get(i).getColumnName(), colCount);
-      colCount++;
+      colName2Id.put(colDefinitions.get(i).getColumnName(), i + 1);
     } // for
-    tableId2ColName2Id.put(tableCount - 1, colName2Id);
+    tableId2ColName2Id.put(tableId, colName2Id);
   }
 
+  public static void updateSchema(Integer tableId, TableSchema tableSchema) {
+
+    tableName2Schema.put(getTableName(tableId), tableSchema);
+    addColumnIds(tableId, tableSchema);
+  }
   /**
    * Get the {@link TableSchema} by table name.
    *
@@ -78,6 +90,11 @@ public class SchemaManager {
 
     Validate.notBlank(tableName);
     return tableName2Schema.get(tableName);
+  }
+
+  public static TableSchema getTableSchemaById(Integer tableId) {
+
+    return tableName2Schema.get(getTableName(tableId));
   }
 
   /**
@@ -100,5 +117,45 @@ public class SchemaManager {
   public static Integer getColumnIdByTableId(Integer tableId,
       String columnName) {
     return tableId2ColName2Id.get(tableId).get(columnName);
+  }
+
+  /**
+   * Returns the column name against a given table id and column id. This is an
+   * expensive operation as all columns are iterated and should be used as
+   * minimum as possible.
+   * 
+   * @param tableId
+   * @param columnId
+   * @return
+   */
+  public static String getColumnNameById(Integer tableId, Integer columnId) {
+
+    if (!tableId2ColName2Id.containsKey(tableId)) {
+      return null;
+    }
+
+    for (Map.Entry<String, Integer> entry : tableId2ColName2Id.get(tableId)
+        .entrySet()) {
+      if (entry.getValue() == columnId) {
+        return entry.getKey();
+      }
+    } // for
+
+    return null;
+  }
+
+  public static String getTableName(Integer tableId) {
+
+    if (!tableId2ColName2Id.containsKey(tableId)) {
+      return null;
+    }
+
+    for (Map.Entry<String, Integer> entry : tableName2Id.entrySet()) {
+      if (entry.getValue() == tableId) {
+        return entry.getKey();
+      }
+    } // for
+
+    return null;
   }
 }

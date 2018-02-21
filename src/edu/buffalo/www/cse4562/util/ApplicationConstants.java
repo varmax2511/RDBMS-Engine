@@ -4,5 +4,6 @@ public interface ApplicationConstants {
 
   public String BASH = "$>";
   public String DATA_DIR_PATH = "./data/";
+  public String SUPPORTED_FILE_EXTENSION = ".dat";
 
 }
