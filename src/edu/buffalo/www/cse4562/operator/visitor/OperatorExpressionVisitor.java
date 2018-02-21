@@ -65,6 +65,14 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * expression process it via the {@link Evaluator} and return result as a
  * {@link ColumnCell}.
  * 
+ * add them to map for expressions which need to be projected, not for
+ * expressions in where clause, since A + B can be part of projection as well,
+ * we are including it.
+ * 
+ * TODO: Presently evaluator searches column values only by column name but we
+ * need to make search based on both column name and table name. Example:
+ * Queries like S.A == X.A Here column name is same but tables are different.
+ * 
  * @author varunjai
  *
  */
