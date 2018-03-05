@@ -1,37 +1,60 @@
 package edu.buffalo.www.cse4562;
 
+import java.util.Iterator;
+
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
+import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.TreeProcessor;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.create.table.CreateTable;
-import net.sf.jsqlparser.statement.select.Select;
 
 public class Main {
 
-  public static void main(String[] args)
-      throws Throwable {
+  /**
+   * Entry
+   * 
+   * @param args
+   * @throws Throwable
+   */
+  public static void main(String[] args) throws Throwable {
+    // prompt
     System.out.println(ApplicationConstants.BASH);
+    System.out.flush();
 
     final CCJSqlParser parser = new CCJSqlParser(System.in);
     Statement statement = parser.Statement();
 
     while (statement != null) {
-      if (statement instanceof CreateTable) {
-        // if create statement
-        QueryProcessor.processCreateQuery((CreateTable) statement);
-      } else if (statement instanceof Select) {
-        // if select statment
-        for(Tuple tuple : QueryProcessor.processSelectQuery((Select) statement)){
-          System.out.println(tuple);
-        }
-         
-      }
 
+      // process query to generate Tree
+      final QueryVisitor queryVisitor = new QueryVisitor();
+      statement.accept(queryVisitor);
+
+      // get the tree
+      final Node root = queryVisitor.getRoot();
+
+      // if a SELECT
+      if (null != root) {
+
+        final Iterator<Tuple> tupleItr = TreeProcessor.processTree(root)
+            .iterator();
+        while (tupleItr.hasNext()) {
+          TuplePrinter.printTuple(tupleItr.next());
+        } // while
+
+      } // if
+
+      // prompt
       System.out.println(ApplicationConstants.BASH);
+      System.out.flush();
+
       statement = parser.Statement();
 
-    }
+    } // while
+
   }
 
 }

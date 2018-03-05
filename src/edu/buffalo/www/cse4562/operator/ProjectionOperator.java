@@ -4,42 +4,107 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.SchemaManager;
+import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
-import edu.buffalo.www.cse4562.util.Validate;
-import net.sf.jsqlparser.statement.select.SelectItem;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
+import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.StringUtils;
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 
+/**
+ * <pre>
+ * This {@link Operator} does the projection of selected columns.
+ *
+ * A projection operator is instantiated for a query in such a way, that its
+ * recorded
+ * 1. All columns need to be displayed
+ * 2. All columns for some tables need to be displayed
+ * 3. The list of expressions that need to be displayed.
+ *
+ * The {@link ProjectionOperator} invokes a {@link OperatorExpressionVisitor}
+ * and pass a tuple and an expression to it for processing.
+ *
+ * TODO: Support for Alias
+ * 
+ * TODO: Support for processing of AllTableColumns
+ *
+ * </pre>
+ *
+ * @author varunjai
+ *
+ */
 public class ProjectionOperator implements Operator {
 
-  private final Collection<SelectItem> selectItems;
-
-  public ProjectionOperator(Collection<SelectItem> selectItems) {
-    Validate.notEmpty(selectItems);
-    this.selectItems = selectItems;
-  }
-
-  public Collection<SelectItem> getSelectItems() {
-    return selectItems;
-  }
+  /**
+   * flag to indicate that columns have been requested, hence no projection
+   */
+  private boolean allColFlag = false;
+  /**
+   * List of {@link AllTableColumns}
+   */
+  private List<AllTableColumns> allTableColumns;
+  /**
+   * List of {@link SelectExpressionItem}
+   */
+  private List<SelectExpressionItem> selectExpressionItems;
 
   @Override
-  public Collection<Tuple> process(Collection<Tuple> tuples) {
+  public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {
 
-    
-    List<Tuple> projectOutput = new ArrayList<>();
-    for (Tuple tuple : tuples) {
-      
-      if(tuple.isEmpty()){
-        continue;
-      }
-      
-      List<ColumnCell> columnCells = new ArrayList<>();
-      for (ColumnCell columnCell : tuple.getColumnCells()) {
-        for (SelectItem selectItem : selectItems) {
-          if (selectItem.toString().equals(columnCell.getColumnName())) {
-            columnCells.add(columnCell);
-          } // if
-        } // for
+    final List<Tuple> projectOutput = new ArrayList<>();
+    // empty check
+    if (CollectionUtils.areTuplesEmpty(tuples)) {
+      return projectOutput;
+    }
+
+    // if user requested all columns for all tables
+    if (this.allColFlag) {
+      return tuples;
+    }
+
+    final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
+    // iterate tuples in the collection
+    for (final Tuple tuple : tuples) {
+      // process expressions
+      final List<ColumnCell> columnCells = new ArrayList<>();
+      for (final SelectExpressionItem expressionItem : selectExpressionItems) {
+
+        // TODO later in the project if the renaming is required as output this
+        // can be used by setting as a column name
+        // for now we don't need to output the column name or the rename(alias)
+        // String alias = expressionItem.getAlias();
+
+        final ColumnCell columnCell = opVisitor.getValue(tuple,
+            expressionItem.getExpression());
+        if (null != columnCell) {
+
+          // if alias is present
+          if (!StringUtils.isBlank(expressionItem.getAlias())) {
+            /*
+             * If the expression has an alias then we add a new column to the
+             * table with the name of the alias. Any change in table schema
+             * should be registered with the Schema Manager
+             */
+            final Integer tableId = tuple.getColumnCells().iterator().next()
+                .getTableId();
+            // register with Schema Manager
+            addColumnAliasToSchema(expressionItem, tableId);
+
+            // Update the column id of Column Cell
+            columnCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+                expressionItem.getAlias()));
+            // Cell value returned from expressions like addition don't have
+            // table id or column id set, so set both for them as well.
+            columnCell.setTableId(tableId);
+          }
+
+          columnCells.add(columnCell);
+        }
       } // for
 
       projectOutput.add(new Tuple(columnCells));
@@ -48,4 +113,71 @@ public class ProjectionOperator implements Operator {
     return projectOutput;
   }
 
+  /**
+   * Get the alias in the {@link SelectExpressionItem} and add it as a new
+   * column in the {@link TableSchema}. Register the changes in table schema
+   * with the {@link SchemaManager}.
+   *
+   * @param expressionItem
+   * @param tableId
+   */
+  private void addColumnAliasToSchema(final SelectExpressionItem expressionItem,
+      Integer tableId) {
+    final TableSchema tableSchema = SchemaManager.getTableSchemaById(tableId);
+    final List<ColumnDefinition> columnDefinitions = tableSchema
+        .getColumnDefinitions();
+    final ColumnDefinition columnDefinition = new ColumnDefinition();
+    columnDefinition.setColumnName(expressionItem.getAlias());
+    columnDefinitions.add(columnDefinition);
+    tableSchema.setColumnDefinitions(columnDefinitions);
+
+    // update schema
+    SchemaManager.updateSchema(tableId, tableSchema);
+  }
+
+  public boolean isAllColFlag() {
+    return this.allColFlag;
+  }
+
+  public void setAllColFlag(boolean allColFlag) {
+    this.allColFlag = allColFlag;
+  }
+
+  public List<AllTableColumns> getAllTableColumns() {
+    return this.allTableColumns;
+  }
+
+  public void setAllTableColumns(List<AllTableColumns> allTableColumns) {
+    this.allTableColumns = allTableColumns;
+  }
+
+  public List<SelectExpressionItem> getSelectExpressionItems() {
+    return this.selectExpressionItems;
+  }
+
+  public void setSelectExpressionItems(
+      List<SelectExpressionItem> selectExpressionItems) {
+    this.selectExpressionItems = selectExpressionItems;
+  }
+
+  public void addSelectExpressionItems(
+      SelectExpressionItem selectExpressionItems) {
+    if (this.selectExpressionItems == null) {
+      this.selectExpressionItems = new ArrayList<>();
+    }
+
+    this.selectExpressionItems.add(selectExpressionItems);
+  }
+
+  /**
+   *
+   * @param allTableColumns
+   */
+  public void addAllTableColumns(AllTableColumns allTableColumns) {
+    if (this.allTableColumns == null) {
+      this.allTableColumns = new ArrayList<>();
+    }
+
+    this.allTableColumns.add(allTableColumns);
+  }
 }
