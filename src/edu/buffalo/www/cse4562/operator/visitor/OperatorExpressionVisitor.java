@@ -8,6 +8,8 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Evaluator;
+import edu.buffalo.www.cse4562.util.StringUtils;
+import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BooleanValue;
@@ -53,6 +55,7 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 /**
+ * <pre>
  * Each operator will pass a tuple to the visitor with an
  * {@link SelectExpressionItem} that it processes and returns the value for that
  * expression.
@@ -73,6 +76,32 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * need to make search based on both column name and table name. Example:
  * Queries like S.A == X.A Here column name is same but tables are different.
  * 
+ * Cases where no table name is available, e.g SELECT A, B FROM R;
+ * 
+ * 
+ * Approach 1: 
+ * Create a map with Key - {@link ColumnKey} --> Value : ColumnCell
+ * The Column key holds the table name and the column name passed. It overrides
+ * the hashcode and equals method and generates same hashcode for other keys
+ * with same table name and column name.
+ * 
+ * E.g SELECT A + B from R;
+ * Two column keys, one for A and one for B
+ * Here column will contain only column name and tablename will be null
+ * 
+ * SELECT R.A + R.B from R; 
+ * Two column keys, one for R.A and one for R.B
+ * Here table name will not be null both columnKey
+ * 
+ * SELECT * FROM R, S WHERE R.A = S.A
+ * Two column keys, one for R.A and one for S.A
+ * The keys will generate separate hash based and hence no overwrite will happen.
+ * 
+ * 
+ * </pre>
+ * 
+ * 
+ * 
  * @author varunjai
  *
  */
@@ -83,7 +112,7 @@ public class OperatorExpressionVisitor
 
   public Evaluator evaluator;
   public Tuple currentTuple;
-  private Map<String, ColumnCell> column2ColumnCell = new TreeMap<>();
+  private Map<ColumnKey, ColumnCell> column2ColumnCell = new TreeMap<>();
   private ColumnCell outputColumnCell;
 
   /**
@@ -186,8 +215,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-    this.column2ColumnCell.put(addition.getStringExpression(),
-        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(addition.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -231,8 +260,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-//    this.column2ColumnCell.put(andExpression.getStringExpression(),
-//        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(andExpression.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -260,8 +289,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-//    this.column2ColumnCell.put(orExpression.getStringExpression(),
-//        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(orExpression.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -294,8 +323,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-//    this.column2ColumnCell.put(equalsTo.getStringExpression(),
-//        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(equalsTo.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -321,8 +350,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-//    this.column2ColumnCell.put(greaterThan.getStringExpression(),
-//        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(greaterThan.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -349,8 +378,8 @@ public class OperatorExpressionVisitor
     }
 
     // TODO: how to set aliases???
-//    this.column2ColumnCell.put(greaterThanEquals.getStringExpression(),
-//        new ColumnCell(cellValue));
+    // this.column2ColumnCell.put(greaterThanEquals.getStringExpression(),
+    // new ColumnCell(cellValue));
     // creating new instance, as we will be destroying map and wasn't sure if
     // it will destroy the object as well
     this.outputColumnCell = new ColumnCell(cellValue);
@@ -454,11 +483,13 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(Column column) {
-    
-    // to flush out any previous entry, and set null if not record is found for a column.
-    //e.g columns B and C are required for a table which only has entries of columns A and B
+
+    // to flush out any previous entry, and set null if not record is found for
+    // a column.
+    // e.g columns B and C are required for a table which only has entries of
+    // columns A and B
     this.outputColumnCell = null;
-    
+
     // return null
     if (this.currentTuple.isEmpty()) {
       return;
@@ -466,13 +497,25 @@ public class OperatorExpressionVisitor
 
     for (final ColumnCell columnCell : this.currentTuple.getColumnCells()) {
 
-      Integer tableId = SchemaManager.getTableId(column.getColumnName());
+      String tableName = column.getTable() != null
+          ? column.getTable().getName()
+          : null;
+
+      Integer tableId = SchemaManager.getTableId(tableName);
+
+      // if no table id found, search in column cell table
       tableId = tableId == null ? columnCell.getTableId() : tableId;
 
       if (SchemaManager.getColumnIdByTableId(tableId,
           column.getColumnName()) == columnCell.getColumnId()) {
-        //changed from column.getWholeColumnName() to column.getColumnName() to fix problems of alias
-        this.column2ColumnCell.put(column.getColumnName(), columnCell);
+
+        // create a key based on data in column received, if table id is null
+        // then
+        // store as is. This is because later the column key will be matched
+        // with
+        // column key hash generated in Evaluator
+        ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
+        this.column2ColumnCell.put(columnKey, columnCell);
         this.outputColumnCell = columnCell;
       } // if
     } // for
@@ -550,5 +593,117 @@ public class OperatorExpressionVisitor
 
     expression.accept(this);
     return this.outputColumnCell;
+  }
+
+  /**
+   * 
+   * @author varunjai
+   *
+   */
+  public static class ColumnKey implements Comparable<ColumnKey> {
+    private final String columnName;
+    private final String tableName;
+
+    /**
+     * 
+     * @param columnName
+     * @param tableName
+     */
+    public ColumnKey(String columnName, String tableName) {
+      Validate.notBlank(columnName);
+      this.columnName = columnName;
+      this.tableName = tableName;
+    }
+
+    @Override
+    public int compareTo(ColumnKey other) {
+      // if we have no table name for any key
+      // we cannot get the column id
+      // make stupid string length comparison
+      if (StringUtils.isBlank(this.tableName)
+          && StringUtils.isBlank(other.tableName)) {
+        if (this.columnName.equals(other.columnName)) {
+          return 0;
+        }
+
+        if (this.columnName.length() > other.columnName.length()) {
+          return 1;
+        } else {
+          return -1;
+        }
+
+      } // if
+
+      // if we have table name for both
+      if (!StringUtils.isBlank(this.tableName)
+          && !StringUtils.isBlank(other.tableName)) {
+
+        if (this.tableName.equals(other.tableName)
+            && this.columnName.equals(other.columnName)) {
+          return 0;
+        }
+
+        if (this.tableName.equals(other.tableName)) {
+          if (SchemaManager.getColumnIdByTableId(
+              SchemaManager.getTableId(this.tableName),
+              this.columnName) > SchemaManager.getColumnIdByTableId(
+                  SchemaManager.getTableId(other.tableName),
+                  other.columnName)) {
+            return 1;
+          } else {
+            return -1;
+          }
+
+        } // if
+      } // if
+
+      // if we have table name for one
+      if (StringUtils.isBlank(this.tableName)) {
+        return -1;
+      } else {
+        return 1;
+      }
+
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + columnName.hashCode();
+      result = prime * result
+          + ((StringUtils.isBlank(tableName)) ? 0 : tableName.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      ColumnKey other = (ColumnKey) obj;
+      if (StringUtils.isBlank(columnName)) {
+        if (!StringUtils.isBlank(other.columnName))
+          return false;
+      } else if (!columnName.equals(other.columnName))
+        return false;
+      if (StringUtils.isBlank(tableName)) {
+        if (!StringUtils.isBlank(other.tableName))
+          return false;
+      } else if (!tableName.equals(other.tableName))
+        return false;
+      return true;
+    }
+
+    public String getColumnName() {
+      return columnName;
+    }
+
+    public String getTableName() {
+      return tableName;
+    }
   }
 }
