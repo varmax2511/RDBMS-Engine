@@ -19,7 +19,7 @@ import net.sf.jsqlparser.expression.Expression;
  * @author varunjai
  *
  */
-public class SelectionOperator implements Operator {
+public class SelectionOperator implements UnaryOperator {
 
   private final Expression expression;
 
@@ -38,18 +38,25 @@ public class SelectionOperator implements Operator {
   }
 
   @Override
-  public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples) throws Throwable {
 
     final List<Tuple> selectOutputs = new ArrayList<>();
 
+    if (tuples == null || tuples.size() == 0) {
+      return selectOutputs;
+    }
+
+    // unary operator, interested in only the first collection
+    Collection<Tuple> tupleRecords = tuples.iterator().next();
+    
     // empty check
-    if (CollectionUtils.areTuplesEmpty(tuples)) {
+    if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return selectOutputs;
     }
 
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
-    for (final Tuple tuple : tuples) {
+    for (final Tuple tuple : tupleRecords) {
       // process expressions
       final ColumnCell columnCell = opVisitor.getValue(tuple, this.expression);
 

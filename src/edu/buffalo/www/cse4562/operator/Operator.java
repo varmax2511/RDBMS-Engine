@@ -10,11 +10,15 @@ import edu.buffalo.www.cse4562.model.Tuple;
  *
  */
 public interface Operator {
- /**
-  * 
-  * @param tuples
-  * @return
-  * @throws Throwable
-  */
- public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable; 
+  /**
+   * Each operator accepts a Collection of collection of tuples. This is to
+   * cater operators which can be binary or more, like Croos-Product which
+   * accept two collection of tuples, one from each table.
+   * 
+   * @param tuples
+   * @return
+   * @throws Throwable
+   */
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
+      throws Throwable;
 }

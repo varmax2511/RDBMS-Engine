@@ -38,7 +38,7 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
  * @author varunjai
  *
  */
-public class ProjectionOperator implements Operator {
+public class ProjectionOperator implements UnaryOperator {
 
   /**
    * flag to indicate that columns have been requested, hence no projection
@@ -54,22 +54,30 @@ public class ProjectionOperator implements Operator {
   private List<SelectExpressionItem> selectExpressionItems;
 
   @Override
-  public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
+      throws Throwable {
 
     final List<Tuple> projectOutput = new ArrayList<>();
+    if (tuples == null || tuples.size() == 0) {
+      return projectOutput;
+    }
+
+    // unary operator, interested in only the first collection
+    Collection<Tuple> tupleRecords = tuples.iterator().next();
+    
     // empty check
-    if (CollectionUtils.areTuplesEmpty(tuples)) {
+    if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return projectOutput;
     }
 
     // if user requested all columns for all tables
     if (this.allColFlag) {
-      return tuples;
+      return tupleRecords;
     }
 
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
-    for (final Tuple tuple : tuples) {
+    for (final Tuple tuple : tupleRecords) {
       // process expressions
       final List<ColumnCell> columnCells = new ArrayList<>();
       for (final SelectExpressionItem expressionItem : selectExpressionItems) {
