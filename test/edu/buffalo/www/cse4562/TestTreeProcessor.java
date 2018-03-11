@@ -230,4 +230,25 @@ public class TestTreeProcessor {
 
   }
 
+  @Test
+  public void testSimpleDateEvalution() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D int, E int, F DATE);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("S") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT * FROM S WHERE D > 4;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(1, TreeProcessor.processTree(root).size());
+
+  }
+  
 }

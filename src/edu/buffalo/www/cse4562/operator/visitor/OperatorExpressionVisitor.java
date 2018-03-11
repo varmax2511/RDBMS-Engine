@@ -97,7 +97,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * Two column keys, one for R.A and one for S.A
  * The keys will generate separate hash based and hence no overwrite will happen.
  *
- *
+ * TODO: identify mapping a String to date like '1994-01-01'
  * </pre>
  *
  *
@@ -160,7 +160,7 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(DateValue arg0) {
-    // TODO Auto-generated method stub
+    System.out.println("date value");
 
   }
 
@@ -183,9 +183,8 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(StringValue arg0) {
-    // TODO Auto-generated method stub
-
+  public void visit(StringValue input) {
+   
   }
 
   @Override
