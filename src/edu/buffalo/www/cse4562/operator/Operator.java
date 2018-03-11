@@ -15,10 +15,10 @@ public interface Operator {
    * cater operators which can be binary or more, like Croos-Product which
    * accept two collection of tuples, one from each table.
    * 
-   * @param tuples
+   * @param tupleCollection
    * @return
    * @throws Throwable
    */
-  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tupleCollection)
       throws Throwable;
 }

@@ -545,7 +545,8 @@ public class OperatorExpressionVisitor
           tableName);
       this.column2ColumnCell.put(columnKey, columnCell);
       this.outputColumnCell = columnCell;
-
+      // since we got the column we are looking for, break
+      break;
     } // for
   }
 
