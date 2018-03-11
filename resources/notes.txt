@@ -389,6 +389,7 @@ Objective:
             - Block Nested Join (scope for utility)
 3. Implement Order By
             - Sorting
+            - With keywords ASC or DESC
 4. Implement LIMIT 
            - 
 5. Implement query optimization
@@ -483,7 +484,17 @@ TODO: QueryVisitor - add new child in the leaf child of current node
 Optimizer
 - Traverse each node
 - identify node type
--          
+
+
+
+For blocking operator like Sort/Order By 
+ - Define a new type of operator -> Blocking Operator
+ - Each node will check if its child is a blocking operator then it will
+   calls its child's getNext until it hasNext.
+ 
+ 
+ For Operators like Limit
+ These will be Terminating Operators which will signal the Node when to stop.         
                   
 
 
