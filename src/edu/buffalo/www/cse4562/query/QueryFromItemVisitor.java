@@ -16,8 +16,10 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
   @Override
   public void visit(Table table) {
     // if table
-    root = new Node(new ScannerOperator(table.getName(),
-        ApplicationConstants.DATA_DIR_PATH), ScannerOperator.class);
+    root = new Node(
+        new ScannerOperator(new ScannerOperator.Config(table.getName(),
+            table.getAlias(), ApplicationConstants.DATA_DIR_PATH)),
+        ScannerOperator.class);
 
   }
 
@@ -42,8 +44,8 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
   }
 
   @Override
-  public void visit(SubJoin arg0) {
-    // TODO Auto-generated method stub
+  public void visit(SubJoin subJoin) {
+    System.out.println("hello");
 
   }
 

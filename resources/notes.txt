@@ -379,6 +379,131 @@ The earlier case should cover this.
 
 
 
+===================
+CHECKPOINT - 2
+==================
+Objective:
+1. Implement Cross-Product 
+            - Block Nested Join 
+2. Implement Join
+            - Block Nested Join (scope for utility)
+3. Implement Order By
+            - Sorting
+            - With keywords ASC or DESC
+4. Implement LIMIT 
+           - 
+5. Implement query optimization
+           - Push Down Select
+           - Push Down Project
+           - Identify Join
+           - Change tree structure
+           - Deep copy for NODE!!!
+6. Implement Foreign Key  TBD
+
+Cross- product 
+---------------
+Block-nested
+Ideally a cross product will fetch each row from one table and union it with 
+every row of the other table
+
+Eg: SELECT R.A, S.B from R,S
+
+If we pick say 20 tuples from table R and 20 tuples from table S,
+then we get 400 combinations of these tuples
+
+1. In our model we can change the number of rows that our Scanner picks up
+2. Or we call the scanner getNext 20 times
+
+Option 1: We configure the scanner object to pick a number of tuples. Presently,
+this is done via an application constant. Maybe we can pass configuration in
+Scanner during query processing and can provide a different number when instantiating
+Scanner for a query with cross join. This needs to be standardized and may
+run into issues in future.
+ 
+Option 2: The second option requires that the Cross Join Operator can control 
+the Scanner operator, but in our model the cross join operator just receives 
+records via Node, which means that the node should know how many records to pull.
+This means that we have change our model altogether and come up with a different
+approach 
+
+
+The Cross-Product operator will receive the records for two tables, it will run
+a double for loop for these two collections and return the result
+Once the operator above has processed those records, it will ask for more data
+from the Cross Join and it will hit the scanners again.
+
+
+Join
+------
+Although Join is a selection over Cross-product, we should define join as a 
+separate operator with access to the join condition, this is because
+Cross-Product is an expensive operation and we can reduce the number of tuples
+in memory 
+
+Select R.A, S.B from R,S where R.A = S.D
+
+so the join expression is in where clause and tables are From.
+
+
+ 
+OR expression
+--------------
+In QueryExpressionVisitor, when it encounters a Binary expression:
+
+1. AND
+   Break the expression into left and right and recursively process them. In the
+   end add left followed by right.
+   
+   SELECT A, B FROM R WHERE A > 10 AND B < 30
+   
+        project(A, B)
+           |
+        SELECT(A > 10)
+           |
+        SELECT(B < 30)
+           |
+         SCAN(R)
+         
+2. 1. AND
+   Break the expression into left and right and recursively process them. In the
+   end add a Project(*) then add children, left followed by right.
+   
+   SELECT A, B FROM R WHERE A > 10 OR B < 30
+   
+        project(A, B)
+           |
+        PROJECT(*)
+        /           \  
+  SELECT(A > 10)    SELECT(B < 30)
+        |               |
+      SCAN(R)         SCAN(R)
+      
+ 
+TODO: QueryVisitor - add new child in the leaf child of current node      
+         
+Optimizer
+- Traverse each node
+- identify node type
+
+
+
+For blocking operator like Sort/Order By 
+ - Define a new type of operator -> Blocking Operator
+ - Each node will check if its child is a blocking operator then it will
+   calls its child's getNext until it hasNext.
+ 
+ 
+ For Operators like Limit
+ These will be Terminating Operators which will signal the Node when to stop.         
+                  
+
+
+
+
+ 
+
+
+
 
 
 
