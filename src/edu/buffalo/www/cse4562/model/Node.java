@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.Operator;
-import edu.buffalo.www.cse4562.operator.TupleIterator;
-import edu.buffalo.www.cse4562.util.Validate;
 
 /**
  * <pre>
@@ -43,35 +41,18 @@ import edu.buffalo.www.cse4562.util.Validate;
  *     makes code simpler. So, its better to implement children as an array
  *
  *
+ * A node is extended by an implementing Operator
+ * 
+ *
  *
  * </pre>
  */
-public class Node {
+public abstract class Node {
 
-  private Class<? extends Operator> operatorType;
-  private Operator operator;
   /*
    * private Node left; private Node right;
    */private boolean isLeaf = true;
   private List<Node> children = new ArrayList<>();
-
-  /**
-   *
-   * @param operator
-   *          !null
-   * @param operatorType
-   *          !null
-   * @throws IllegalArgumentException
-   */
-  public Node(Operator operator, Class<? extends Operator> operatorType) {
-    // null check
-    Validate.notNull(operator);
-    Validate.notNull(operatorType);
-
-    this.operator = operator;
-    this.operatorType = operatorType;
-
-  }
 
   public void addChild(Node child) {
     this.isLeaf = false;
@@ -86,17 +67,24 @@ public class Node {
     this.children = children;
   }
 
-  public Class<? extends Operator> getOperatorType() {
-    return operatorType;
+  /**
+   * Each operator accepts a Collection of collection of tuples. This is to
+   * cater operators which can be binary or more, like Croos-Product which
+   * accept two collection of tuples, one from each table.
+   * 
+   * @param tupleCollection
+   * @return
+   * @throws Throwable
+   */
+  public abstract Collection<Tuple> process(
+      Collection<Collection<Tuple>> tupleCollection) throws Throwable;
+
+  public void open() throws Throwable {
+
   }
-  public void setOperatorType(Class<? extends Operator> operatorType) {
-    this.operatorType = operatorType;
-  }
-  public Operator getOperator() {
-    return operator;
-  }
-  public void setOperator(Operator operator) {
-    this.operator = operator;
+
+  public void close() throws Throwable {
+
   }
 
   /**
@@ -107,16 +95,7 @@ public class Node {
    * @throws IOException
    */
   public boolean hasNext() throws IOException {
-    if (!isLeaf) {
-      return this.children.get(0).hasNext();
-    }
-
-    if (operator instanceof TupleIterator) {
-      final TupleIterator tupleItr = (TupleIterator) operator;
-      return tupleItr.hasNext();
-    }
-
-    return false;
+    return this.children.get(0).hasNext();
   }
 
   /**
@@ -128,7 +107,7 @@ public class Node {
   public Collection<Tuple> getNext() throws Throwable {
     // if leaf node
     if (this.isLeaf) {
-      return this.operator.process(null);
+      return process(null);
     }
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
@@ -141,6 +120,6 @@ public class Node {
       tuples.add(iterator.next().getNext());
     }
 
-    return this.operator.process(tuples);
+    return process(tuples);
   }
 }

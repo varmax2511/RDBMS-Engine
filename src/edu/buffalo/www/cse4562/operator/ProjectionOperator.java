@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
@@ -38,7 +39,7 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
  * @author varunjai
  *
  */
-public class ProjectionOperator implements UnaryOperator {
+public class ProjectionOperator extends Node implements UnaryOperator {
 
   /**
    * flag to indicate that columns have been requested, hence no projection

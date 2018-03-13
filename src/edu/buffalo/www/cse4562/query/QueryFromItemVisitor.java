@@ -16,10 +16,8 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
   @Override
   public void visit(Table table) {
     // if table
-    root = new Node(
-        new ScannerOperator(new ScannerOperator.Config(table.getName(),
-            table.getAlias(), ApplicationConstants.DATA_DIR_PATH)),
-        ScannerOperator.class);
+    root = new ScannerOperator(new ScannerOperator.Config(table.getName(),
+            table.getAlias(), ApplicationConstants.DATA_DIR_PATH));
 
   }
 
@@ -38,8 +36,7 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
     }
 
     // if an alias is present pass, it SubSelect operator
-    root = new Node(new SubSelectOperator(subSelect.getAlias()),
-        SubSelectOperator.class);
+    root = new SubSelectOperator(subSelect.getAlias());
     root.addChild(selectQueryVisitor.getRoot());
   }
 
