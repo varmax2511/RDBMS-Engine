@@ -1,13 +1,17 @@
 package edu.buffalo.www.cse4562.util;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.TreeMap;
 
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor.ColumnKey;
 import net.sf.jsqlparser.eval.Eval;
+import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.PrimitiveValue;
+import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.schema.Column;
 /**
  * Evaluator class to evaluate expression operation.
@@ -17,12 +21,14 @@ import net.sf.jsqlparser.schema.Column;
  */
 public class Evaluator extends Eval {
 
+  private static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
   /**
    * This is a mapping of the column name to the {@link ColumnCell} value used
    * by {@link #eval(Column)} to lookup the corresponding {@link PrimitiveValue}
    * for the column.
    */
   private Map<ColumnKey, ColumnCell> column2ColumnCell = new TreeMap<>();
+  final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_YYYY_MM_DD);
 
   @Override
   public PrimitiveValue eval(Column column) throws SQLException {
@@ -32,12 +38,29 @@ public class Evaluator extends Eval {
     String tableName = column.getTable() != null
         ? column.getTable().getName()
         : null;
-        
-    ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);   
+
+    ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
     final ColumnCell cell = this.column2ColumnCell.get(columnKey);
     return cell.getCellValue();
   }
 
+  /**
+   * Observed that date value passed in format 'yyyy-MM-dd' is read as String by
+   * expression visitor, so this a hack where I check each String value passed
+   * in the evaluation expression for being a date.
+   */
+  @Override
+  public PrimitiveValue eval(StringValue v) {
+
+    try {
+      dateFormat.parse(v.getValue());
+      return new DateValue(v.getValue());
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+
+    return super.eval(v);
+  }
   /**
    * {@link #column2ColumnCell}
    * 

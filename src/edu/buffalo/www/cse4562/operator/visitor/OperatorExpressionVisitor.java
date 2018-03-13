@@ -59,49 +59,49 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  * Each operator will pass a tuple to the visitor with an
  * {@link SelectExpressionItem} that it processes and returns the value for that
  * expression.
- * 
+ *
  * Here it will also have an instance of a Map of column name to
  * {@link ColumnCell}.
- * 
+ *
  * An operator will invoke the visitor with expression and tuple, visitor will
  * process it be it single column expression or a binary expression, for binary
  * expression process it via the {@link Evaluator} and return result as a
  * {@link ColumnCell}.
- * 
+ *
  * add them to map for expressions which need to be projected, not for
  * expressions in where clause, since A + B can be part of projection as well,
  * we are including it.
- * 
+ *
  * TODO: Presently evaluator searches column values only by column name but we
  * need to make search based on both column name and table name. Example:
  * Queries like S.A == X.A Here column name is same but tables are different.
- * 
+ *
  * Cases where no table name is available, e.g SELECT A, B FROM R;
- * 
- * 
- * Approach 1: 
+ *
+ *
+ * Approach 1:
  * Create a map with Key - {@link ColumnKey} --> Value : ColumnCell
  * The Column key holds the table name and the column name passed. It overrides
  * the hashcode and equals method and generates same hashcode for other keys
  * with same table name and column name.
- * 
+ *
  * E.g SELECT A + B from R;
  * Two column keys, one for A and one for B
  * Here column will contain only column name and tablename will be null
- * 
- * SELECT R.A + R.B from R; 
+ *
+ * SELECT R.A + R.B from R;
  * Two column keys, one for R.A and one for R.B
  * Here table name will not be null both columnKey
- * 
+ *
  * SELECT * FROM R, S WHERE R.A = S.A
  * Two column keys, one for R.A and one for S.A
  * The keys will generate separate hash based and hence no overwrite will happen.
- * 
- * 
+ *
+ * TODO: identify mapping a String to date like '1994-01-01'
  * </pre>
- * 
- * 
- * 
+ *
+ *
+ *
  * @author varunjai
  *
  */
@@ -116,7 +116,7 @@ public class OperatorExpressionVisitor
   private ColumnCell outputColumnCell;
 
   /**
-   * 
+   *
    */
   public OperatorExpressionVisitor() {
     this.evaluator = new Evaluator();
@@ -160,7 +160,7 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(DateValue arg0) {
-    // TODO Auto-generated method stub
+    System.out.println("date value");
 
   }
 
@@ -183,9 +183,8 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(StringValue arg0) {
-    // TODO Auto-generated method stub
-
+  public void visit(StringValue input) {
+   
   }
 
   @Override
@@ -497,27 +496,56 @@ public class OperatorExpressionVisitor
 
     for (final ColumnCell columnCell : this.currentTuple.getColumnCells()) {
 
-      String tableName = column.getTable() != null
+      final String tableName = column.getTable() != null
           ? column.getTable().getName()
           : null;
 
       Integer tableId = SchemaManager.getTableId(tableName);
 
-      // if no table id found, search in column cell table
-      tableId = tableId == null ? columnCell.getTableId() : tableId;
+      /*
+       * Check all negative cases.
+       */
+      if (tableId == null) {
 
-      if (SchemaManager.getColumnIdByTableId(tableId,
-          column.getColumnName()) == columnCell.getColumnId()) {
+        /*
+         * If table id is null, then check only column id. To get column id, we
+         * will use the column cell table id itself. E.g. SELECT A, B FROM R;
+         * Here no table id will be present
+         */
+        tableId = tableId == null ? columnCell.getTableId() : tableId;
 
-        // create a key based on data in column received, if table id is null
-        // then
-        // store as is. This is because later the column key will be matched
-        // with
-        // column key hash generated in Evaluator
-        ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
-        this.column2ColumnCell.put(columnKey, columnCell);
-        this.outputColumnCell = columnCell;
+        if (SchemaManager.getColumnIdByTableId(tableId,
+            column.getColumnName()) != columnCell.getColumnId()) {
+          continue;
+        } // if
+
+      } else {
+
+        // If table id is not null, check with column
+        // cell table id and column id.
+        if (tableId != columnCell.getTableId()) {
+          continue;
+        }
+
+        if (SchemaManager.getColumnIdByTableId(tableId,
+            column.getColumnName()) != columnCell.getColumnId()) {
+          continue;
+        }
+
       } // if
+
+      // create a key based on data in column received, if table id is null
+      // then
+      // store as is. This is because later the column key will be matched
+      // with
+      // column key hash generated in Evaluator
+
+      final ColumnKey columnKey = new ColumnKey(column.getColumnName(),
+          tableName);
+      this.column2ColumnCell.put(columnKey, columnCell);
+      this.outputColumnCell = columnCell;
+      // since we got the column we are looking for, break
+      break;
     } // for
   }
 
@@ -596,7 +624,7 @@ public class OperatorExpressionVisitor
   }
 
   /**
-   * 
+   *
    * @author varunjai
    *
    */
@@ -605,7 +633,7 @@ public class OperatorExpressionVisitor
     private final String tableName;
 
     /**
-     * 
+     *
      * @param columnName
      * @param tableName
      */
@@ -678,23 +706,30 @@ public class OperatorExpressionVisitor
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
+      if (this == obj) {
         return true;
-      if (obj == null)
+      }
+      if (obj == null) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+      if (getClass() != obj.getClass()) {
         return false;
-      ColumnKey other = (ColumnKey) obj;
+      }
+      final ColumnKey other = (ColumnKey) obj;
       if (StringUtils.isBlank(columnName)) {
-        if (!StringUtils.isBlank(other.columnName))
+        if (!StringUtils.isBlank(other.columnName)) {
           return false;
-      } else if (!columnName.equals(other.columnName))
+        }
+      } else if (!columnName.equals(other.columnName)) {
         return false;
+      }
       if (StringUtils.isBlank(tableName)) {
-        if (!StringUtils.isBlank(other.tableName))
+        if (!StringUtils.isBlank(other.tableName)) {
           return false;
-      } else if (!tableName.equals(other.tableName))
+        }
+      } else if (!tableName.equals(other.tableName)) {
         return false;
+      }
       return true;
     }
 
