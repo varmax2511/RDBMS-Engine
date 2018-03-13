@@ -390,6 +390,7 @@ Objective:
 3. Implement Order By
             - Sorting
             - With keywords ASC or DESC
+            - can be ordered by multiple attributes
 4. Implement LIMIT 
            - 
 5. Implement query optimization

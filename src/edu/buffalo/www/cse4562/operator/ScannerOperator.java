@@ -15,6 +15,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
@@ -30,7 +31,7 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * responsible for fetching data from file on disk.
  *
  */
-public class ScannerOperator implements UnaryOperator, TupleIterator {
+public class ScannerOperator extends Node implements UnaryOperator {
 
   private Iterator<CSVRecord> recordIterator;
   private Reader reader;

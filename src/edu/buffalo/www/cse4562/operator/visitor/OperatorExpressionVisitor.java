@@ -512,7 +512,7 @@ public class OperatorExpressionVisitor
          * will use the column cell table id itself. E.g. SELECT A, B FROM R;
          * Here no table id will be present
          */
-        tableId = tableId == null ? columnCell.getTableId() : tableId;
+        tableId = columnCell.getTableId();
 
         if (SchemaManager.getColumnIdByTableId(tableId,
             column.getColumnName()) != columnCell.getColumnId()) {
