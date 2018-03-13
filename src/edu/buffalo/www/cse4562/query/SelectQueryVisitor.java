@@ -78,8 +78,7 @@ public class SelectQueryVisitor
    */
   private void processCross(final FromItem fromItem, final List<Join> joins) {
     final CrossProductOperator crossProductOperator = new CrossProductOperator();
-    final Node crossNode = new Node(crossProductOperator,
-        CrossProductOperator.class);
+    final Node crossNode = crossProductOperator;
     currentNode.addChild(crossNode);
     currentNode = crossNode;
 
@@ -134,7 +133,7 @@ public class SelectQueryVisitor
       selectItemItr.next().accept(this);
     }
 
-    root = new Node(projectionOpr, ProjectionOperator.class);
+    root = projectionOpr;
     currentNode = root;
   }
 

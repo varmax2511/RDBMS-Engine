@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
@@ -19,7 +20,7 @@ import net.sf.jsqlparser.expression.Expression;
  * @author varunjai
  *
  */
-public class SelectionOperator implements UnaryOperator {
+public class SelectionOperator extends Node implements UnaryOperator {
 
   private final Expression expression;
 

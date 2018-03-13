@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
@@ -18,7 +19,7 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * @author varunjai
  *
  */
-public class SubSelectOperator implements UnaryOperator {
+public class SubSelectOperator extends Node implements UnaryOperator {
 
   private final String alias;
 
