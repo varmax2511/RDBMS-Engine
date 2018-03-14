@@ -1,5 +1,6 @@
 package edu.buffalo.www.cse4562.operator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -8,29 +9,26 @@ import java.util.List;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.util.CollectionUtils;
 
 /**
- * To take cross product,
- * Tables R and S
- * We need tuple blocks, say 20 tuples from each child and get a result of 400 rows.
- * Now next call to getNext(), should check if S has reached the end of the iteration
- * or not. 
+ * To take cross product, Tables R and S We need tuple blocks, say 20 tuples
+ * from each child and get a result of 400 rows. Now next call to getNext(),
+ * should check if S has reached the end of the iteration or not.
  * 
- * If S ! end
- *  - Use the same 20 tuples of R pulled in previous call and pull the next 20 tuples
- *    of S.
+ * If S ! end - Use the same 20 tuples of R pulled in previous call and pull the
+ * next 20 tuples of S.
  * 
- * If S = end
- *  - Read the next 20 tuples from R if |R| > 40 
- *  - Re-open the S scanner to again read the S tables    
- *    
+ * If S = end - Read the next 20 tuples from R if |R| > 40 - Re-open the S
+ * scanner to again read the S tables
+ * 
  * @author varunjai
  *
  */
 public class CrossProductOperator extends Node implements BinaryOperator {
 
-  
-  
+  private Collection<Tuple> holdingList = null;
+
   @Override
   public Collection<Tuple> process(
       Collection<Collection<Tuple>> tupleCollection) throws Throwable {
@@ -81,16 +79,32 @@ public class CrossProductOperator extends Node implements BinaryOperator {
           "Invalid cross product child configuration!");
     }
 
-    final Collection<Collection<Tuple>> tuples = new ArrayList<>();
-    final Iterator<Node> iterator = this.getChildren().iterator();
+    Node firstChild = this.getChildren().get(0);
+    Node secondChild = this.getChildren().get(1);
 
-    // process each child node for this node
-    // add all collection of tuples returned by each node in a collection
-    // of collection
-    while (iterator.hasNext()) {
-      tuples.add(iterator.next().getNext());
+    // update relation 1 tuples
+    if (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
+      holdingList = firstChild.getNext();
+    }
+    // if first child has rows and the second child has reached end,
+    // then re-open the second child iterator and update the holding list
+    // with the next values from first child.
+    if (firstChild.hasNext() && !secondChild.hasNext()) {
+      holdingList = firstChild.getNext();
+      secondChild.open();
     }
 
+    final Collection<Collection<Tuple>> tuples = new ArrayList<>();
+    tuples.add(holdingList);
+    // add second child tuples
+    tuples.add(secondChild.getNext());
+
     return process(tuples);
+  }
+
+
+  @Override
+  public void close() throws Throwable {
+    this.holdingList = null;
   }
 }
