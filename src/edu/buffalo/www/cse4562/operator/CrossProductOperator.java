@@ -10,6 +10,7 @@ import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import javafx.util.Pair;
 
 /**
  * To take cross product, Tables R and S We need tuple blocks, say 20 tuples
@@ -106,5 +107,11 @@ public class CrossProductOperator extends Node implements BinaryOperator {
   @Override
   public void close() throws Throwable {
     this.holdingList = null;
+  }
+
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

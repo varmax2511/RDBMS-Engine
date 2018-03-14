@@ -11,6 +11,7 @@ import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import javafx.util.Pair;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 /**
  * This operator is responsible for adding Alias information whenever its passed
@@ -78,5 +79,11 @@ public class SubSelectOperator extends Node implements UnaryOperator {
   public String getAlias() {
     return alias;
   }
-
+  
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    if (!getChildren().isEmpty())
+      builtSchema = getChildren().get(0).getBuiltSchema();
+    return builtSchema;
+  }
 }

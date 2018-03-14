@@ -13,6 +13,7 @@ import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.StringUtils;
+import javafx.util.Pair;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
@@ -188,5 +189,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     }
 
     this.allTableColumns.add(allTableColumns);
+  }
+
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

@@ -24,6 +24,7 @@ import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
 import edu.buffalo.www.cse4562.util.StringUtils;
 import edu.buffalo.www.cse4562.util.Validate;
+import javafx.util.Pair;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
@@ -126,6 +127,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
             colDefinition.getColumnName()));
         columnCells.add(colCell);
+        builtSchema.add(new Pair<Integer, Integer>(colCell.getTableId(),
+            colCell.getColumnId()));
       } // for
     } // for
 
@@ -223,6 +226,10 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return alias;
     }
 
+  }
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    return builtSchema;
   }
 
 }
