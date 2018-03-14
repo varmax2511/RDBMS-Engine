@@ -11,6 +11,7 @@ import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.Validate;
+import javafx.util.Pair;
 import net.sf.jsqlparser.expression.Expression;
 /**
  * This {@link Operator} performs the selection from a relational point of view.
@@ -39,7 +40,8 @@ public class SelectionOperator extends Node implements UnaryOperator {
   }
 
   @Override
-  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples) throws Throwable {
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
+      throws Throwable {
 
     final List<Tuple> selectOutputs = new ArrayList<>();
 
@@ -49,7 +51,7 @@ public class SelectionOperator extends Node implements UnaryOperator {
 
     // unary operator, interested in only the first collection
     Collection<Tuple> tupleRecords = tuples.iterator().next();
-    
+
     // empty check
     if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return selectOutputs;
@@ -70,6 +72,13 @@ public class SelectionOperator extends Node implements UnaryOperator {
     } // for
 
     return selectOutputs;
+  }
+
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    if (!getChildren().isEmpty())
+      builtSchema = getChildren().get(0).getBuiltSchema();
+    return builtSchema;
   }
 
 }

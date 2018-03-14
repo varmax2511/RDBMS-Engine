@@ -8,6 +8,7 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.Operator;
+import javafx.util.Pair;
 
 /**
  * <pre>
@@ -54,9 +55,17 @@ public abstract class Node {
    * private Node left; private Node right;
    */private boolean isLeaf = true;
   private List<Node> children = new ArrayList<>();
+  
+  //Backward pointer enabled to each node switches within the tree
+  private Node parent;
+  
+  protected List<Pair<Integer, Integer>> builtSchema = new ArrayList<>();
+
+  public abstract List<Pair<Integer, Integer>> getBuiltSchema();
 
   public void addChild(Node child) {
     this.isLeaf = false;
+    child.setParent(this);
     children.add(child);
   }
 
@@ -67,7 +76,14 @@ public abstract class Node {
   public void setChildren(List<Node> children) {
     this.children = children;
   }
+  
+  public Node getParent() {
+    return parent;
+  }
 
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
   /**
    * Each operator accepts a Collection of collection of tuples. This is to
    * cater operators which can be binary or more, like Croos-Product which
