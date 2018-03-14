@@ -229,6 +229,35 @@ public class TestTreeProcessor {
     assertEquals(10, TreeProcessor.processTree(root).size());
 
   }
+  
+  @Test
+  public void testSimpleJoin1() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D int, E int, F DATE);"));
+    parser.Statement().accept(queryVisitor);
+    
+    assertTrue(SchemaManager.getTableSchema("S") != null);
+    
+    // QUERY 1
+    parser = new CCJSqlParser(
+        new StringReader("SELECT * FROM R r,S s;"));
+    parser.Statement().accept(queryVisitor);
+    
+    // get the tree
+    Node root = queryVisitor.getRoot();
+
+    assertEquals(100, TreeProcessor.processTree(root).size());
+
+  }
 
   @Test
   public void testSimpleDateEvalution() throws Throwable {

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.Operator;
 
 /**
@@ -42,7 +43,7 @@ import edu.buffalo.www.cse4562.operator.Operator;
  *
  *
  * A node is extended by an implementing Operator
- * 
+ *
  *
  *
  * </pre>
@@ -71,7 +72,7 @@ public abstract class Node {
    * Each operator accepts a Collection of collection of tuples. This is to
    * cater operators which can be binary or more, like Croos-Product which
    * accept two collection of tuples, one from each table.
-   * 
+   *
    * @param tupleCollection
    * @return
    * @throws Throwable
@@ -79,11 +80,34 @@ public abstract class Node {
   public abstract Collection<Tuple> process(
       Collection<Collection<Tuple>> tupleCollection) throws Throwable;
 
+  /**
+   * Open the file channels or any other pipeline for the Node. This can also be
+   * used to re-open a closed operator. This method calls the {@link #open()}
+   * method of all its {@link #getChildren()}.
+   *
+   * @throws Throwable
+   */
   public void open() throws Throwable {
+    final Iterator<Node> iterator = this.children.iterator();
+    // open all children
+    while (iterator.hasNext()) {
+      iterator.next().open();
+    }
 
   }
 
+  /**
+   * Close the pipeline or file channels for this operator.
+   *
+   * @throws Throwable
+   */
   public void close() throws Throwable {
+    final Iterator<Node> iterator = this.children.iterator();
+
+    // close children
+    while (iterator.hasNext()) {
+      iterator.next().close();
+    }
 
   }
 
@@ -95,6 +119,17 @@ public abstract class Node {
    * @throws IOException
    */
   public boolean hasNext() throws IOException {
+
+    if (this instanceof BinaryOperator) {
+      final Iterator<Node> childItr = this.getChildren().iterator();
+      boolean result = childItr.next().hasNext();
+
+      while (childItr.hasNext()) {
+        final boolean val = childItr.next().hasNext();
+        result = result || val;
+      }
+      return result;
+    }
     return this.children.get(0).hasNext();
   }
 

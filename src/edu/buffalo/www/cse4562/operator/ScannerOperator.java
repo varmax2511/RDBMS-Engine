@@ -165,7 +165,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
   public boolean hasNext() throws IOException {
     // if method invoked first time without connection being opened
     if (null == reader) {
-      open();
+      return false;
     }
     return this.recordIterator.hasNext();
   }

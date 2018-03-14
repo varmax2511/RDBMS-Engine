@@ -26,6 +26,7 @@ public class TreeProcessor {
     Collection<Tuple> tuples = new ArrayList<>();
     final Collection<Tuple> output = new ArrayList<>();
 
+    root.open();
     // move iteratively
     while (root.hasNext()) {
       tuples = root.getNext();
@@ -36,6 +37,7 @@ public class TreeProcessor {
       output.addAll(tuples);
     } // while
 
+    root.close();
     return output;
   }
 
