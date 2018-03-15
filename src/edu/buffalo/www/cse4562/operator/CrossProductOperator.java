@@ -1,16 +1,15 @@
 package edu.buffalo.www.cse4562.operator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
-import javafx.util.Pair;
 
 /**
  * To take cross product, Tables R and S We need tuple blocks, say 20 tuples
@@ -103,7 +102,6 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     return process(tuples);
   }
 
-
   @Override
   public void close() throws Throwable {
     this.holdingList = null;
@@ -111,7 +109,14 @@ public class CrossProductOperator extends Node implements BinaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    // TODO Auto-generated method stub
-    return null;
+
+    if (CollectionUtils.isEmpty(builtSchema)) {
+      final Iterator<Node> childItr = getChildren().iterator();
+      // iterate over all children and add their schema
+      while (childItr.hasNext()) {
+        builtSchema.addAll(childItr.next().getBuiltSchema());
+      } // while
+    } // if
+    return builtSchema;
   }
 }

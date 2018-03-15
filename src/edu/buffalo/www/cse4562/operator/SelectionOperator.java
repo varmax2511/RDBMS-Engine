@@ -5,13 +5,13 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.Validate;
-import javafx.util.Pair;
 import net.sf.jsqlparser.expression.Expression;
 /**
  * This {@link Operator} performs the selection from a relational point of view.
@@ -24,6 +24,7 @@ import net.sf.jsqlparser.expression.Expression;
 public class SelectionOperator extends Node implements UnaryOperator {
 
   private final Expression expression;
+  
 
   /**
    * 
@@ -76,8 +77,10 @@ public class SelectionOperator extends Node implements UnaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    if (!getChildren().isEmpty())
+    if (CollectionUtils.isEmpty(builtSchema)) {
       builtSchema = getChildren().get(0).getBuiltSchema();
+    }// if
+    
     return builtSchema;
   }
 

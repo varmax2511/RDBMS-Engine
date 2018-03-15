@@ -101,6 +101,8 @@ public class TestTreeProcessor {
 
     // get the tree
     final Node root = queryVisitor.getRoot();
+    // build schema
+    //
 
     assertEquals(1, TreeProcessor.processTree(root).size());
 
@@ -126,6 +128,26 @@ public class TestTreeProcessor {
     assertEquals(4, TreeProcessor.processTree(root).size());
 
   }
+  @Test
+  public void testRenamingAlias4() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT A AS C FROM R WHERE A=4;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+
+    assertEquals(4, TreeProcessor.processTree(root).size());
+
+  }
 
   @Test
   public void testSubQueryWithAlias() throws Throwable {
@@ -143,7 +165,8 @@ public class TestTreeProcessor {
 
     // get the tree
     final Node root = queryVisitor.getRoot();
-
+    // build schema
+    
     assertEquals(3, TreeProcessor.processTree(root).size());
 
   }
@@ -164,6 +187,8 @@ public class TestTreeProcessor {
 
     // get the tree
     final Node root = queryVisitor.getRoot();
+    // build schema
+    
 
     assertEquals(10, TreeProcessor.processTree(root).size());
 
@@ -189,13 +214,12 @@ public class TestTreeProcessor {
     assertEquals(10, TreeProcessor.processTree(root).size());
 
   }
-  
+
   @Test
   public void testSimpleJoin() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
-    
     final QueryVisitor queryVisitor = new QueryVisitor();
     parser.Statement().accept(queryVisitor);
 
@@ -204,38 +228,40 @@ public class TestTreeProcessor {
     parser = new CCJSqlParser(
         new StringReader("CREATE TABLE S(D int, E int, F DATE);"));
     parser.Statement().accept(queryVisitor);
-    
+
     assertTrue(SchemaManager.getTableSchema("S") != null);
-    
+
     // QUERY 1
     parser = new CCJSqlParser(
         new StringReader("SELECT r.A, s.D FROM R r,S s WHERE r.A=s.D;"));
     parser.Statement().accept(queryVisitor);
-    
+
     // get the tree
     Node root = queryVisitor.getRoot();
+    // build schema
+    
 
-    assertEquals(10, TreeProcessor.processTree(root).size());
+    assertEquals(26, TreeProcessor.processTree(root).size());
 
     // QUERY 2
     parser = new CCJSqlParser(
         new StringReader("SELECT R.A, S.D FROM R,S WHERE R.A=S.D;"));
     parser.Statement().accept(queryVisitor);
 
-    
     // get the tree
     root = queryVisitor.getRoot();
+    // build schema
+    
 
-    assertEquals(10, TreeProcessor.processTree(root).size());
+    assertEquals(26, TreeProcessor.processTree(root).size());
 
   }
-  
+
   @Test
   public void testSimpleJoin1() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
-    
     final QueryVisitor queryVisitor = new QueryVisitor();
     parser.Statement().accept(queryVisitor);
 
@@ -244,14 +270,13 @@ public class TestTreeProcessor {
     parser = new CCJSqlParser(
         new StringReader("CREATE TABLE S(D int, E int, F DATE);"));
     parser.Statement().accept(queryVisitor);
-    
+
     assertTrue(SchemaManager.getTableSchema("S") != null);
-    
+
     // QUERY 1
-    parser = new CCJSqlParser(
-        new StringReader("SELECT * FROM R r,S s;"));
+    parser = new CCJSqlParser(new StringReader("SELECT * FROM R r,S s;"));
     parser.Statement().accept(queryVisitor);
-    
+
     // get the tree
     Node root = queryVisitor.getRoot();
 
@@ -269,8 +294,7 @@ public class TestTreeProcessor {
 
     assertTrue(SchemaManager.getTableSchema("S") != null);
 
-    parser = new CCJSqlParser(
-        new StringReader("SELECT * FROM S WHERE D > 4;"));
+    parser = new CCJSqlParser(new StringReader("SELECT * FROM S WHERE D > 4;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
@@ -279,5 +303,5 @@ public class TestTreeProcessor {
     assertEquals(1, TreeProcessor.processTree(root).size());
 
   }
-  
+
 }

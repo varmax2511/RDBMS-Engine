@@ -20,6 +20,7 @@ public class Optimizer {
    */
   public static Node optimizeTree(Node root) {
     // splitAllSelectConditions(root);
+    root.getBuiltSchema();
     PushDownSelection.pushDownSelect(root);
     PushDownProjection.pushDownProject(root);
     CrossToJoin.convertCrossProductToJoin(root);

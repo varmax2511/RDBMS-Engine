@@ -8,7 +8,7 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.Operator;
-import javafx.util.Pair;
+
 
 /**
  * <pre>
@@ -59,7 +59,7 @@ public abstract class Node {
   //Backward pointer enabled to each node switches within the tree
   private Node parent;
   
-  protected List<Pair<Integer, Integer>> builtSchema = new ArrayList<>();
+  protected List<Pair <Integer, Integer>> builtSchema = new ArrayList<>();
 
   public abstract List<Pair<Integer, Integer>> getBuiltSchema();
 

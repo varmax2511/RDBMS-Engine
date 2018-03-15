@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
+import edu.buffalo.www.cse4562.operator.OrderByOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.Expression;
@@ -12,6 +13,8 @@ import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.Limit;
+import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -31,7 +34,7 @@ public class SelectQueryVisitor
       SelectItemVisitor {
 
   private Node root;
-  private ProjectionOperator projectionOpr;
+  private ProjectionOperator node;
   private Node currentNode;
   @Override
   public void visit(PlainSelect plainSelect) {
@@ -41,11 +44,18 @@ public class SelectQueryVisitor
       return;
     }
 
+    final Limit limit = plainSelect.getLimit();
+    final List<OrderByElement> orderByElements = plainSelect
+        .getOrderByElements();
     final List<SelectItem> selectItems = plainSelect.getSelectItems();
     final FromItem fromItem = plainSelect.getFromItem();
     final Expression where = plainSelect.getWhere();
     final List<Join> joins = plainSelect.getJoins();
 
+    // order by
+    if (!CollectionUtils.isEmpty(orderByElements)) {
+      processOrderBy(orderByElements);
+    }
     // project
     /*
      * TODO: This needs to be worked out for later use of union, aggregate
@@ -71,16 +81,30 @@ public class SelectQueryVisitor
 
   }
 
+  private void processOrderBy(final List<OrderByElement> orderByElements) {
+    final Node node = new OrderByOperator(orderByElements);
+
+    if (root == null) {
+      root = node;
+      currentNode = root;
+      return;
+    }
+
+    currentNode.addChild(node);
+    currentNode = node;
+
+  }
+
   /**
-   * 
+   *
    * @param fromItem
    * @param joins
    */
   private void processCross(final FromItem fromItem, final List<Join> joins) {
     final CrossProductOperator crossProductOperator = new CrossProductOperator();
-    final Node crossNode = crossProductOperator;
-    currentNode.addChild(crossNode);
-    currentNode = crossNode;
+    final Node node = crossProductOperator;
+    currentNode.addChild(node);
+    currentNode = node;
 
     procesFrom(fromItem);
 
@@ -93,7 +117,7 @@ public class SelectQueryVisitor
   }
 
   /**
-   * 
+   *
    * @param fromItem
    */
   private void procesFrom(final FromItem fromItem) {
@@ -107,7 +131,7 @@ public class SelectQueryVisitor
   }
 
   /**
-   * 
+   *
    * @param where
    */
   private void processWhere(final Expression where) {
@@ -123,18 +147,24 @@ public class SelectQueryVisitor
   }
 
   /**
-   * 
+   *
    * @param selectItems
    */
   private void processProject(final List<SelectItem> selectItems) {
-    projectionOpr = new ProjectionOperator();
+    node = new ProjectionOperator();
     final Iterator<SelectItem> selectItemItr = selectItems.iterator();
     while (selectItemItr.hasNext()) {
       selectItemItr.next().accept(this);
     }
 
-    root = projectionOpr;
-    currentNode = root;
+    if (root == null) {
+      root = node;
+      currentNode = root;
+      return;
+    }
+    currentNode.addChild(node);
+    currentNode = node;
+
   }
 
   @Override
@@ -151,7 +181,7 @@ public class SelectQueryVisitor
     }
 
     // enable processing for *
-    projectionOpr.setAllColFlag(true);
+    node.setAllColFlag(true);
   }
 
   @Override
@@ -160,7 +190,7 @@ public class SelectQueryVisitor
       return;
     }
 
-    projectionOpr.addAllTableColumns(allTableColumns);
+    node.addAllTableColumns(allTableColumns);
   }
 
   @Override
@@ -169,7 +199,7 @@ public class SelectQueryVisitor
       return;
     }
 
-    projectionOpr.addSelectExpressionItems(expression);
+    node.addSelectExpressionItems(expression);
   }
 
   @Override
