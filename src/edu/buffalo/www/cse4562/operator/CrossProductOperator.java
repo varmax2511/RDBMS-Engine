@@ -52,16 +52,16 @@ public class CrossProductOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
-        final List<ColumnCell> mergedColumnCells = new ArrayList<>();
-        mergedColumnCells.addAll(tuple.getColumnCells());
 
         // join one row of the outputTuple with every row of the next table
         for (final Tuple joinTuple : nextTable) {
 
+          final List<ColumnCell> mergedColumnCells = new ArrayList<>();
+          mergedColumnCells.addAll(tuple.getColumnCells());
           mergedColumnCells.addAll(joinTuple.getColumnCells());
+          newOutputTuple.add(new Tuple(mergedColumnCells));
         } // for
 
-        newOutputTuple.add(new Tuple(mergedColumnCells));
       } // for
 
       outputTuples = newOutputTuple;

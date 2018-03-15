@@ -30,12 +30,12 @@ public class JoinOperator extends Node implements BinaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
     if (CollectionUtils.isEmpty(builtSchema)) {
       final Iterator<Node> childItr = getChildren().iterator();
-      
+
       // iterate over all children and add their schema
       while (childItr.hasNext()) {
         builtSchema.addAll(childItr.next().getBuiltSchema());
       } // while
-      
+
     } // if
     return builtSchema;
   }
@@ -43,14 +43,14 @@ public class JoinOperator extends Node implements BinaryOperator {
   @Override
   public Collection<Tuple> process(
       Collection<Collection<Tuple>> tupleCollection) throws Throwable {
-    Collection<Tuple> outputTuples = new ArrayList<>();
+
     final Iterator<Collection<Tuple>> tupleCollItr = tupleCollection.iterator();
 
     if (!tupleCollItr.hasNext()) {
       return null;
     }
 
-    outputTuples = tupleCollItr.next();
+    Collection<Tuple> outputTuples = tupleCollItr.next();
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     /*
      * Merge collection of tuples one by one. First merge the two collections
@@ -63,25 +63,29 @@ public class JoinOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
-        final List<ColumnCell> mergedColumnCells = new ArrayList<>();
-        mergedColumnCells.addAll(tuple.getColumnCells());
+        // final List<ColumnCell> mergedColumnCells = new ArrayList<>();
+        // mergedColumnCells.addAll(tuple.getColumnCells());
 
-        // join one row of the outputTuple with every row of the next table
+        // join one row of the outputTuple with one row of the next table per
+        // iteration
         for (final Tuple joinTuple : nextTable) {
-
+          final List<ColumnCell> mergedColumnCells = new ArrayList<>();
+          mergedColumnCells.addAll(tuple.getColumnCells());
           mergedColumnCells.addAll(joinTuple.getColumnCells());
+
+          final Tuple testTuple = new Tuple(mergedColumnCells);
+          // process expressions
+          final ColumnCell columnCell = opVisitor.getValue(testTuple,
+              this.expression);
+
+          // if operator returned a result and its value is true, then row can
+          // get
+          // selected
+          if (null != columnCell && columnCell.getCellValue().toBool()) {
+            newOutputTuple.add(testTuple);
+          } // if
+
         } // for
-
-        final Tuple testTuple = new Tuple(mergedColumnCells);
-        // process expressions
-        final ColumnCell columnCell = opVisitor.getValue(testTuple,
-            this.expression);
-
-        // if operator returned a result and its value is true, then row can get
-        // selected
-        if (null != columnCell && columnCell.getCellValue().toBool()) {
-          newOutputTuple.add(testTuple);
-        }
 
       } // for
 
@@ -90,6 +94,42 @@ public class JoinOperator extends Node implements BinaryOperator {
     } // while
 
     return outputTuples;
+  }
+
+  @Override
+  public Collection<Tuple> getNext() throws Throwable {
+    // check child count, should be 2
+    if (this.getChildren() == null || this.getChildren().size() != 2) {
+      throw new IllegalArgumentException(
+          "Invalid cross product child configuration!");
+    }
+
+    Node firstChild = this.getChildren().get(0);
+    Node secondChild = this.getChildren().get(1);
+
+    // update relation 1 tuples
+    if (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
+      holdingList = firstChild.getNext();
+    }
+    // if first child has rows and the second child has reached end,
+    // then re-open the second child iterator and update the holding list
+    // with the next values from first child.
+    if (firstChild.hasNext() && !secondChild.hasNext()) {
+      holdingList = firstChild.getNext();
+      secondChild.open();
+    }
+
+    final Collection<Collection<Tuple>> tuples = new ArrayList<>();
+    tuples.add(holdingList);
+    // add second child tuples
+    tuples.add(secondChild.getNext());
+
+    return process(tuples);
+  }
+
+  @Override
+  public void close() throws Throwable {
+    this.holdingList = null;
   }
 
 }

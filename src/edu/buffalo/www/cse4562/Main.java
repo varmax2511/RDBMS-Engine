@@ -35,7 +35,7 @@ public class Main {
 
       // get the tree
       final Node root = queryVisitor.getRoot();
-
+      
       // if a SELECT
       if (null != root) {
 

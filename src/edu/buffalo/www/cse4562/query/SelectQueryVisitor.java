@@ -53,12 +53,11 @@ public class SelectQueryVisitor
     final Expression where = plainSelect.getWhere();
     final List<Join> joins = plainSelect.getJoins();
 
-    
     // limit
-    if(limit != null){
+    if (limit != null) {
       processLimit(limit);
     }
-    
+
     // order by
     if (!CollectionUtils.isEmpty(orderByElements)) {
       processOrderBy(orderByElements);
@@ -90,7 +89,7 @@ public class SelectQueryVisitor
 
   private void processLimit(final Limit limit) {
     final Node node = new LimitOperator(limit.getRowCount());
-    
+
     if (root == null) {
       root = node;
       currentNode = root;
@@ -159,9 +158,15 @@ public class SelectQueryVisitor
       final QueryExpressionVisitor whereVisitor = new QueryExpressionVisitor();
       where.accept(whereVisitor);
       if (null != whereVisitor.getRoot()) {
-        final Node node = whereVisitor.getRoot();
+        Node node = whereVisitor.getRoot();
         currentNode.addChild(node);
         currentNode = node;
+        
+        while (!CollectionUtils.isEmpty(node.getChildren())) {
+          node = node.getChildren().get(0);
+          currentNode = node;
+        }
+
       } // if
     }
   }

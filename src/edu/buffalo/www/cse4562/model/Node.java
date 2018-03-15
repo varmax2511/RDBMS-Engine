@@ -173,4 +173,8 @@ public abstract class Node {
 
     return process(tuples);
   }
+  
+  public boolean isLeaf(){
+    return this.isLeaf;
+  }
 }

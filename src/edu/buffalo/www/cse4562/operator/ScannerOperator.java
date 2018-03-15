@@ -40,7 +40,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
   private CSVParser csvParser;
   private final Config config;
   /**
-   * 
+   *
    * @param config
    *          !null.
    */
@@ -67,9 +67,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
   @Override
   public Collection<Tuple> getNext() throws IOException {
 
-    final List<Tuple> tuples = new ArrayList<>();
-    tuples.add(process());
-    return tuples;
+    return process();
   }
 
   /**
@@ -78,20 +76,19 @@ public class ScannerOperator extends Node implements UnaryOperator {
    * @return
    * @throws IOException
    */
-  private Tuple process() throws IOException {
+  private Collection<Tuple> process() throws IOException {
 
     // if method invoked first time without connection being opened
-    if (null == reader) {
+    /*if (null == reader) {
       open();
-    }
+    }*/
 
     // if no records left to iterate
     if (!recordIterator.hasNext()) {
       close();
-      return new Tuple(new ArrayList<>());
+      return new ArrayList<>();
     }
 
-    final List<ColumnCell> columnCells = new ArrayList<>();
     final TableSchema tableSchema = SchemaManager
         .getTableSchema(config.getTableName());
     Integer tableId = SchemaManager.getTableId(config.getTableName());
@@ -105,6 +102,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
       tableId = SchemaManager.getTableId(config.getAlias());
     }
 
+    final List<Tuple> tuples = new ArrayList<>();
     for (int i = 0; i < config.getChunkSize(); i++) {
 
       // no value to iterate
@@ -115,7 +113,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
 
       // fetch a row
       final String[] values = recordIterator.next().get(0).split("\\|");
-
+      final List<ColumnCell> columnCells = new ArrayList<>();
+      
       for (int j = 0; j < values.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
@@ -130,9 +129,11 @@ public class ScannerOperator extends Node implements UnaryOperator {
         columnCells.add(colCell);
 
       } // for
+
+      tuples.add(new Tuple(columnCells));
     } // for
 
-    return new Tuple(columnCells);
+    return tuples;
   }
 
   /**
@@ -172,10 +173,43 @@ public class ScannerOperator extends Node implements UnaryOperator {
     }
     return this.recordIterator.hasNext();
   }
+  
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+
+    // build schema if not yet built
+    if (CollectionUtils.isEmpty(builtSchema)) {
+      buildSchema();
+    } // if
+    return builtSchema;
+  }
+
+  /**
+   * Populate the builtSchema from the table name and alias information.
+   */
+  private void buildSchema() {
+    final TableSchema tableSchema = SchemaManager
+        .getTableSchema(config.getTableName());
+    Integer tableId = SchemaManager.getTableId(config.getTableName());
+
+    // if alias
+    if (!StringUtils.isBlank(config.getAlias())) {
+      SchemaManager.addTableSchema(config.getAlias(), tableSchema);
+      tableId = SchemaManager.getTableId(config.getAlias());
+    }
+
+    // build schema
+    for (final ColumnDefinition colDefinition : tableSchema
+        .getColumnDefinitions()) {
+
+      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
+          .getColumnIdByTableId(tableId, colDefinition.getColumnName())));
+    } // for
+  }
 
   /**
    * Configuration class for {@link ScannerOperator}
-   * 
+   *
    * @author varunjai
    *
    */
@@ -186,7 +220,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
     private final String alias;
 
     /**
-     * 
+     *
      * @param dataParentPath
      * @param tableName
      *          !blank.
@@ -226,37 +260,6 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return alias;
     }
 
-  }
-  @Override
-  public List<Pair<Integer, Integer>> getBuiltSchema() {
-
-    // build schema if not yet built
-    if (CollectionUtils.isEmpty(builtSchema)) {
-      buildSchema();
-    } // if
-    return builtSchema;
-  }
-
-  /**
-   * Populate the builtSchema from the table name and alias information.
-   */
-  private void buildSchema() {
-    final TableSchema tableSchema = SchemaManager
-        .getTableSchema(config.getTableName());
-    Integer tableId = SchemaManager.getTableId(config.getTableName());
-
-    // if alias
-    if (!StringUtils.isBlank(config.getAlias())) {
-      SchemaManager.addTableSchema(config.getAlias(), tableSchema);
-      tableId = SchemaManager.getTableId(config.getAlias());
-    }
-
-    // build schema
-    for (ColumnDefinition colDefinition : tableSchema.getColumnDefinitions()) {
-
-      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
-          .getColumnIdByTableId(tableId, colDefinition.getColumnName())));
-    } // for
   }
 
 }
