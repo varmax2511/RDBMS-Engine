@@ -47,4 +47,27 @@ public class TestOrderBy {
       System.out.println(tuple.toString());
     }
   }
+
+  @Test
+  public void testLimit() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT * FROM R ORDER BY A DESC LIMIT 2;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+    // build schema
+
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(2, tuples.size());
+  }
+
 }

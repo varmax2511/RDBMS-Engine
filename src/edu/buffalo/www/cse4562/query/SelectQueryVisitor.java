@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
+import edu.buffalo.www.cse4562.operator.LimitOperator;
 import edu.buffalo.www.cse4562.operator.OrderByOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
@@ -52,6 +53,12 @@ public class SelectQueryVisitor
     final Expression where = plainSelect.getWhere();
     final List<Join> joins = plainSelect.getJoins();
 
+    
+    // limit
+    if(limit != null){
+      processLimit(limit);
+    }
+    
     // order by
     if (!CollectionUtils.isEmpty(orderByElements)) {
       processOrderBy(orderByElements);
@@ -79,6 +86,19 @@ public class SelectQueryVisitor
      */
     processCross(fromItem, joins);
 
+  }
+
+  private void processLimit(final Limit limit) {
+    final Node node = new LimitOperator(limit.getRowCount());
+    
+    if (root == null) {
+      root = node;
+      currentNode = root;
+      return;
+    }
+
+    currentNode.addChild(node);
+    currentNode = node;
   }
 
   private void processOrderBy(final List<OrderByElement> orderByElements) {
