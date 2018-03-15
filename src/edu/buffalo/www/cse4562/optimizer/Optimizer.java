@@ -23,7 +23,7 @@ public class Optimizer {
     root.getBuiltSchema();
     
     PushDownSelection.pushDownSelect(root);
-    PushDownProjection.pushDownProject(root);
+    //PushDownProjection.pushDownProject(root);
     return root;
   }
 

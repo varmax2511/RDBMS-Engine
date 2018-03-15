@@ -12,6 +12,7 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
+import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
@@ -75,23 +76,46 @@ public class PushDownSelection {
       }
     }
 
+    // level on top of which Select node will be setup
     final Node pushDownLevel = getPushDownLevel(selectNode, selectSchema);
 
-    if (pushDownLevel != selectNode) {
-
-      if (pushDownLevel instanceof CrossProductOperator) {
-        convertCrossToJoin((SelectionOperator) selectNode, pushDownLevel);
-        return;
-      }
-
-      pushDown(selectNode, pushDownLevel);
+    // if pushlevel is same as select node, no optimization can be done
+    if (pushDownLevel == selectNode) {
+      return;
     }
+
+    // push down select to the appropriate level
+    pushDown(selectNode, pushDownLevel);
+
+    // if push level is a cross product, now select is above cross product
+    // convert to join
+    if (pushDownLevel instanceof CrossProductOperator) {
+      convertCrossToJoin((SelectionOperator) selectNode, pushDownLevel);
+      return;
+    }
+
   }
 
+  /**
+   * <pre>
+   * This method makes a tree of the form
+   * 
+   *     ...                  ...
+   *      |                    |
+   *    Select      ->        Join 
+   *      |                   /  \
+   *    Cross   
+   *    /   \
+   * 
+   * </pre>
+   * 
+   * @param selectNode
+   * @param pushDownLevel
+   */
   public static void convertCrossToJoin(SelectionOperator selectNode,
       Node pushDownLevel) {
 
-    Node joinNode = new JoinOperator(selectNode.getExpression());
+    final Node joinNode = new JoinOperator(selectNode.getExpression());
     joinNode.setChildren(pushDownLevel.getChildren());
     joinNode.setParent(selectNode.getParent());
 
@@ -111,7 +135,7 @@ public class PushDownSelection {
     } // for
 
     // update references for pushdown or cross product children
-    for (Node child : pushDownLevel.getChildren()) {
+    for (final Node child : pushDownLevel.getChildren()) {
       child.setParent(joinNode);
     }
 
@@ -175,6 +199,11 @@ public class PushDownSelection {
       List<Pair<Integer, Integer>> selectSchema) {
     Node pushDownLevel = node;
 
+    // no-op
+    if (CollectionUtils.isEmpty(selectSchema)) {
+      return pushDownLevel;
+    }
+
     for (final Node nextLevel : node.getChildren()) {
 
       // we can't push below leaf
@@ -201,6 +230,16 @@ public class PushDownSelection {
       List<Pair<Integer, Integer>> selectSchema) {
     final Integer tableId = SchemaManager
         .getTableId(column.getTable().getName());
+
+    // if no table id found, it means that its a simple expression
+    // like SELECT A,B FROM R WHERE C < 3;
+    // this doesn't need optimization, rather an attempt to optimize it
+    // by looking into the Select node children, getting the schema info
+    // and guessing the table is costly.
+    if (tableId == null) {
+      return;
+    }
+
     final Integer columnId = SchemaManager.getColumnIdByTableId(tableId,
         column.getColumnName());
     selectSchema.add(new Pair<Integer, Integer>(tableId, columnId));

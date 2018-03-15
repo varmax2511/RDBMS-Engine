@@ -167,7 +167,7 @@ public class TestTreeProcessor {
     final Node root = queryVisitor.getRoot();
     // build schema
     
-    assertEquals(3, TreeProcessor.processTree(root).size());
+    assertEquals(4, TreeProcessor.processTree(root).size());
 
   }
 

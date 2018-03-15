@@ -91,14 +91,18 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     // with the next values from first child.
     if (firstChild.hasNext() && !secondChild.hasNext()) {
       holdingList = firstChild.getNext();
+      // update if result obtained is empty, possible if a select is below
+      while(CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()){
+        holdingList = firstChild.getNext();  
+      }
+      secondChild.close();
       secondChild.open();
-    }
+    }// if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
     tuples.add(holdingList);
     // add second child tuples
     tuples.add(secondChild.getNext());
-
     return process(tuples);
   }
 
@@ -110,6 +114,7 @@ public class CrossProductOperator extends Node implements BinaryOperator {
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
+    // if no schema populated already
     if (CollectionUtils.isEmpty(builtSchema)) {
       final Iterator<Node> childItr = getChildren().iterator();
       // iterate over all children and add their schema

@@ -116,8 +116,13 @@ public class JoinOperator extends Node implements BinaryOperator {
     // with the next values from first child.
     if (firstChild.hasNext() && !secondChild.hasNext()) {
       holdingList = firstChild.getNext();
+      // update if result obtained is empty, possible if a select is below
+      while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
+        holdingList = firstChild.getNext();
+      }
+      secondChild.close();
       secondChild.open();
-    }
+    } // if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
     tuples.add(holdingList);

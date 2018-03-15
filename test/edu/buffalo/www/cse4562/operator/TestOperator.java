@@ -94,6 +94,10 @@ public class TestOperator {
     final Node root = queryVisitor.getRoot();
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(17, tuples.size());
+    
+    for (final Tuple tuple : tuples) {
+      System.out.println(tuple.toString());
+    }
 
   }
   

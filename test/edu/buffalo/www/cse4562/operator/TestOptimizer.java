@@ -33,7 +33,6 @@ public class TestOptimizer {
 
     parser.Statement().accept(queryVisitor);
 
-    
     parser = new CCJSqlParser(
         new StringReader("SELECT * FROM R,S WHERE R.A > 3;"));
     parser.Statement().accept(queryVisitor);
@@ -41,14 +40,10 @@ public class TestOptimizer {
     // get the tree
     final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
-    assertEquals(45, tuples.size());
+    assertEquals(50, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
-    
   }
-  
+
   @Test
   public void testOptimizer2() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -64,7 +59,6 @@ public class TestOptimizer {
 
     parser.Statement().accept(queryVisitor);
 
-    
     parser = new CCJSqlParser(
         new StringReader("SELECT * FROM R,S WHERE R.A = S.D;"));
     parser.Statement().accept(queryVisitor);
@@ -74,12 +68,8 @@ public class TestOptimizer {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(26, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
-    
   }
-  
+
   @Test
   public void testOptimizer3() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -95,7 +85,6 @@ public class TestOptimizer {
 
     parser.Statement().accept(queryVisitor);
 
-    
     parser = new CCJSqlParser(
         new StringReader("SELECT * FROM R,S WHERE R.A = S.D AND R.A > 3;"));
     parser.Statement().accept(queryVisitor);
@@ -103,12 +92,32 @@ public class TestOptimizer {
     // get the tree
     final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
-    assertEquals(13, tuples.size());
+    assertEquals(17, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
-    
   }
-  
+
+  /**
+   * This test should result in a no-op for the optimizer.
+   * 
+   * @throws Throwable
+   */
+  @Test
+  public void testOptimizer4() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(new StringReader("SELECT * FROM R WHERE A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(5, tuples.size());
+
+  }
 }
