@@ -53,8 +53,14 @@ public class SchemaManager {
    * @param tableSchema
    */
   public static void addTableSchema(String tableName, TableSchema tableSchema) {
+    
+    if(tableName2Schema.containsKey(tableName)){
+      tableName2Schema.put(tableName, tableSchema);
+      addColumnIds(tableName2Id.get(tableName), tableSchema);
+      return;
+    }
+    
     tableName2Schema.put(tableName, tableSchema);
-
     tableName2Id.put(tableName, tableCount);
     tableCount++;
 

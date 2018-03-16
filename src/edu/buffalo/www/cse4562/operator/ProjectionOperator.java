@@ -83,6 +83,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     for (final Tuple tuple : tupleRecords) {
       // process expressions
       final List<ColumnCell> columnCells = new ArrayList<>();
+      int cnt = 0;
       for (final SelectExpressionItem expressionItem : selectExpressionItems) {
 
         // TODO later in the project if the renaming is required as output this
@@ -94,32 +95,40 @@ public class ProjectionOperator extends Node implements UnaryOperator {
             expressionItem.getExpression());
         // final Integer tableId = tuple.getColumnCells().iterator().next()
         // .getTableId();
-        Integer tableId = columnCell.getTableId() == null
-            ? tuple.getColumnCells().iterator().next().getTableId()
-            : columnCell.getTableId();
+
         if (null != columnCell) {
+          /*
+           * Integer tableId = columnCell.getTableId() == null ?
+           * tuple.getColumnCells().iterator().next().getTableId() :
+           * columnCell.getTableId();
+           */
 
           // if alias is present
-          if (!StringUtils.isBlank(expressionItem.getAlias())) {
-            /*
-             * If the expression has an alias then we add a new column to the
-             * table with the name of the alias. Any change in table schema
-             * should be registered with the Schema Manager
-             */
+          // if (!StringUtils.isBlank(expressionItem.getAlias())) {
+          /*
+           * If the expression has an alias then we add a new column to the
+           * table with the name of the alias. Any change in table schema should
+           * be registered with the Schema Manager
+           */
 
-            // register with Schema Manager
-            // addColumnAliasToSchema(expressionItem, tableId);
+          // register with Schema Manager
+          // addColumnAliasToSchema(expressionItem, tableId);
 
-            // Update the column id of Column Cell
-            columnCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
-                expressionItem.getAlias()));
-            // Cell value returned from expressions like addition don't have
-            // table id or column id set, so set both for them as well.
-            columnCell.setTableId(tableId);
-          }
+          // Update the column id of Column Cell
+          /*
+           * columnCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+           * expressionItem.getAlias()));
+           */
+          // Cell value returned from expressions like addition don't have
+          // table id or column id set, so set both for them as well.
+          // columnCell.setTableId(tableId);
+          columnCell.setColumnId(builtSchema.get(cnt).getValue());
+          columnCell.setTableId(builtSchema.get(cnt).getKey());
+          // }
 
           columnCells.add(columnCell);
         }
+        cnt++;
       } // for
 
       projectOutput.add(new Tuple(columnCells));
@@ -161,17 +170,17 @@ public class ProjectionOperator extends Node implements UnaryOperator {
    * Get the alias in the {@link SelectExpressionItem} and add it as a new
    * column in the {@link TableSchema}. Register the changes in table schema
    * with the {@link SchemaManager}.
-   *
-   * @param expressionItem
+   * @param alias
+   *          TODO
    * @param tableId
    */
-  private void addColumnAliasToSchema(final SelectExpressionItem expressionItem,
+  private void addColumnAliasToSchema(String alias,
       Integer tableId) {
     final TableSchema tableSchema = SchemaManager.getTableSchemaById(tableId);
     final List<ColumnDefinition> columnDefinitions = tableSchema
         .getColumnDefinitions();
     final ColumnDefinition columnDefinition = new ColumnDefinition();
-    columnDefinition.setColumnName(expressionItem.getAlias());
+    columnDefinition.setColumnName(alias);
     columnDefinitions.add(columnDefinition);
     tableSchema.setColumnDefinitions(columnDefinitions);
 
@@ -229,18 +238,19 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if already set
-    // TODO: Rethink deep once doing projection pushdown
     if (!CollectionUtils.isEmpty(builtSchema)) {
-
-      // expr like R.*
-      findAllTableColumns();
+      return builtSchema;
     }
 
     // invoke child schema for schema manager updation
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
         .getBuiltSchema();
 
-    // if expression is SELECT * or SELECT R.*, S.* FROM R,S
+    // expr like R.*
+    // TODO: Rethink deep once doing projection pushdown
+    findAllTableColumns();
+
+    // if expression is SELECT * FROM R,S
     if (this.allColFlag || CollectionUtils.isEmpty(selectExpressionItems)) {
       builtSchema = childSchema;
       return builtSchema;
@@ -262,11 +272,10 @@ public class ProjectionOperator extends Node implements UnaryOperator {
         } // if no column name
 
         buildWithCidTid(selectExprItem, column);
-        continue;
       } else {
-        if (!StringUtils.isBlank(selectExprItem.getAlias())) {
+        //if (!StringUtils.isBlank(selectExprItem.getAlias())) {
           buildExpression(childSchema, selectExprItem);
-        }
+       // }
       }
 
     } // for
@@ -288,7 +297,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     // if alias is present, add to schema
     if (!StringUtils.isBlank(selectExprItem.getAlias())) {
 
-      addColumnAliasToSchema(selectExprItem, tableId);
+      if (SchemaManager.getColumnIdByTableId(tableId,
+          selectExprItem.getAlias()) == null) {
+        addColumnAliasToSchema(selectExprItem.getAlias(), tableId);
+      }
+
       builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
           .getColumnIdByTableId(tableId, selectExprItem.getAlias())));
       return;
@@ -308,6 +321,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
    */
   private void buildNoTableSchema(List<Pair<Integer, Integer>> childSchema,
       final SelectExpressionItem selectExprItem, final String columnName) {
+
     for (final Pair<Integer, Integer> pair : childSchema) {
       // if matching
       if (!SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
@@ -318,11 +332,16 @@ public class ProjectionOperator extends Node implements UnaryOperator {
       // alias
       if (!StringUtils.isBlank(selectExprItem.getAlias())) {
 
-        addColumnAliasToSchema(selectExprItem, pair.getKey());
+        // if not already registered
+        if (SchemaManager.getColumnIdByTableId(pair.getKey(),
+            selectExprItem.getAlias()) == null) {
+          addColumnAliasToSchema(selectExprItem.getAlias(), pair.getKey());
+        }
+
         builtSchema.add(new Pair<Integer, Integer>(pair.getKey(), SchemaManager
             .getColumnIdByTableId(pair.getKey(), selectExprItem.getAlias())));
         return;
-      }
+      } // if
 
       // no alias present
       builtSchema.add(new Pair<Integer, Integer>(pair.getKey(),
@@ -343,7 +362,12 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     // alias
     if (!StringUtils.isBlank(selectExprItem.getAlias())) {
 
-      addColumnAliasToSchema(selectExprItem, childSchema.get(0).getKey());
+      // if not already registered
+      if (SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
+          selectExprItem.getAlias()) == null) {
+        addColumnAliasToSchema(selectExprItem.getAlias(), childSchema.get(0).getKey());
+      }
+
       builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
           SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
               selectExprItem.getAlias())));
@@ -351,6 +375,13 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     }
 
     // no alias present
+    // register expression as column
+    // if not already registered
+    if (SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
+        selectExprItem.getAlias()) == null) {
+      addColumnAliasToSchema(selectExprItem.getExpression().toString(),
+          childSchema.get(0).getKey());
+    }
     builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
         SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
             selectExprItem.getExpression().toString())));
