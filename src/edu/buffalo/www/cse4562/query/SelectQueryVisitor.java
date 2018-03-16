@@ -74,7 +74,7 @@ public class SelectQueryVisitor
 
     // if no Joins, simple FROM
     if (joins == null || CollectionUtils.isEmpty(joins)) {
-      procesFrom(fromItem);
+      procesFrom(fromItem, currentNode);
       return;
     } // if
 
@@ -119,33 +119,67 @@ public class SelectQueryVisitor
    * @param fromItem
    * @param joins
    */
-  private void processCross(final FromItem fromItem, final List<Join> joins) {
+  private void processCross2(final FromItem fromItem, final List<Join> joins) {
     final CrossProductOperator crossProductOperator = new CrossProductOperator();
     final Node node = crossProductOperator;
     currentNode.addChild(node);
     currentNode = node;
 
-    procesFrom(fromItem);
+    procesFrom(fromItem, currentNode);
 
     // process each Join From Item
     final Iterator<Join> joinItr = joins.iterator();
     while (joinItr.hasNext()) {
       final FromItem joinFromItem = joinItr.next().getRightItem();
-      procesFrom(joinFromItem);
+      procesFrom(joinFromItem, currentNode);
     } // while
   }
 
   /**
    *
    * @param fromItem
+   * @param joins
+   * @throws IllegalAccessException
    */
-  private void procesFrom(final FromItem fromItem) {
+  private void processCross(final FromItem fromItem, final List<Join> joins) {
+
+    final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
+    fromItem.accept(fromItemVisitor);
+    if (fromItemVisitor.getRoot() == null) {
+      return;
+    }
+
+    Node leftNode = fromItemVisitor.getRoot();
+
+    // process each Join From Item
+    final Iterator<Join> joinItr = joins.iterator();
+    while (joinItr.hasNext()) {
+      final FromItem joinFromItem = joinItr.next().getRightItem();
+      joinFromItem.accept(fromItemVisitor);
+      if (fromItemVisitor.getRoot() == null) {
+        continue;
+      }
+      
+      final Node cNode = new CrossProductOperator();
+      cNode.addChild(leftNode);
+      cNode.addChild(fromItemVisitor.getRoot());
+      leftNode = cNode;
+    } // while
+
+    currentNode.addChild(leftNode);
+  }
+
+  /**
+   *
+   * @param fromItem
+   */
+  private void procesFrom(final FromItem fromItem, Node current) {
     // process FROM
     final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
     fromItem.accept(fromItemVisitor);
     if (fromItemVisitor.getRoot() != null) {
       final Node node = fromItemVisitor.getRoot();
-      currentNode.addChild(node);
+      current.addChild(node);
     } // if
   }
 
@@ -161,7 +195,7 @@ public class SelectQueryVisitor
         Node node = whereVisitor.getRoot();
         currentNode.addChild(node);
         currentNode = node;
-        
+
         while (!CollectionUtils.isEmpty(node.getChildren())) {
           node = node.getChildren().get(0);
           currentNode = node;
