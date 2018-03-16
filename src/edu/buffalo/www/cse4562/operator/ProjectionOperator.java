@@ -95,6 +95,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
 
         final ColumnCell columnCell = opVisitor.getValue(tuple,
             expressionItem.getExpression());
+        // final Integer tableId = tuple.getColumnCells().iterator().next()
+        // .getTableId();
+        Integer tableId = columnCell.getTableId() == null
+            ? tuple.getColumnCells().iterator().next().getTableId()
+            : columnCell.getTableId();
         if (null != columnCell) {
 
           // if alias is present
@@ -104,8 +109,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
              * table with the name of the alias. Any change in table schema
              * should be registered with the Schema Manager
              */
-            final Integer tableId = tuple.getColumnCells().iterator().next()
-                .getTableId();
+
             // register with Schema Manager
             // addColumnAliasToSchema(expressionItem, tableId);
 
@@ -228,10 +232,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if already set
-    /*if (!CollectionUtils.isEmpty(builtSchema)) {
-
-      return builtSchema;
-    }*/
+    /*
+     * if (!CollectionUtils.isEmpty(builtSchema)) {
+     * 
+     * return builtSchema; }
+     */
 
     // invoke child schema for schema manager updation
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)

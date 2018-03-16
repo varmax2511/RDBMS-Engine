@@ -8,7 +8,7 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.Operator;
-
+import edu.buffalo.www.cse4562.util.CollectionUtils;
 
 /**
  * <pre>
@@ -55,11 +55,11 @@ public abstract class Node {
    * private Node left; private Node right;
    */private boolean isLeaf = true;
   private List<Node> children = new ArrayList<>();
-  
-  //Backward pointer enabled to each node switches within the tree
+
+  // Backward pointer enabled to each node switches within the tree
   private Node parent;
-  
-  protected List<Pair <Integer, Integer>> builtSchema = new ArrayList<>();
+
+  protected List<Pair<Integer, Integer>> builtSchema = new ArrayList<>();
 
   public abstract List<Pair<Integer, Integer>> getBuiltSchema();
 
@@ -76,7 +76,7 @@ public abstract class Node {
   public void setChildren(List<Node> children) {
     this.children = children;
   }
-  
+
   public Node getParent() {
     return parent;
   }
@@ -168,13 +168,17 @@ public abstract class Node {
     // add all collection of tuples returned by each node in a collection
     // of collection
     while (iterator.hasNext()) {
-      tuples.add(iterator.next().getNext());
+
+      Collection<Tuple> tuplesGen = iterator.next().getNext();
+      if (!CollectionUtils.isEmpty(tuplesGen)) {
+        tuples.add(tuplesGen);
+      }
     }
 
     return process(tuples);
   }
-  
-  public boolean isLeaf(){
+
+  public boolean isLeaf() {
     return this.isLeaf;
   }
 }
