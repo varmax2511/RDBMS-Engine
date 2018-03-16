@@ -78,9 +78,6 @@ public class ProjectionOperator extends Node implements UnaryOperator {
       return tupleRecords;
     }
 
-    // expr like R.*
-    findAllTableColumns();
-
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
     for (final Tuple tuple : tupleRecords) {
@@ -232,11 +229,12 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if already set
-    /*
-     * if (!CollectionUtils.isEmpty(builtSchema)) {
-     * 
-     * return builtSchema; }
-     */
+    // TODO: Rethink deep once doing projection pushdown
+    if (!CollectionUtils.isEmpty(builtSchema)) {
+
+      // expr like R.*
+      findAllTableColumns();
+    }
 
     // invoke child schema for schema manager updation
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
