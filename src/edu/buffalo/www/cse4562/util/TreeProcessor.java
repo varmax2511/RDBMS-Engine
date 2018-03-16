@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Tuple;
+import edu.buffalo.www.cse4562.optimizer.Optimizer;
 
 /**
  * Process each type of query.
@@ -14,6 +15,7 @@ import edu.buffalo.www.cse4562.model.Tuple;
  */
 public class TreeProcessor {
 
+  
   /**
    * Process the Tree.
    *
@@ -26,6 +28,8 @@ public class TreeProcessor {
     Collection<Tuple> tuples = new ArrayList<>();
     final Collection<Tuple> output = new ArrayList<>();
 
+    //root.getBuiltSchema();
+    root = Optimizer.optimizeTree(root);
     root.open();
     // move iteratively
     while (root.hasNext()) {

@@ -19,10 +19,14 @@ public class Optimizer {
    * @param root
    */
   public static Node optimizeTree(Node root) {
-    // splitAllSelectConditions(root);
+    // build schema
+    root.getBuiltSchema();
+    
     PushDownSelection.pushDownSelect(root);
-    PushDownProjection.pushDownProject(root);
-    CrossToJoin.convertCrossProductToJoin(root);
+    //PushDownProjection.pushDownProject(root);
+    
+    // re-build schema
+    //root.getBuiltSchema();
     return root;
   }
 

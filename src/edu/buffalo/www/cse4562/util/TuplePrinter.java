@@ -19,11 +19,21 @@ public class TuplePrinter {
    *          !null
    */
   public static void printTuple(Tuple tuple) {
+
+    System.out.println(parseTuple(tuple));
+  }
+
+  /**
+   * 
+   * @param tuple
+   * @return
+   */
+  public static String parseTuple(Tuple tuple) {
     // null check
-    if(null == tuple){
-      return;
+    if (null == tuple) {
+      return null;
     }
-    
+
     final StringBuilder stringBuidler = new StringBuilder();
 
     final Iterator<ColumnCell> columnCellItr = tuple.getColumnCells()
@@ -35,10 +45,10 @@ public class TuplePrinter {
     }
 
     // if empty
-    if(stringBuidler.length() == 0){
-      return;
+    if (stringBuidler.length() == 0) {
+      return null;
     }
-    
-    System.out.println(stringBuidler.substring(0, stringBuidler.length() - 1));
+
+    return stringBuidler.substring(0, stringBuidler.length() - 1);
   }
 }

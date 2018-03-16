@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import edu.buffalo.www.cse4562.operator.Operator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.expression.PrimitiveValue;
 
 /**
@@ -51,6 +52,12 @@ public class Tuple {
     return false;
   }
 
+  @Override
+  public String toString() {
+
+    return TuplePrinter.parseTuple(this);
+  }
+
   /**
    * Represents one cell value.
    * 
@@ -94,6 +101,19 @@ public class Tuple {
 
     public void setCellValue(PrimitiveValue cellValue) {
       this.cellValue = cellValue;
+    }
+
+    @Override
+    public String toString() {
+
+      StringBuilder builder = new StringBuilder();
+      builder.append(tableId == null ? "" : tableId.toString());
+      builder.append("|");
+      builder.append(columnId == null ? "" : columnId.toString());
+      builder.append("|");
+      builder.append(cellValue == null ? "" : cellValue.toString());
+
+      return builder.toString();
     }
 
   }

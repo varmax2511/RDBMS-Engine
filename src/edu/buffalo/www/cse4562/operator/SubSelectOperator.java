@@ -6,12 +6,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
-import javafx.util.Pair;
+import edu.buffalo.www.cse4562.util.StringUtils;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 /**
  * This operator is responsible for adding Alias information whenever its passed
@@ -37,27 +38,29 @@ public class SubSelectOperator extends Node implements UnaryOperator {
     }
 
     // unary operator, interested in only the first collection
-    Collection<Tuple> tupleRecords = tuples.iterator().next();
-    
+    final Collection<Tuple> tupleRecords = tuples.iterator().next();
+
     // empty check
     if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return tupleRecords;
     }
 
     // add table entry in Schema Manager
+
     final Iterator<Tuple> tupleItr = tupleRecords.iterator();
     final List<ColumnDefinition> columnDefinitions = new ArrayList<>();
     final Tuple tuple = tupleItr.next();
 
-    for (final ColumnCell columnCell : tuple.getColumnCells()) {
-      final ColumnDefinition columnDefinition = new ColumnDefinition();
-      columnDefinition.setColumnName(SchemaManager.getColumnNameById(
-          columnCell.getTableId(), columnCell.getColumnId()));
-      columnDefinitions.add(columnDefinition);
-    } // for
-
-    SchemaManager.addTableSchema(this.alias,
-        new TableSchema(this.alias, columnDefinitions));
+    /*
+     * for (final ColumnCell columnCell : tuple.getColumnCells()) { final
+     * ColumnDefinition columnDefinition = new ColumnDefinition();
+     * columnDefinition.setColumnName(SchemaManager.getColumnNameById(
+     * columnCell.getTableId(), columnCell.getColumnId()));
+     * columnDefinitions.add(columnDefinition); } // for
+     * 
+     * SchemaManager.addTableSchema(this.alias, new TableSchema(this.alias,
+     * columnDefinitions));
+     */
 
     // update table id to alias name in each column of the returned tuples
     for (final Tuple tupleVal : tupleRecords) {
@@ -79,11 +82,47 @@ public class SubSelectOperator extends Node implements UnaryOperator {
   public String getAlias() {
     return alias;
   }
-  
+
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    if (!getChildren().isEmpty())
-      builtSchema = getChildren().get(0).getBuiltSchema();
+    //if (CollectionUtils.isEmpty(builtSchema)) {
+
+      final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
+          .getBuiltSchema();
+      if (StringUtils.isBlank(this.alias)) {
+        builtSchema = childSchema;
+        return builtSchema;
+      }
+
+      buildSchemaWithAlias(childSchema);
+
+   // }// not yet schema built
+
     return builtSchema;
+  }
+
+  private void buildSchemaWithAlias(
+      final List<Pair<Integer, Integer>> childSchema) {
+    final List<ColumnDefinition> columnDefinitions = new ArrayList<>();
+    for (final Pair<Integer, Integer> pair : childSchema) {
+      final ColumnDefinition columnDefinition = new ColumnDefinition();
+      columnDefinition.setColumnName(
+          SchemaManager.getColumnNameById(pair.getKey(), pair.getValue()));
+      columnDefinitions.add(columnDefinition);
+    } // for
+
+    SchemaManager.addTableSchema(this.alias,
+        new TableSchema(this.alias, columnDefinitions));
+
+    final Integer tableId = SchemaManager.getTableId(this.alias);
+    final TableSchema tableSchema = SchemaManager.getTableSchemaById(tableId);
+
+    // build schema
+    for (final ColumnDefinition colDefinition : tableSchema
+        .getColumnDefinitions()) {
+
+      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
+          .getColumnIdByTableId(tableId, colDefinition.getColumnName())));
+    } // for
   }
 }
