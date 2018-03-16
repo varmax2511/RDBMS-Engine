@@ -9,38 +9,49 @@ import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.Validate;
+import net.sf.jsqlparser.expression.Expression;
 
-/**
- * To take cross product, Tables R and S We need tuple blocks, say 20 tuples
- * from each child and get a result of 400 rows. Now next call to getNext(),
- * should check if S has reached the end of the iteration or not.
- * 
- * If S ! end - Use the same 20 tuples of R pulled in previous call and pull the
- * next 20 tuples of S.
- * 
- * If S = end - Read the next 20 tuples from R if |R| > 40 - Re-open the S
- * scanner to again read the S tables
- * 
- * @author varunjai
- *
- */
-public class CrossProductOperator extends Node implements BinaryOperator {
+public class JoinOperator extends Node implements BinaryOperator {
 
+  private final Expression expression;
   private Collection<Tuple> holdingList = null;
+
+  public JoinOperator(Expression expression) {
+    Validate.notNull(expression);
+
+    this.expression = expression;
+  }
+
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+    if (CollectionUtils.isEmpty(builtSchema)) {
+      final Iterator<Node> childItr = getChildren().iterator();
+
+      // iterate over all children and add their schema
+      while (childItr.hasNext()) {
+        builtSchema.addAll(childItr.next().getBuiltSchema());
+      } // while
+
+    } // if
+    return builtSchema;
+  }
 
   @Override
   public Collection<Tuple> process(
       Collection<Collection<Tuple>> tupleCollection) throws Throwable {
 
-    Collection<Tuple> outputTuples = new ArrayList<>();
     final Iterator<Collection<Tuple>> tupleCollItr = tupleCollection.iterator();
 
     if (!tupleCollItr.hasNext()) {
       return null;
     }
 
-    outputTuples = tupleCollItr.next();
+    Collection<Tuple> outputTuples = tupleCollItr.next();
+    final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     /*
      * Merge collection of tuples one by one. First merge the two collections
      * and create a new collection containing their join. Then join these with
@@ -52,14 +63,28 @@ public class CrossProductOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
+        // final List<ColumnCell> mergedColumnCells = new ArrayList<>();
+        // mergedColumnCells.addAll(tuple.getColumnCells());
 
-        // join one row of the outputTuple with every row of the next table
+        // join one row of the outputTuple with one row of the next table per
+        // iteration
         for (final Tuple joinTuple : nextTable) {
-
           final List<ColumnCell> mergedColumnCells = new ArrayList<>();
           mergedColumnCells.addAll(tuple.getColumnCells());
           mergedColumnCells.addAll(joinTuple.getColumnCells());
-          newOutputTuple.add(new Tuple(mergedColumnCells));
+
+          final Tuple testTuple = new Tuple(mergedColumnCells);
+          // process expressions
+          final ColumnCell columnCell = opVisitor.getValue(testTuple,
+              this.expression);
+
+          // if operator returned a result and its value is true, then row can
+          // get
+          // selected
+          if (null != columnCell && columnCell.getCellValue().toBool()) {
+            newOutputTuple.add(testTuple);
+          } // if
+
         } // for
 
       } // for
@@ -92,17 +117,18 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     if (firstChild.hasNext() && !secondChild.hasNext()) {
       holdingList = firstChild.getNext();
       // update if result obtained is empty, possible if a select is below
-      while(CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()){
-        holdingList = firstChild.getNext();  
+      while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
+        holdingList = firstChild.getNext();
       }
       secondChild.close();
       secondChild.open();
-    }// if
+    } // if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
     tuples.add(holdingList);
     // add second child tuples
     tuples.add(secondChild.getNext());
+
     return process(tuples);
   }
 
@@ -111,17 +137,4 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     this.holdingList = null;
   }
 
-  @Override
-  public List<Pair<Integer, Integer>> getBuiltSchema() {
-
-    // if no schema populated already
-    if (CollectionUtils.isEmpty(builtSchema)) {
-      final Iterator<Node> childItr = getChildren().iterator();
-      // iterate over all children and add their schema
-      while (childItr.hasNext()) {
-        builtSchema.addAll(childItr.next().getBuiltSchema());
-      } // while
-    } // if
-    return builtSchema;
-  }
 }

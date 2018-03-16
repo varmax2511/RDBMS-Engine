@@ -142,7 +142,11 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(AndExpression andExpression) {
-    root = new SelectionOperator(andExpression);
+    Node node = new SelectionOperator(andExpression.getLeftExpression()); 
+    andExpression.getRightExpression().accept(this);
+    node.addChild(this.getRoot());
+    root = node;
+    //root = new SelectionOperator(andExpression);
   }
 
   @Override

@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import edu.buffalo.www.cse4562.operator.Operator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.expression.PrimitiveValue;
 
 /**
@@ -49,6 +50,12 @@ public class Tuple {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public String toString() {
+
+    return TuplePrinter.parseTuple(this);
   }
 
   /**

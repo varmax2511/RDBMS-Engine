@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
@@ -13,7 +14,7 @@ import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.StringUtils;
-import javafx.util.Pair;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
@@ -32,7 +33,7 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
  * and pass a tuple and an expression to it for processing.
  *
  * TODO: Support for Alias
- * 
+ *
  * TODO: Support for processing of AllTableColumns
  *
  * </pre>
@@ -53,7 +54,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   /**
    * List of {@link SelectExpressionItem}
    */
-  private List<SelectExpressionItem> selectExpressionItems;
+  private List<SelectExpressionItem> selectExpressionItems = new ArrayList<>();
 
   @Override
   public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
@@ -65,8 +66,8 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     }
 
     // unary operator, interested in only the first collection
-    Collection<Tuple> tupleRecords = tuples.iterator().next();
-    
+    final Collection<Tuple> tupleRecords = tuples.iterator().next();
+
     // empty check
     if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return projectOutput;
@@ -76,6 +77,9 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     if (this.allColFlag) {
       return tupleRecords;
     }
+
+    // expr like R.*
+    findAllTableColumns();
 
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
@@ -103,7 +107,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
             final Integer tableId = tuple.getColumnCells().iterator().next()
                 .getTableId();
             // register with Schema Manager
-            addColumnAliasToSchema(expressionItem, tableId);
+            // addColumnAliasToSchema(expressionItem, tableId);
 
             // Update the column id of Column Cell
             columnCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
@@ -121,6 +125,35 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     } // for
 
     return projectOutput;
+  }
+
+  /**
+   * Find the {@link AllTableColumns} and add their expanded form i.e.
+   * table.Column in the {@link #selectExpressionItems}
+   */
+  private void findAllTableColumns() {
+    // null check
+    if (CollectionUtils.isEmpty(allTableColumns)) {
+      return;
+    }
+
+    int cnt = 0;
+    for (final AllTableColumns tableColumns : allTableColumns) {
+
+      final TableSchema tableSchema = SchemaManager
+          .getTableSchema(tableColumns.getTable().getName());
+
+      for (final ColumnDefinition colDef : tableSchema.getColumnDefinitions()) {
+        final SelectExpressionItem selectExprItem = new SelectExpressionItem();
+        final Column column = new Column();
+        column.setColumnName(colDef.getColumnName());
+        column.setTable(tableColumns.getTable());
+        selectExprItem.setExpression(column);
+        // TODO: hack assuming Table.* is at beginning
+        this.selectExpressionItems.add(cnt++, selectExprItem);
+      } // for
+    } // for
+
   }
 
   /**
@@ -193,7 +226,134 @@ public class ProjectionOperator extends Node implements UnaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    // TODO Auto-generated method stub
-    return null;
+
+    // if already set
+    if (!CollectionUtils.isEmpty(builtSchema)) {
+
+      return builtSchema;
+    }
+
+    // invoke child schema for schema manager updation
+    final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
+        .getBuiltSchema();
+
+    // if expression is SELECT * or SELECT R.*, S.* FROM R,S
+    if (this.allColFlag || CollectionUtils.isEmpty(selectExpressionItems)) {
+      builtSchema = childSchema;
+      return builtSchema;
+    }
+
+    // get schema based on expression items of project
+    for (final SelectExpressionItem selectExprItem : this.selectExpressionItems) {
+
+      if (selectExprItem.getExpression() instanceof Column) {
+        final Column column = (Column) selectExprItem.getExpression();
+
+        // if no table name, get table id from child schema where the
+        // column name matches
+        if (StringUtils.isBlank(column.getTable().getName())) {
+
+          buildNoTableSchema(childSchema, selectExprItem,
+              column.getColumnName());
+          continue;
+        } // if no column name
+
+        buildWithCidTid(selectExprItem, column);
+        continue;
+      } else {
+        if (!StringUtils.isBlank(selectExprItem.getAlias())) {
+          buildExpression(childSchema, selectExprItem);
+        }
+      }
+
+    } // for
+
+    return builtSchema;
   }
+
+  /**
+   *
+   * @param selectExprItem
+   * @param column
+   * @return
+   */
+  private void buildWithCidTid(final SelectExpressionItem selectExprItem,
+      final Column column) {
+    final Integer tableId = SchemaManager
+        .getTableId(column.getTable().getName());
+
+    // if alias is present, add to schema
+    if (!StringUtils.isBlank(selectExprItem.getAlias())) {
+
+      addColumnAliasToSchema(selectExprItem, tableId);
+      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
+          .getColumnIdByTableId(tableId, selectExprItem.getAlias())));
+      return;
+    }
+
+    // no alias present
+    builtSchema.add(new Pair<Integer, Integer>(tableId,
+        SchemaManager.getColumnIdByTableId(tableId, column.getColumnName())));
+
+  }
+
+  /**
+   *
+   * @param childSchema
+   * @param selectExprItem
+   * @param column
+   */
+  private void buildNoTableSchema(List<Pair<Integer, Integer>> childSchema,
+      final SelectExpressionItem selectExprItem, final String columnName) {
+    for (final Pair<Integer, Integer> pair : childSchema) {
+      // if matching
+      if (!SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
+          .equals(columnName)) {
+        continue;
+      }
+
+      // alias
+      if (!StringUtils.isBlank(selectExprItem.getAlias())) {
+
+        addColumnAliasToSchema(selectExprItem, pair.getKey());
+        builtSchema.add(new Pair<Integer, Integer>(pair.getKey(), SchemaManager
+            .getColumnIdByTableId(pair.getKey(), selectExprItem.getAlias())));
+        return;
+      }
+
+      // no alias present
+      builtSchema.add(new Pair<Integer, Integer>(pair.getKey(),
+          SchemaManager.getColumnIdByTableId(pair.getKey(), columnName)));
+
+      return;
+    } // for
+  }
+
+  /**
+   *
+   * @param childSchema
+   * @param selectExprItem
+   * @param column
+   */
+  private void buildExpression(List<Pair<Integer, Integer>> childSchema,
+      final SelectExpressionItem selectExprItem) {
+    // alias
+    if (!StringUtils.isBlank(selectExprItem.getAlias())) {
+
+      addColumnAliasToSchema(selectExprItem, childSchema.get(0).getKey());
+      builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
+          SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
+              selectExprItem.getAlias())));
+      return;
+    }
+
+    // no alias present
+    builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
+        SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
+            selectExprItem.getExpression().toString())));
+
+    return;
+
+  }
+
 }
