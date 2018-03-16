@@ -417,7 +417,6 @@ public class TestTreeProcessor {
 
     for(Tuple tuple :TreeProcessor.processTree(root)){
       TuplePrinter.printTuple(tuple);
-      System.out.println();
     }
     
     /*parser = new CCJSqlParser(new StringReader(
