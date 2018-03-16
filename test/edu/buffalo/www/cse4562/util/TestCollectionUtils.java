@@ -1,4 +1,4 @@
-/*package edu.buffalo.www.cse4562.util;
+package edu.buffalo.www.cse4562.util;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,4 +40,3 @@ public class TestCollectionUtils {
 
   }
 }
-*/
