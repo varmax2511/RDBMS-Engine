@@ -64,9 +64,9 @@ public class OrderByOperator extends Node implements BlockingOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    //if (CollectionUtils.isEmpty(builtSchema)) {
+    if (CollectionUtils.isEmpty(builtSchema)) {
       builtSchema = getChildren().get(0).getBuiltSchema();
-    //} // if
+    } // if
 
     return builtSchema;
   }

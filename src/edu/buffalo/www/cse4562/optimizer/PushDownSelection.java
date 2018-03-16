@@ -115,9 +115,11 @@ public class PushDownSelection {
   public static void convertCrossToJoin(SelectionOperator selectNode,
       Node pushDownLevel) {
 
-    final Node joinNode = new JoinOperator(selectNode.getExpression());
+    final JoinOperator joinNode = new JoinOperator(selectNode.getExpression());
     joinNode.setChildren(pushDownLevel.getChildren());
     joinNode.setParent(selectNode.getParent());
+    joinNode.setSchema(pushDownLevel.getBuiltSchema());
+    
 
     int index = 0;
     // removing selectNode from the tree and updating references
