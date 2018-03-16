@@ -85,7 +85,7 @@ public class SubSelectOperator extends Node implements UnaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    if (CollectionUtils.isEmpty(builtSchema)) {
+    //if (CollectionUtils.isEmpty(builtSchema)) {
 
       final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
           .getBuiltSchema();
@@ -96,7 +96,7 @@ public class SubSelectOperator extends Node implements UnaryOperator {
 
       buildSchemaWithAlias(childSchema);
 
-    }// not yet schema built
+   // }// not yet schema built
 
     return builtSchema;
   }

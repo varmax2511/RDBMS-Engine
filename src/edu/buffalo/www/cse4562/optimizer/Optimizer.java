@@ -24,6 +24,9 @@ public class Optimizer {
     
     PushDownSelection.pushDownSelect(root);
     //PushDownProjection.pushDownProject(root);
+    
+    // re-build schema
+    root.getBuiltSchema();
     return root;
   }
 

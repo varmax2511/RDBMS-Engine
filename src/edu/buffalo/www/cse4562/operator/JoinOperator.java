@@ -28,7 +28,7 @@ public class JoinOperator extends Node implements BinaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    if (CollectionUtils.isEmpty(builtSchema)) {
+   // if (CollectionUtils.isEmpty(builtSchema)) {
       final Iterator<Node> childItr = getChildren().iterator();
 
       // iterate over all children and add their schema
@@ -36,7 +36,7 @@ public class JoinOperator extends Node implements BinaryOperator {
         builtSchema.addAll(childItr.next().getBuiltSchema());
       } // while
 
-    } // if
+   // } // if
     return builtSchema;
   }
 

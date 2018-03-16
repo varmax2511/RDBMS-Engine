@@ -103,6 +103,19 @@ public class Tuple {
       this.cellValue = cellValue;
     }
 
+    @Override
+    public String toString() {
+
+      StringBuilder builder = new StringBuilder();
+      builder.append(tableId == null ? "" : tableId.toString());
+      builder.append("|");
+      builder.append(columnId == null ? "" : columnId.toString());
+      builder.append("|");
+      builder.append(cellValue == null ? "" : cellValue.toString());
+
+      return builder.toString();
+    }
+
   }
 
 }

@@ -77,10 +77,10 @@ public class SelectionOperator extends Node implements UnaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    if (CollectionUtils.isEmpty(builtSchema)) {
+   // if (CollectionUtils.isEmpty(builtSchema)) {
       builtSchema = getChildren().get(0).getBuiltSchema();
-    }// if
-    
+    //}// if
+   
     return builtSchema;
   }
 
