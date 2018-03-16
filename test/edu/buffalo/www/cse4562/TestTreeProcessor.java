@@ -387,7 +387,7 @@ public class TestTreeProcessor {
     // get the tree
     root = queryVisitor.getRoot();
 
-    assertEquals(25, TreeProcessor.processTree(root).size());
+    assertEquals(330410, TreeProcessor.processTree(root).size());
 
   }
   
@@ -413,14 +413,14 @@ public class TestTreeProcessor {
 
     // get the tree
     Node root = queryVisitor.getRoot();
-    assertEquals(82, TreeProcessor.processTree(root).size());
+    assertEquals(100, TreeProcessor.processTree(root).size());
 
     for(Tuple tuple :TreeProcessor.processTree(root)){
       TuplePrinter.printTuple(tuple);
     }
     
     parser = new CCJSqlParser(new StringReader(
-        "SELECT C.*, N.N_NAME, R.R_NAME FROM CUSTOMER C, NATION N, REGION R WHERE N.N_NATIONKEY = C.C_NATIONKEY AND N.N_NATIONKEY >= 3;"));
+        "SELECT C.*, N.N_NAME, R.R_NAME FROM CUSTOMER1 C, NATION1 N, REGION1 R WHERE N.N_NATIONKEY = C.C_NATIONKEY AND N.N_NATIONKEY >= 3;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
@@ -438,8 +438,17 @@ public class TestTreeProcessor {
     final QueryVisitor queryVisitor = new QueryVisitor();
     parser.Statement().accept(queryVisitor);
 
+    //parser = new CCJSqlParser(new StringReader(
+    //    "SELECT P1_FIRSTNAME, P1_LASTNAME, P2_FIRSTNAME, P2_LASTNAME FROM (SELECT P1.FIRSTNAME AS P1_FIRSTNAME, P1.LASTNAME AS P1_LASTNAME, P2.FIRSTNAME AS P2_FIRSTNAME, P2.LASTNAME AS P2_LASTNAME, P1.FIRSTSEASON AS P1_FIRSTSEASON, P1.LASTSEASON AS P1_LASTSEASON, P2.FIRSTSEASON AS P2_FIRSTSEASON, P2.LASTSEASON AS P2_LASTSEASON FROM PLAYERS P1, PLAYERS P2 WHERE P1.ID<>P2.ID) SUB_Q WHERE P1_FIRSTSEASON<P2_FIRSTSEASON AND P1_LASTSEASON>P2_LASTSEASON;"));
+    //parser.Statement().accept(queryVisitor);
+    
+    
     parser = new CCJSqlParser(new StringReader(
-        "SELECT P1_FIRSTNAME, P1_LASTNAME, P2_FIRSTNAME, P2_LASTNAME FROM (SELECT P1.FIRSTNAME AS P1_FIRSTNAME, P1.LASTNAME AS P1_LASTNAME, P2.FIRSTNAME AS P2_FIRSTNAME, P2.LASTNAME AS P2_LASTNAME, P1.FIRSTSEASON AS P1_FIRSTSEASON, P1.LASTSEASON AS P1_LASTSEASON, P2.FIRSTSEASON AS P2_FIRSTSEASON, P2.LASTSEASON AS P2_LASTSEASON FROM PLAYERS P1, PLAYERS P2 WHERE P1.ID<>P2.ID) SUB_Q WHERE P1_FIRSTSEASON<P2_FIRSTSEASON AND P1_LASTSEASON>P2_LASTSEASON;"));
+        "SELECT P1.FIRSTNAME AS P1_FIRSTNAME, P1.LASTNAME AS P1_LASTNAME, P2.FIRSTNAME AS P2_FIRSTNAME, P2.LASTNAME AS P2_LASTNAME, P1.FIRSTSEASON AS P1_FIRSTSEASON, P1.LASTSEASON AS P1_LASTSEASON, P2.FIRSTSEASON AS P2_FIRSTSEASON, P2.LASTSEASON AS P2_LASTSEASON FROM PLAYERS P1, PLAYERS P2 WHERE P1.ID<>P2.ID;"));
+    parser.Statement().accept(queryVisitor);
+    
+    parser = new CCJSqlParser(new StringReader(
+        "SELECT P1.FIRSTNAME AS P1_FIRSTNAME, P2.FIRSTNAME AS P2_FIRSTNAME FROM PLAYERS P1, PLAYERS P2 WHERE P1.ID<>P2.ID;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
