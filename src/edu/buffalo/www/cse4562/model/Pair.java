@@ -1,5 +1,7 @@
 package edu.buffalo.www.cse4562.model;
 
+import edu.buffalo.www.cse4562.util.StringUtils;
+
 /**
  * 
  * @author snehameh
@@ -56,4 +58,12 @@ public class Pair<K, V> {
     return true;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(this.key == null ? "" : this.key);
+    builder.append("|");
+    builder.append(this.value == null ? "" : this.value);
+    return builder.toString();
+  }
 }

@@ -90,13 +90,23 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     // then re-open the second child iterator and update the holding list
     // with the next values from first child.
     if (firstChild.hasNext() && !secondChild.hasNext()) {
-      holdingList = firstChild.getNext();
+      holdingList = null;
+      Collection<Tuple> firstChldTuples = firstChild.getNext();
       // update if result obtained is empty, possible if a select is below
-      while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
-        holdingList = firstChild.getNext();
+      while (CollectionUtils.isEmpty(firstChldTuples) && firstChild.hasNext()) {
+        firstChldTuples = firstChild.getNext();
       }
-      secondChild.close();
-      secondChild.open();
+
+      if (firstChldTuples != null) {
+        holdingList = new ArrayList<>();
+        for (Tuple tuple : firstChldTuples) {
+          holdingList.add(tuple.getCopy());
+        } // for
+
+        secondChild.close();
+        secondChild.open();
+      } // if
+
     } // if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
