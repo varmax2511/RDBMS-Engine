@@ -115,13 +115,13 @@ public class CrossProductOperator extends Node implements BinaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if no schema populated already
-    if (CollectionUtils.isEmpty(builtSchema)) {
+    //if (CollectionUtils.isEmpty(builtSchema)) {
       final Iterator<Node> childItr = getChildren().iterator();
       // iterate over all children and add their schema
       while (childItr.hasNext()) {
         builtSchema.addAll(childItr.next().getBuiltSchema());
       } // while
-    } // if
+    //} // if
     return builtSchema;
   }
 }

@@ -33,3 +33,20 @@ WHERE
 ORDER BY L_EXTENDEDPRICE
 LIMIT 20;
 
+
+SELECT C.*, N.n_name, R.r_name
+FROM CUSTOMER C, NATION N, REGION R
+WHERE N.n_nationkey = C.c_nationkey
+     AND N.n_nationkey < 3
+     AND C.c_mktsegment = 'FURNITURE'
+     AND C.c_acctbal > 9995;
+
+
+SELECT C.*, N.N_NAME, R.R_NAME
+FROM CUSTOMER C, NATION N, REGION R
+WHERE N.N_NATIONKEY = C.C_NATIONKEY
+     AND N.N_NATIONKEY < 3
+     AND C.MKTSEGMENT = 'FURNITURE'
+     AND C.C_ACCTBAL > 9995;
+
+

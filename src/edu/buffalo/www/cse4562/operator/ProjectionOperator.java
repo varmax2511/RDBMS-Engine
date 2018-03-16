@@ -228,10 +228,10 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if already set
-    if (!CollectionUtils.isEmpty(builtSchema)) {
+    /*if (!CollectionUtils.isEmpty(builtSchema)) {
 
       return builtSchema;
-    }
+    }*/
 
     // invoke child schema for schema manager updation
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
