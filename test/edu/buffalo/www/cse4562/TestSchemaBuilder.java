@@ -1,4 +1,4 @@
-/*package edu.buffalo.www.cse4562;
+package edu.buffalo.www.cse4562;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,12 +15,12 @@ import edu.buffalo.www.cse4562.query.QueryVisitor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
-*//**
+/**
  * Test class for schema builder
  * 
  * @author varunjai
  *
- *//*
+ */
 public class TestSchemaBuilder {
 
   @Test
@@ -94,4 +94,3 @@ public class TestSchemaBuilder {
   }
 
 }
-*/

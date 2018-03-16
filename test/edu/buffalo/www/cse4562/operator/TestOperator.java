@@ -1,4 +1,4 @@
-/*package edu.buffalo.www.cse4562.operator;
+package edu.buffalo.www.cse4562.operator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,11 +15,11 @@ import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 
-*//**
+/**
  * 
  * @author varunjai
  *
- *//*
+ */
 public class TestOperator {
 
   @Test
@@ -43,9 +43,6 @@ public class TestOperator {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(10, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
   }
 
   @Test
@@ -94,10 +91,6 @@ public class TestOperator {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(17, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
-
   }
 
   @Test
@@ -123,10 +116,6 @@ public class TestOperator {
     final Node root = (queryVisitor.getRoot());
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(26, tuples.size());
-
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
 
   }
 
@@ -154,9 +143,6 @@ public class TestOperator {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(50, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
   }
 
   @Test
@@ -183,10 +169,35 @@ public class TestOperator {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(50, tuples.size());
 
-    for (final Tuple tuple : tuples) {
-      System.out.println(tuple.toString());
-    }
   }
 
+  @Test
+  public void testMultiCross() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+    
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE T(G STRING, H INTEGER, I DATE, J DOUBLE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.A, S.E, T.I FROM R,S,T WHERE R.A=S.D AND R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(340, tuples.size());
+  }
 }
-*/

@@ -1,4 +1,4 @@
-/*package edu.buffalo.www.cse4562.operator;
+package edu.buffalo.www.cse4562.operator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -96,11 +96,11 @@ public class TestOptimizer {
 
   }
 
-  *//**
+  /**
    * This test should result in a no-op for the optimizer.
    * 
    * @throws Throwable
-   *//*
+   */
   @Test
   public void testOptimizer4() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -121,4 +121,3 @@ public class TestOptimizer {
 
   }
 }
-*/
