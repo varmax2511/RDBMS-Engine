@@ -29,14 +29,13 @@ public class Main {
 
     while (statement != null) {
 
-      try{
       // process query to generate Tree
       final QueryVisitor queryVisitor = new QueryVisitor();
       statement.accept(queryVisitor);
 
       // get the tree
       final Node root = queryVisitor.getRoot();
-      
+
       // if a SELECT
       if (null != root) {
 
@@ -53,10 +52,6 @@ public class Main {
       System.out.flush();
 
       statement = parser.Statement();
-      }catch(Throwable t){
-        System.out.println(ApplicationConstants.BASH);
-        System.out.flush();
-      }
     } // while
 
   }
