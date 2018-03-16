@@ -1,6 +1,8 @@
 package edu.buffalo.www.cse4562.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import edu.buffalo.www.cse4562.operator.Operator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
@@ -22,10 +24,16 @@ import net.sf.jsqlparser.expression.PrimitiveValue;
  * @author varunjai
  *
  */
-public class Tuple {
+public class Tuple implements Cloneable {
 
-  private final Collection<ColumnCell> columnCells;
+  private Collection<ColumnCell> columnCells;
 
+  /**
+   * 
+   */
+  public Tuple(){
+    
+  }
   /**
    * 
    * @param columnCells
@@ -57,6 +65,18 @@ public class Tuple {
 
     return TuplePrinter.parseTuple(this);
   }
+  
+  public Tuple getCopy(){
+    Tuple tuple = new Tuple();
+    List<ColumnCell> columnCells = new ArrayList<>();
+    for(ColumnCell columnCell : this.getColumnCells()){
+      columnCells.add(columnCell.getCopy());
+    }
+    
+    tuple.columnCells = columnCells;
+    return tuple;
+  }
+  
 
   /**
    * Represents one cell value.
@@ -64,10 +84,18 @@ public class Tuple {
    * @author varunjai
    *
    */
-  public static class ColumnCell {
+  public static class ColumnCell implements Cloneable{
     private Integer tableId;
     private Integer columnId;
     private PrimitiveValue cellValue;
+    
+    /**
+     * WARNING!!!! Don't use
+     */
+    public ColumnCell() {
+      super();
+    }
+
     /**
      * 
      * @param cellValue
@@ -116,6 +144,14 @@ public class Tuple {
       return builder.toString();
     }
 
+    public ColumnCell getCopy(){
+        ColumnCell columnCell = new ColumnCell();
+        columnCell.setColumnId(this.columnId);
+        columnCell.setTableId(this.tableId);
+        columnCell.setCellValue(this.cellValue);
+        return columnCell;
+    }
+    
   }
 
 }
