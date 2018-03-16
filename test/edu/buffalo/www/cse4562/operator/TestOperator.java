@@ -71,7 +71,7 @@ public class TestOperator {
   }
 
   @Test
-  public void testCross() throws Throwable{
+  public void testCross() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
         new StringReader("CREATE TABLE R(A int, B int, C int);"));
 
@@ -85,7 +85,6 @@ public class TestOperator {
 
     parser.Statement().accept(queryVisitor);
 
-    
     parser = new CCJSqlParser(
         new StringReader("SELECT * FROM R,S WHERE R.A = S.D AND R.A > 3;"));
     parser.Statement().accept(queryVisitor);
@@ -94,13 +93,13 @@ public class TestOperator {
     final Node root = queryVisitor.getRoot();
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(17, tuples.size());
-    
+
     for (final Tuple tuple : tuples) {
       System.out.println(tuple.toString());
     }
 
   }
-  
+
   @Test
   public void testCross2() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -116,7 +115,6 @@ public class TestOperator {
 
     parser.Statement().accept(queryVisitor);
 
-    
     parser = new CCJSqlParser(
         new StringReader("SELECT * FROM R,S WHERE R.A = S.D;"));
     parser.Statement().accept(queryVisitor);
@@ -129,7 +127,65 @@ public class TestOperator {
     for (final Tuple tuple : tuples) {
       System.out.println(tuple.toString());
     }
-    
+
   }
-  
+
+  @Test
+  public void testCross3() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*, S.E, S.F FROM R,S WHERE R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(50, tuples.size());
+
+    for (final Tuple tuple : tuples) {
+      System.out.println(tuple.toString());
+    }
+  }
+
+  @Test
+  public void testCross4() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*, S.* FROM R,S WHERE R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(50, tuples.size());
+
+    for (final Tuple tuple : tuples) {
+      System.out.println(tuple.toString());
+    }
+  }
+
 }

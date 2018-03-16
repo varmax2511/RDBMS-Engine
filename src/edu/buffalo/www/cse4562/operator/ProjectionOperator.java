@@ -54,7 +54,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   /**
    * List of {@link SelectExpressionItem}
    */
-  private List<SelectExpressionItem> selectExpressionItems;
+  private List<SelectExpressionItem> selectExpressionItems = new ArrayList<>();
 
   @Override
   public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
@@ -77,6 +77,9 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     if (this.allColFlag) {
       return tupleRecords;
     }
+
+    // expr like R.*
+    findAllTableColumns();
 
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
@@ -122,6 +125,35 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     } // for
 
     return projectOutput;
+  }
+
+  /**
+   * Find the {@link AllTableColumns} and add their expanded form i.e.
+   * table.Column in the {@link #selectExpressionItems}
+   */
+  private void findAllTableColumns() {
+    // null check
+    if (CollectionUtils.isEmpty(allTableColumns)) {
+      return;
+    }
+
+    int cnt = 0;
+    for (final AllTableColumns tableColumns : allTableColumns) {
+
+      final TableSchema tableSchema = SchemaManager
+          .getTableSchema(tableColumns.getTable().getName());
+
+      for (final ColumnDefinition colDef : tableSchema.getColumnDefinitions()) {
+        final SelectExpressionItem selectExprItem = new SelectExpressionItem();
+        final Column column = new Column();
+        column.setColumnName(colDef.getColumnName());
+        column.setTable(tableColumns.getTable());
+        selectExprItem.setExpression(column);
+        // TODO: hack assuming Table.* is at beginning
+        this.selectExpressionItems.add(cnt++, selectExprItem);
+      } // for
+    } // for
+
   }
 
   /**
@@ -205,8 +237,8 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
         .getBuiltSchema();
 
-    // if expression is SELECT *
-    if (this.allColFlag) {
+    // if expression is SELECT * or SELECT R.*, S.* FROM R,S
+    if (this.allColFlag || CollectionUtils.isEmpty(selectExpressionItems)) {
       builtSchema = childSchema;
       return builtSchema;
     }
