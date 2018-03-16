@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+/*package edu.buffalo.www.cse4562;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -14,12 +14,12 @@ import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
-/**
+*//**
  * Test cases for {@link TreeProcessor}.
  * 
  * @author varunjai
  *
- */
+ *//*
 public class TestTreeProcessor {
 
   @Test
@@ -34,11 +34,11 @@ public class TestTreeProcessor {
 
   }
 
-  /**
+  *//**
    * Test simple select query w/o where clause.
    * 
    * @throws Throwable
-   */
+   *//*
   @Test
   public void testSimpleSelect() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -59,11 +59,11 @@ public class TestTreeProcessor {
 
   }
 
-  /**
+  *//**
    * Test simple select query w/o where clause.
    * 
    * @throws Throwable
-   */
+   *//*
   @Test
   public void testSimpleSelectWhere() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -305,3 +305,4 @@ public class TestTreeProcessor {
   }
 
 }
+*/
