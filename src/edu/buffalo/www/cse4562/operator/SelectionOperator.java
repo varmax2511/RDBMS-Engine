@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
@@ -19,9 +21,10 @@ import net.sf.jsqlparser.expression.Expression;
  * @author varunjai
  *
  */
-public class SelectionOperator implements Operator {
+public class SelectionOperator extends Node implements UnaryOperator {
 
   private final Expression expression;
+  
 
   /**
    * 
@@ -38,18 +41,26 @@ public class SelectionOperator implements Operator {
   }
 
   @Override
-  public Collection<Tuple> process(Collection<Tuple> tuples) throws Throwable {
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
+      throws Throwable {
 
     final List<Tuple> selectOutputs = new ArrayList<>();
 
+    if (tuples == null || tuples.size() == 0) {
+      return selectOutputs;
+    }
+
+    // unary operator, interested in only the first collection
+    Collection<Tuple> tupleRecords = tuples.iterator().next();
+
     // empty check
-    if (CollectionUtils.areTuplesEmpty(tuples)) {
+    if (CollectionUtils.areTuplesEmpty(tupleRecords)) {
       return selectOutputs;
     }
 
     final OperatorVisitor opVisitor = new OperatorExpressionVisitor();
     // iterate tuples in the collection
-    for (final Tuple tuple : tuples) {
+    for (final Tuple tuple : tupleRecords) {
       // process expressions
       final ColumnCell columnCell = opVisitor.getValue(tuple, this.expression);
 
@@ -62,6 +73,15 @@ public class SelectionOperator implements Operator {
     } // for
 
     return selectOutputs;
+  }
+
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+   // if (CollectionUtils.isEmpty(builtSchema)) {
+      builtSchema = getChildren().get(0).getBuiltSchema();
+    //}// if
+   
+    return builtSchema;
   }
 
 }

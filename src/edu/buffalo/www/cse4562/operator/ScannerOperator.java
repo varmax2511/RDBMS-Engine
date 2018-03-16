@@ -15,12 +15,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
+import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
+import edu.buffalo.www.cse4562.util.StringUtils;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
@@ -29,38 +33,27 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * responsible for fetching data from file on disk.
  *
  */
-public class ScannerOperator implements Operator, TupleIterator {
+public class ScannerOperator extends Node implements UnaryOperator {
 
-  private final String dataParentPath;
   private Iterator<CSVRecord> recordIterator;
-  private final String tableName;
   private Reader reader;
   private CSVParser csvParser;
-  private int chunkSize = 1;
-
+  private final Config config;
   /**
    *
-   * @param table
-   *          !null
-   * @param dataParentPath
-   *          !blank
+   * @param config
+   *          !null.
    */
-  public ScannerOperator(String tableName, String dataParentPath) {
-    Validate.notBlank(tableName);
-
-    if (null == SchemaManager.getTableSchema(tableName)) {
-      throw new IllegalArgumentException(
-          "Table with name: " + tableName + " does not exist!");
-    }
-
-    this.dataParentPath = dataParentPath;
-    this.tableName = tableName;
+  public ScannerOperator(Config config) {
+    Validate.notNull(config);
+    this.config = config;
   }
 
   @Override
   public void open() throws IOException {
     reader = Files.newBufferedReader(
-        Paths.get(this.dataParentPath + this.tableName + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
+        Paths.get(config.getDataParentPath() + config.getTableName()
+            + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
     csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
     final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
     recordIterator = csvRecords.iterator();
@@ -74,9 +67,7 @@ public class ScannerOperator implements Operator, TupleIterator {
   @Override
   public Collection<Tuple> getNext() throws IOException {
 
-    final List<Tuple> tuples = new ArrayList<>();
-    tuples.add(process());
-    return tuples;
+    return process();
   }
 
   /**
@@ -85,23 +76,34 @@ public class ScannerOperator implements Operator, TupleIterator {
    * @return
    * @throws IOException
    */
-  private Tuple process() throws IOException {
+  private Collection<Tuple> process() throws IOException {
 
     // if method invoked first time without connection being opened
-    if (null == reader) {
+    /*if (null == reader) {
       open();
-    }
+    }*/
 
     // if no records left to iterate
     if (!recordIterator.hasNext()) {
       close();
-      return new Tuple(new ArrayList<>());
+      return new ArrayList<>();
     }
 
-    final List<ColumnCell> columnCells = new ArrayList<>();
-    final TableSchema tableSchema = SchemaManager.getTableSchema(tableName);
-    final Integer tableId = SchemaManager.getTableId(tableName);
-    for (int i = 0; i < chunkSize; i++) {
+    final TableSchema tableSchema = SchemaManager
+        .getTableSchema(config.getTableName());
+    Integer tableId = SchemaManager.getTableId(config.getTableName());
+    /*
+     * This is use case for queries like SELECT P.A, P.B FROM R AS P WHERE P.A >
+     * 4 AND P.B > 1; We will point the same reference of table schema and not a
+     * copy of it.
+     */
+    if (!StringUtils.isBlank(config.getAlias())) {
+      // SchemaManager.addTableSchema(config.getAlias(), tableSchema);
+      tableId = SchemaManager.getTableId(config.getAlias());
+    }
+
+    final List<Tuple> tuples = new ArrayList<>();
+    for (int i = 0; i < config.getChunkSize(); i++) {
 
       // no value to iterate
       if (!recordIterator.hasNext()) {
@@ -111,7 +113,8 @@ public class ScannerOperator implements Operator, TupleIterator {
 
       // fetch a row
       final String[] values = recordIterator.next().get(0).split("\\|");
-
+      final List<ColumnCell> columnCells = new ArrayList<>();
+      
       for (int j = 0; j < values.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
@@ -124,10 +127,13 @@ public class ScannerOperator implements Operator, TupleIterator {
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
             colDefinition.getColumnName()));
         columnCells.add(colCell);
+
       } // for
+
+      tuples.add(new Tuple(columnCells));
     } // for
 
-    return new Tuple(columnCells);
+    return tuples;
   }
 
   /**
@@ -154,7 +160,7 @@ public class ScannerOperator implements Operator, TupleIterator {
   }
 
   @Override
-  public Collection<Tuple> process(Collection<Tuple> tuples)
+  public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
       throws IOException {
     return getNext();
   }
@@ -163,9 +169,97 @@ public class ScannerOperator implements Operator, TupleIterator {
   public boolean hasNext() throws IOException {
     // if method invoked first time without connection being opened
     if (null == reader) {
-      open();
+      return false;
     }
     return this.recordIterator.hasNext();
+  }
+  
+  @Override
+  public List<Pair<Integer, Integer>> getBuiltSchema() {
+
+    // build schema if not yet built
+    if (CollectionUtils.isEmpty(builtSchema)) {
+      buildSchema();
+    } // if
+    return builtSchema;
+  }
+
+  /**
+   * Populate the builtSchema from the table name and alias information.
+   */
+  private void buildSchema() {
+    final TableSchema tableSchema = SchemaManager
+        .getTableSchema(config.getTableName());
+    Integer tableId = SchemaManager.getTableId(config.getTableName());
+
+    // if alias
+    if (!StringUtils.isBlank(config.getAlias())) {
+      SchemaManager.addTableSchema(config.getAlias(), tableSchema);
+      tableId = SchemaManager.getTableId(config.getAlias());
+    }
+
+    // build schema
+    for (final ColumnDefinition colDefinition : tableSchema
+        .getColumnDefinitions()) {
+
+      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
+          .getColumnIdByTableId(tableId, colDefinition.getColumnName())));
+    } // for
+  }
+
+  /**
+   * Configuration class for {@link ScannerOperator}
+   *
+   * @author varunjai
+   *
+   */
+  public static class Config {
+    private final String dataParentPath;
+    private int chunkSize = 10;
+    private final String tableName;
+    private final String alias;
+
+    /**
+     *
+     * @param dataParentPath
+     * @param tableName
+     *          !blank.
+     * @param alias
+     *          can be blank.
+     */
+    public Config(String tableName, String alias, String dataParentPath) {
+      Validate.notBlank(tableName);
+
+      if (null == SchemaManager.getTableSchema(tableName)) {
+        throw new IllegalArgumentException(
+            "Table with name: " + tableName + " does not exist!");
+      }
+
+      this.dataParentPath = dataParentPath;
+      this.tableName = tableName;
+      this.alias = alias;
+    }
+
+    public int getChunkSize() {
+      return chunkSize;
+    }
+
+    public void setChunkSize(int chunkSize) {
+      this.chunkSize = chunkSize;
+    }
+
+    public String getDataParentPath() {
+      return dataParentPath;
+    }
+
+    public String getTableName() {
+      return tableName;
+    }
+
+    public String getAlias() {
+      return alias;
+    }
+
   }
 
 }

@@ -119,7 +119,7 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(Addition addition) {
-    root = new Node(new SelectionOperator(addition), SelectionOperator.class);
+    root = new SelectionOperator(addition);
   }
 
   @Override
@@ -142,14 +142,16 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(AndExpression andExpression) {
-    root = new Node(new SelectionOperator(andExpression),
-        SelectionOperator.class);
+    Node node = new SelectionOperator(andExpression.getRightExpression()); 
+    andExpression.getLeftExpression().accept(this);
+    node.addChild(this.getRoot());
+    root = node;
+    //root = new SelectionOperator(andExpression);
   }
 
   @Override
   public void visit(OrExpression orExpression) {
-    root = new Node(new SelectionOperator(orExpression),
-        SelectionOperator.class);
+    root = new SelectionOperator(orExpression);
   }
 
   @Override
@@ -160,19 +162,17 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(EqualsTo equalsTo) {
-    root = new Node(new SelectionOperator(equalsTo), SelectionOperator.class);
+    root = new SelectionOperator(equalsTo);
   }
 
   @Override
   public void visit(GreaterThan greaterThan) {
-    root = new Node(new SelectionOperator(greaterThan),
-        SelectionOperator.class);
+    root = new SelectionOperator(greaterThan);
   }
 
   @Override
   public void visit(GreaterThanEquals greaterThanEquals) {
-    root = new Node(new SelectionOperator(greaterThanEquals),
-        SelectionOperator.class);
+    root = new SelectionOperator(greaterThanEquals);
   }
 
   @Override
@@ -195,21 +195,18 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(MinorThan minorThan) {
-    root = new Node(new SelectionOperator(minorThan),
-        SelectionOperator.class);
+    root = new SelectionOperator(minorThan);
 
   }
 
   @Override
   public void visit(MinorThanEquals minorThanEquals) {
-    root = new Node(new SelectionOperator(minorThanEquals),
-        SelectionOperator.class);
+    root = new SelectionOperator(minorThanEquals);
   }
 
   @Override
   public void visit(NotEqualsTo notEquals) {
-    root = new Node(new SelectionOperator(notEquals),
-        SelectionOperator.class);
+    root = new SelectionOperator(notEquals);
     }
 
   @Override
@@ -219,7 +216,7 @@ public class QueryExpressionVisitor implements ExpressionVisitor, SqlVisitor {
 
   @Override
   public void visit(SubSelect subSelect) {
-    // if subselect
+    // TODO: wrong implementation, refer book 16.3.2
     SelectQueryVisitor selectQueryVisitor = new SelectQueryVisitor();
     subSelect.getSelectBody().accept(selectQueryVisitor);
     root = selectQueryVisitor.getRoot();

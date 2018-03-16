@@ -26,6 +26,10 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  *
  * <b>NOTE</b> : Not thread safe and not cloned.
  *
+ *
+ *  TODO: We store all tableName -> table schema and tableAlias -> table schema
+ *  in the mamager which has application scope, but tableAlias -> table schema
+ *  has query scope.
  * </pre>
  *
  * @author varunjai
@@ -164,4 +168,6 @@ public class SchemaManager {
 
     return null;
   }
+  
+  
 }
