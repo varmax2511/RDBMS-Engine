@@ -56,7 +56,7 @@ public class Evaluator extends Eval {
       dateFormat.parse(v.getValue());
       return new DateValue(v.getValue());
     } catch (ParseException e) {
-      e.printStackTrace();
+      // no-op
     }
 
     return super.eval(v);

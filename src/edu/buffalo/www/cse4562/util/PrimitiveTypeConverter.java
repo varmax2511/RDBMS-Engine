@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.jsqlparser.expression.DateValue;
+import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.PrimitiveValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -43,6 +44,16 @@ public class PrimitiveTypeConverter {
     if (primitiveType.equals(PrimitiveType.LONG)) {
       return new LongValue(value);
     }
+    
+    // string
+    if (primitiveType.equals(PrimitiveType.STRING)) {
+      return new StringValue(value);
+    }
+    
+    // double
+    if (primitiveType.equals(PrimitiveType.DOUBLE)) {
+      return new DoubleValue(value);
+    }
 
     // Date
     if (primitiveType.equals(PrimitiveType.DATE)) {
@@ -50,11 +61,6 @@ public class PrimitiveTypeConverter {
     }
 
     return new StringValue(value);
-  }
-  
-  
-  public static void main(String[] args){
-    System.out.println(new DateValue("'1994-01-01'"));
   }
 
 }
