@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562.operator;
+/*package edu.buffalo.www.cse4562.operator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,11 +15,11 @@ import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 
-/**
+*//**
  * 
  * @author varunjai
  *
- */
+ *//*
 public class TestOperator {
 
   @Test
@@ -201,3 +201,4 @@ public class TestOperator {
     assertEquals(340, tuples.size());
   }
 }
+*/

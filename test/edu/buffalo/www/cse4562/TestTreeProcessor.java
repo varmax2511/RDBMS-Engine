@@ -1,4 +1,4 @@
-package edu.buffalo.www.cse4562;
+/*package edu.buffalo.www.cse4562;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -16,12 +16,12 @@ import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 
-/**
+*//**
  * Test cases for {@link TreeProcessor}.
  * 
  * @author varunjai
  *
- */
+ *//*
 public class TestTreeProcessor {
 
   @Test
@@ -36,11 +36,11 @@ public class TestTreeProcessor {
 
   }
 
-  /**
+  *//**
    * Test simple select query w/o where clause.
    * 
    * @throws Throwable
-   */
+   *//*
   @Test
   public void testSimpleSelect() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -61,11 +61,11 @@ public class TestTreeProcessor {
 
   }
 
-  /**
+  *//**
    * Test simple select query w/o where clause.
    * 
    * @throws Throwable
-   */
+   *//*
   @Test
   public void testSimpleSelectWhere() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -380,14 +380,14 @@ public class TestTreeProcessor {
       System.out.println();
     }
     
-    /*parser = new CCJSqlParser(new StringReader(
+    parser = new CCJSqlParser(new StringReader(
         "SELECT C.*, N.N_NAME, R.R_NAME FROM CUSTOMER C, NATION N, REGION R WHERE N.N_NATIONKEY = C.C_NATIONKEY AND N.N_NATIONKEY >= 3;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
     root = queryVisitor.getRoot();
 
-    assertEquals(25, TreeProcessor.processTree(root).size());*/
+    assertEquals(25, TreeProcessor.processTree(root).size());
 
   }
   
@@ -417,17 +417,16 @@ public class TestTreeProcessor {
 
     for(Tuple tuple :TreeProcessor.processTree(root)){
       TuplePrinter.printTuple(tuple);
-      System.out.println();
     }
     
-    /*parser = new CCJSqlParser(new StringReader(
+    parser = new CCJSqlParser(new StringReader(
         "SELECT C.*, N.N_NAME, R.R_NAME FROM CUSTOMER C, NATION N, REGION R WHERE N.N_NATIONKEY = C.C_NATIONKEY AND N.N_NATIONKEY >= 3;"));
     parser.Statement().accept(queryVisitor);
 
     // get the tree
     root = queryVisitor.getRoot();
 
-    assertEquals(25, TreeProcessor.processTree(root).size());*/
+    assertEquals(25, TreeProcessor.processTree(root).size());
 
   }
 
@@ -454,3 +453,4 @@ public class TestTreeProcessor {
   }
 
 }
+*/

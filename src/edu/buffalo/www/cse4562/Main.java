@@ -52,7 +52,6 @@ public class Main {
       System.out.flush();
 
       statement = parser.Statement();
-
     } // while
 
   }
