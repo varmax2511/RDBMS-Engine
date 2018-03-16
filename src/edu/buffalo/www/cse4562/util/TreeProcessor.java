@@ -28,8 +28,8 @@ public class TreeProcessor {
     Collection<Tuple> tuples = new ArrayList<>();
     final Collection<Tuple> output = new ArrayList<>();
 
-    //root.getBuiltSchema();
-    root = Optimizer.optimizeTree(root);
+    root.getBuiltSchema();
+    //root = Optimizer.optimizeTree(root);
     root.open();
     // move iteratively
     while (root.hasNext()) {
