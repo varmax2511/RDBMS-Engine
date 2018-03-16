@@ -29,6 +29,7 @@ public class Main {
 
     while (statement != null) {
 
+      try{
       // process query to generate Tree
       final QueryVisitor queryVisitor = new QueryVisitor();
       statement.accept(queryVisitor);
@@ -52,7 +53,10 @@ public class Main {
       System.out.flush();
 
       statement = parser.Statement();
-
+      }catch(Throwable t){
+        System.out.println(ApplicationConstants.BASH);
+        System.out.flush();
+      }
     } // while
 
   }
