@@ -1,6 +1,7 @@
 package edu.buffalo.www.cse4562.operator.visitor;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -112,7 +113,7 @@ public class OperatorExpressionVisitor
 
   public Evaluator evaluator;
   public Tuple currentTuple;
-  private Map<ColumnKey, ColumnCell> column2ColumnCell = new TreeMap<>();
+  private Map<ColumnKey, ColumnCell> column2ColumnCell = new HashMap<>();
   private ColumnCell outputColumnCell;
 
   /**
@@ -160,7 +161,7 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(DateValue arg0) {
-    System.out.println("date value");
+    //System.out.println("date value");
 
   }
 
@@ -496,6 +497,9 @@ public class OperatorExpressionVisitor
 
     for (final ColumnCell columnCell : this.currentTuple.getColumnCells()) {
 
+      /*if(columnCell == null){
+        System.out.println("i am null");
+      }*/
       final String tableName = column.getTable() != null
           ? column.getTable().getName()
           : null;
@@ -668,6 +672,7 @@ public class OperatorExpressionVisitor
 
         if (this.tableName.equals(other.tableName)
             && this.columnName.equals(other.columnName)) {
+          
           return 0;
         }
 
