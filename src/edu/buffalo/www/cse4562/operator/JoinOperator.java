@@ -81,8 +81,13 @@ public class JoinOperator extends Node implements BinaryOperator {
 
           final Tuple testTuple = new Tuple(mergedColumnCells);
           // process expressions
-          final ColumnCell columnCell = opVisitor.getValue(testTuple,
+          
+          ColumnCell columnCell = null;
+          try{
+          columnCell = opVisitor.getValue(testTuple,
               this.expression);
+          }catch(Throwable t){
+          }
 
           // if operator returned a result and its value is true, then row can
           // get
