@@ -83,11 +83,26 @@ public class JoinOperator extends Node implements BinaryOperator {
           // process expressions
           
           ColumnCell columnCell = null;
-        // try{
+        try{
           columnCell = opVisitor.getValue(testTuple,
               this.expression);
-         // }catch(Throwable t){
-         // }
+         }catch(Throwable t){
+
+           for(ColumnCell colCell : testTuple.getColumnCells()){
+             System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
+           }
+           
+           System.err.println("Holding Tuple");
+           for(ColumnCell colCell : tuple.getColumnCells()){
+             System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
+           }
+           
+           System.err.println("BuiltSchema");
+           for(Pair<Integer, Integer> pair : builtSchema){
+             System.err.println(pair.getKey() + "|" + pair.getValue());
+           }
+           
+         }
 
           // if operator returned a result and its value is true, then row can
           // get
