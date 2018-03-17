@@ -54,7 +54,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
     reader = Files.newBufferedReader(
         Paths.get(config.getDataParentPath() + config.getTableName()
             + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
-    csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
+    csvParser = new CSVParser(reader, CSVFormat.newFormat('|'));
     final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
     recordIterator = csvRecords.iterator();
   }
@@ -112,16 +112,16 @@ public class ScannerOperator extends Node implements UnaryOperator {
       }
 
       // fetch a row
-      final String[] values = recordIterator.next().get(0).split("\\|");
+      final CSVRecord record = recordIterator.next();
       final List<ColumnCell> columnCells = new ArrayList<>();
 
-      for (int j = 0; j < values.length; j++) {
+      for (int j = 0; j < record.size(); j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 
         final ColumnCell colCell = new ColumnCell(
             PrimitiveTypeConverter.getPrimitiveValueByColDataType(
-                colDefinition.getColDataType(), values[j]));
+                colDefinition.getColDataType(), record.get(j)));
 
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
