@@ -79,9 +79,9 @@ public class ScannerOperator extends Node implements UnaryOperator {
   private Collection<Tuple> process() throws IOException {
 
     // if method invoked first time without connection being opened
-    /*if (null == reader) {
-      open();
-    }*/
+    /*
+     * if (null == reader) { open(); }
+     */
 
     // if no records left to iterate
     if (!recordIterator.hasNext()) {
@@ -114,15 +114,15 @@ public class ScannerOperator extends Node implements UnaryOperator {
       // fetch a row
       final String[] values = recordIterator.next().get(0).split("\\|");
       final List<ColumnCell> columnCells = new ArrayList<>();
-      
+
       for (int j = 0; j < values.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 
-        // create a ColumnCell, convert value to Primitive Value
         final ColumnCell colCell = new ColumnCell(
             PrimitiveTypeConverter.getPrimitiveValueByColDataType(
                 colDefinition.getColDataType(), values[j]));
+
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
             colDefinition.getColumnName()));
@@ -173,7 +173,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
     }
     return this.recordIterator.hasNext();
   }
-  
+
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
@@ -215,7 +215,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
    */
   public static class Config {
     private final String dataParentPath;
-    private int chunkSize = 20;
+    private int chunkSize = 40;
     private final String tableName;
     private final String alias;
 
