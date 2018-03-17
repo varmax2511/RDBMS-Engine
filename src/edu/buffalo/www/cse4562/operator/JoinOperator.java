@@ -64,30 +64,47 @@ public class JoinOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
+
         // final List<ColumnCell> mergedColumnCells = new ArrayList<>();
         // mergedColumnCells.addAll(tuple.getColumnCells());
 
         // join one row of the outputTuple with one row of the next table per
         // iteration
         for (final Tuple joinTuple : nextTable) {
-          
-          if(joinTuple == null || CollectionUtils.isEmpty(joinTuple.getColumnCells())){
+
+          if (joinTuple == null
+              || CollectionUtils.isEmpty(joinTuple.getColumnCells())) {
             continue;
           }
-          
+
           final List<ColumnCell> mergedColumnCells = new ArrayList<>();
           mergedColumnCells.addAll(tuple.getColumnCells());
           mergedColumnCells.addAll(joinTuple.getColumnCells());
 
           final Tuple testTuple = new Tuple(mergedColumnCells);
           // process expressions
-          
+
           ColumnCell columnCell = null;
-         try{
-          columnCell = opVisitor.getValue(testTuple,
-              this.expression);
-          }catch(Throwable t){
-          }
+          // try{
+          columnCell = opVisitor.getValue(testTuple, this.expression);
+          /*
+           * }catch(Throwable t){
+           * 
+           * System.err.println(cnt); for(ColumnCell colCell :
+           * testTuple.getColumnCells()){
+           * System.err.println(colCell.getTableId() + "|" +
+           * colCell.getColumnId()); }
+           * 
+           * System.err.println("Holding Tuple"); for(ColumnCell colCell :
+           * tuple.getColumnCells()){ System.err.println(colCell.getTableId() +
+           * "|" + colCell.getColumnId()); }
+           * 
+           * System.err.println("BuiltSchema"); for(Pair<Integer, Integer> pair
+           * : builtSchema){ System.err.println(pair.getKey() + "|" +
+           * pair.getValue()); }
+           * 
+           * System.err.println("------------------"); }
+           */
 
           // if operator returned a result and its value is true, then row can
           // get
@@ -115,18 +132,18 @@ public class JoinOperator extends Node implements BinaryOperator {
           "Invalid cross product child configuration!");
     }
 
-    Node firstChild = this.getChildren().get(1);
-    Node secondChild = this.getChildren().get(0);
+    Node firstChild = this.getChildren().get(0);
+    Node secondChild = this.getChildren().get(1);
 
     // update relation 1 tuples
     while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
       holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
     }
 
-    if(CollectionUtils.isEmpty(holdingList)){
+    if (CollectionUtils.isEmpty(holdingList)) {
       return new ArrayList<>();
     }
-    
+
     // if first child has rows and the second child has reached end,
     // then re-open the second child iterator and update the holding list
     // with the next values from first child.
@@ -137,7 +154,7 @@ public class JoinOperator extends Node implements BinaryOperator {
       while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
         holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
       }
-      
+
       if (CollectionUtils.isEmpty(holdingList)) {
         return new ArrayList<>();
       }
