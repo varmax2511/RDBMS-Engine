@@ -215,7 +215,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
    */
   public static class Config {
     private final String dataParentPath;
-    private int chunkSize = 40;
+    private int chunkSize = 10;
     private final String tableName;
     private final String alias;
 
