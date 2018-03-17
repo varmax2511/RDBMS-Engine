@@ -115,8 +115,8 @@ public class JoinOperator extends Node implements BinaryOperator {
           "Invalid cross product child configuration!");
     }
 
-    Node firstChild = this.getChildren().get(0);
-    Node secondChild = this.getChildren().get(1);
+    Node firstChild = this.getChildren().get(1);
+    Node secondChild = this.getChildren().get(0);
 
     // update relation 1 tuples
     while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
