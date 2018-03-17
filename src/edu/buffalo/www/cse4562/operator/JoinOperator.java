@@ -12,6 +12,7 @@ import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.Expression;
 
@@ -69,14 +70,24 @@ public class JoinOperator extends Node implements BinaryOperator {
         // join one row of the outputTuple with one row of the next table per
         // iteration
         for (final Tuple joinTuple : nextTable) {
+          
+          if(joinTuple == null || CollectionUtils.isEmpty(joinTuple.getColumnCells())){
+            continue;
+          }
+          
           final List<ColumnCell> mergedColumnCells = new ArrayList<>();
           mergedColumnCells.addAll(tuple.getColumnCells());
           mergedColumnCells.addAll(joinTuple.getColumnCells());
 
           final Tuple testTuple = new Tuple(mergedColumnCells);
           // process expressions
-          final ColumnCell columnCell = opVisitor.getValue(testTuple,
+          
+          ColumnCell columnCell = null;
+          try{
+          columnCell = opVisitor.getValue(testTuple,
               this.expression);
+          }catch(Throwable t){
+          }
 
           // if operator returned a result and its value is true, then row can
           // get
@@ -108,20 +119,32 @@ public class JoinOperator extends Node implements BinaryOperator {
     Node secondChild = this.getChildren().get(1);
 
     // update relation 1 tuples
-    if (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
-      holdingList = firstChild.getNext();
+    while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
+      holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
     }
+
+    if(CollectionUtils.isEmpty(holdingList)){
+      return new ArrayList<>();
+    }
+    
     // if first child has rows and the second child has reached end,
     // then re-open the second child iterator and update the holding list
     // with the next values from first child.
     if (firstChild.hasNext() && !secondChild.hasNext()) {
-      holdingList = firstChild.getNext();
-      // update if result obtained is empty, possible if a select is below
+
+      holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
+
       while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
-        holdingList = firstChild.getNext();
+        holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
       }
+      
+      if (CollectionUtils.isEmpty(holdingList)) {
+        return new ArrayList<>();
+      }
+
       secondChild.close();
       secondChild.open();
+
     } // if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();

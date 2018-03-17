@@ -200,5 +200,84 @@ public class TestOperator {
     final Collection<Tuple> tuples = TreeProcessor.processTree(root);
     assertEquals(340, tuples.size());
   }
+  
+  @Test
+  public void testCross5() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE F(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*, F.E, F.F FROM F,R WHERE R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(25, tuples.size());
+
+  }
+  
+  @Test
+  public void testCross6() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE F(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*, F.E, F.F FROM R,F WHERE R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(25, tuples.size());
+
+  }
+  
+  @Test
+  public void testCross7() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE F(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*, F.E, F.F FROM F, R WHERE F.D == R.A AND R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = (queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(9, tuples.size());
+
+  }
+  
 }
 */

@@ -52,11 +52,12 @@ public class Main {
       System.out.println(ApplicationConstants.BASH);
       System.out.flush();
       }catch(Throwable t){
-        System.out.println("1|1|" + t.getMessage());
+        System.out.println("1|1"+"|" + t.getMessage());
      // prompt
         System.out.println(ApplicationConstants.BASH);
         System.out.flush();
       }
+
       statement = parser.Statement();
     } // while
 

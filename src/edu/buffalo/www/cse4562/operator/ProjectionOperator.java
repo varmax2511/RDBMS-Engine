@@ -122,11 +122,12 @@ public class ProjectionOperator extends Node implements UnaryOperator {
           // Cell value returned from expressions like addition don't have
           // table id or column id set, so set both for them as well.
           // columnCell.setTableId(tableId);
-          columnCell.setColumnId(builtSchema.get(cnt).getValue());
-          columnCell.setTableId(builtSchema.get(cnt).getKey());
+          ColumnCell cCell = new ColumnCell(columnCell.getCellValue());
+          cCell.setColumnId(builtSchema.get(cnt).getValue());
+          cCell.setTableId(builtSchema.get(cnt).getKey());
           // }
 
-          columnCells.add(columnCell);
+          columnCells.add(cCell);
         }
         cnt++;
       } // for
