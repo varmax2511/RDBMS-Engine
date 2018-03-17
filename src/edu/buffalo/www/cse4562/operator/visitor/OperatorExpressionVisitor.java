@@ -673,9 +673,6 @@ public class OperatorExpressionVisitor
         if (this.tableName.equals(other.tableName)
             && this.columnName.equals(other.columnName)) {
           
-          if(this.columnName.equals("L_QUANTITY")){
-            System.out.println();
-          }
           return 0;
         }
 
