@@ -20,7 +20,8 @@ public class JoinOperator extends Node implements BinaryOperator {
 
   private final Expression expression;
   private Collection<Tuple> holdingList = null;
-
+  int cnt = 0;
+  int cnt1 = 0;
   public JoinOperator(Expression expression) {
     Validate.notNull(expression);
 
@@ -45,6 +46,10 @@ public class JoinOperator extends Node implements BinaryOperator {
   public Collection<Tuple> process(
       Collection<Collection<Tuple>> tupleCollection) throws Throwable {
 
+    cnt++;
+    if(cnt1 == 0){
+      cnt1++;
+    }
     final Iterator<Collection<Tuple>> tupleCollItr = tupleCollection.iterator();
 
     if (!tupleCollItr.hasNext()) {
@@ -64,6 +69,14 @@ public class JoinOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
+        if(cnt1 == 1){
+          System.err.println("Valid tuple");
+          System.err.println("Holding Tuple");
+          for(ColumnCell colCell : tuple.getColumnCells()){
+            System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
+          }
+        }
+        
         // final List<ColumnCell> mergedColumnCells = new ArrayList<>();
         // mergedColumnCells.addAll(tuple.getColumnCells());
 
@@ -88,6 +101,7 @@ public class JoinOperator extends Node implements BinaryOperator {
               this.expression);
          }catch(Throwable t){
 
+           System.err.println(cnt);
            for(ColumnCell colCell : testTuple.getColumnCells()){
              System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
            }
@@ -102,8 +116,10 @@ public class JoinOperator extends Node implements BinaryOperator {
              System.err.println(pair.getKey() + "|" + pair.getValue());
            }
            
+           System.err.println("------------------");
          }
 
+        
           // if operator returned a result and its value is true, then row can
           // get
           // selected
