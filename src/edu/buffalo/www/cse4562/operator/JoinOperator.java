@@ -83,11 +83,11 @@ public class JoinOperator extends Node implements BinaryOperator {
           // process expressions
           
           ColumnCell columnCell = null;
-         // try{
+         try{
           columnCell = opVisitor.getValue(testTuple,
               this.expression);
-         // }catch(Throwable t){
-          //}
+          }catch(Throwable t){
+          }
 
           // if operator returned a result and its value is true, then row can
           // get
