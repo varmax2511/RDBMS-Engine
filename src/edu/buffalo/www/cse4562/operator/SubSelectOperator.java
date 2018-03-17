@@ -13,6 +13,7 @@ import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.StringUtils;
+import edu.buffalo.www.cse4562.util.TuplePrinter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 /**
  * This operator is responsible for adding Alias information whenever its passed
@@ -63,9 +64,13 @@ public class SubSelectOperator extends Node implements UnaryOperator {
      */
 
     // update table id to alias name in each column of the returned tuples
-    for (final Tuple tupleVal : tupleRecords) {
+    
+    Collection<Tuple> tupleCopies = TuplePrinter.getTupleCopy(tupleRecords);
+    for (final Tuple tupleVal : tupleCopies) {
+      
       for (final ColumnCell columnCell : tupleVal.getColumnCells()) {
 
+        
         // update column's id and table id
         columnCell.setColumnId(SchemaManager.getColumnIdByTableId(
             SchemaManager.getTableId(this.alias),
@@ -76,7 +81,7 @@ public class SubSelectOperator extends Node implements UnaryOperator {
       }
     }
 
-    return tupleRecords;
+    return tupleCopies;
   }
 
   public String getAlias() {
