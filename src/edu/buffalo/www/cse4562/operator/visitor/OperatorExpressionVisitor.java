@@ -113,7 +113,7 @@ public class OperatorExpressionVisitor
 
   public Evaluator evaluator;
   public Tuple currentTuple;
-  private Map<ColumnKey, ColumnCell> column2ColumnCell = new HashMap<>();
+  private Map<ColumnKey, ColumnCell> column2ColumnCell = new TreeMap<>();
   private ColumnCell outputColumnCell;
 
   /**
