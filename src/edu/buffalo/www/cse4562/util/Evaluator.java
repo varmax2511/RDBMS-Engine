@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
@@ -40,6 +41,14 @@ public class Evaluator extends Eval {
         : null;
 
     ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
+    
+    /*ColumnCell cell = null;
+    for(Entry<ColumnKey, ColumnCell> entry : this.column2ColumnCell.entrySet()){
+      if(entry.getKey().hashCode() == columnKey.hashCode() && entry.getKey().equals(columnKey)){
+        cell = entry.getValue();
+      }
+    }
+    */
     final ColumnCell cell = this.column2ColumnCell.get(columnKey);
     return cell.getCellValue();
   }
