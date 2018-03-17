@@ -146,8 +146,8 @@ public class Tuple implements Cloneable {
 
     public ColumnCell getCopy(){
         ColumnCell columnCell = new ColumnCell();
-        columnCell.setColumnId(this.columnId);
-        columnCell.setTableId(this.tableId);
+        columnCell.setColumnId(this.columnId.intValue());
+        columnCell.setTableId(this.tableId.intValue());
         columnCell.setCellValue(this.cellValue);
         return columnCell;
     }
