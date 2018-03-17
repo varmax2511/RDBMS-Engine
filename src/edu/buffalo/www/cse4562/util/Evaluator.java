@@ -42,14 +42,14 @@ public class Evaluator extends Eval {
 
     ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
     
-    ColumnCell cell = null;
+    /*ColumnCell cell = null;
     for(Entry<ColumnKey, ColumnCell> entry : this.column2ColumnCell.entrySet()){
       if(entry.getKey().hashCode() == columnKey.hashCode() && entry.getKey().equals(columnKey)){
         cell = entry.getValue();
       }
     }
-    
-    //final ColumnCell cell = this.column2ColumnCell.get(columnKey);
+    */
+    final ColumnCell cell = this.column2ColumnCell.get(columnKey);
     return cell.getCellValue();
   }
 
