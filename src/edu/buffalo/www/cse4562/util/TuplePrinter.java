@@ -1,6 +1,9 @@
 package edu.buffalo.www.cse4562.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
@@ -50,5 +53,22 @@ public class TuplePrinter {
     }
 
     return stringBuidler.substring(0, stringBuidler.length() - 1);
+  }
+
+  public static Collection<Tuple> getTupleCopy(Collection<Tuple> tuples) {
+    if (CollectionUtils.isEmpty(tuples)) {
+      return tuples;
+    }
+
+    List<Tuple> output = new ArrayList<>();
+    for (Tuple tuple : tuples) {
+      if(tuple == null || CollectionUtils.isEmpty(tuple.getColumnCells())){
+        continue;
+      }
+      output.add(tuple.getCopy());
+    } // for
+
+    return output;
+
   }
 }
