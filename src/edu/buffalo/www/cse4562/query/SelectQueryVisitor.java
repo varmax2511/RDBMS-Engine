@@ -83,7 +83,8 @@ public class SelectQueryVisitor
     /*
      * Add a cross product
      */
-    processCross(fromItem, joins);
+    //processCross(fromItem, joins);
+    currentNode.addChild(processCross3(fromItem, joins.iterator()));
 
   }
 
@@ -156,10 +157,12 @@ public class SelectQueryVisitor
     while (joinItr.hasNext()) {
       final FromItem joinFromItem = joinItr.next().getRightItem();
       joinFromItem.accept(fromItemVisitor);
+
+      // null check
       if (fromItemVisitor.getRoot() == null) {
         continue;
       }
-      
+
       final Node cNode = new CrossProductOperator();
       cNode.addChild(leftNode);
       cNode.addChild(fromItemVisitor.getRoot());
@@ -167,6 +170,28 @@ public class SelectQueryVisitor
     } // while
 
     currentNode.addChild(leftNode);
+  }
+
+  private Node processCross3(final FromItem fromItem,
+      final Iterator<Join> joinItr) {
+
+    final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
+    fromItem.accept(fromItemVisitor);
+
+    final Node cNode = new CrossProductOperator();
+    cNode.addChild(fromItemVisitor.getRoot());
+
+    final FromItem fromItemNext = joinItr.next().getRightItem();
+
+    // no more items
+    if (!joinItr.hasNext()) {
+      fromItemNext.accept(fromItemVisitor);
+      cNode.addChild(fromItemVisitor.getRoot());
+      return cNode;
+    }
+
+    cNode.addChild(processCross3(fromItemNext, joinItr));
+    return cNode;
   }
 
   /**
