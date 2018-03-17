@@ -119,14 +119,31 @@ public class ScannerOperator extends Node implements UnaryOperator {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 
+        
+        
         // create a ColumnCell, convert value to Primitive Value
+        if(StringUtils.isBlank(values[j])){
+          
+          final ColumnCell colCell = new ColumnCell(
+              PrimitiveTypeConverter.getPrimitiveValueByColDataType(
+                  colDefinition.getColDataType(), "NULL"));
+          
+          colCell.setTableId(tableId);
+          colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+              colDefinition.getColumnName()));
+          columnCells.add(colCell);
+          
+        }else{
+        
         final ColumnCell colCell = new ColumnCell(
             PrimitiveTypeConverter.getPrimitiveValueByColDataType(
                 colDefinition.getColDataType(), values[j]));
+        
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
             colDefinition.getColumnName()));
         columnCells.add(colCell);
+        }
 
       } // for
 
@@ -215,7 +232,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
    */
   public static class Config {
     private final String dataParentPath;
-    private int chunkSize = 20;
+    private int chunkSize = 1;
     private final String tableName;
     private final String alias;
 
