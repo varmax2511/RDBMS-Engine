@@ -47,9 +47,7 @@ public class JoinOperator extends Node implements BinaryOperator {
       Collection<Collection<Tuple>> tupleCollection) throws Throwable {
 
     cnt++;
-    if(cnt1 == 0){
-      cnt1++;
-    }
+    cnt1++;
     final Iterator<Collection<Tuple>> tupleCollItr = tupleCollection.iterator();
 
     if (!tupleCollItr.hasNext()) {
@@ -69,13 +67,6 @@ public class JoinOperator extends Node implements BinaryOperator {
       final List<Tuple> newOutputTuple = new ArrayList<>();
 
       for (final Tuple tuple : outputTuples) {
-        if(cnt1 == 1){
-          System.err.println("Valid tuple");
-          System.err.println("Holding Tuple");
-          for(ColumnCell colCell : tuple.getColumnCells()){
-            System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
-          }
-        }
         
         // final List<ColumnCell> mergedColumnCells = new ArrayList<>();
         // mergedColumnCells.addAll(tuple.getColumnCells());
@@ -124,6 +115,13 @@ public class JoinOperator extends Node implements BinaryOperator {
           // get
           // selected
           if (null != columnCell && columnCell.getCellValue().toBool()) {
+            if(cnt1 == 1){
+              System.err.println("Valid tuple");
+              System.err.println("Holding Tuple");
+              for(ColumnCell colCell : tuple.getColumnCells()){
+                System.err.println(colCell.getTableId() + "|" + colCell.getColumnId());
+              }
+            }
             newOutputTuple.add(testTuple);
           } // if
 
