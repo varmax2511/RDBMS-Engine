@@ -1,5 +1,6 @@
 package edu.buffalo.www.cse4562.operator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,7 +29,7 @@ import edu.buffalo.www.cse4562.util.TuplePrinter;
  */
 public class CrossProductOperator extends Node implements BinaryOperator {
 
-  private Collection<Tuple> holdingList = null;
+  private Collection<Tuple> holdingList = new ArrayList<>();
 
   @Override
   public Collection<Tuple> process(
@@ -81,7 +82,7 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     // check child count, should be 2
     if (this.getChildren() == null || this.getChildren().size() != 2) {
       throw new IllegalArgumentException(
-          "Invalid cross product child configuration!");
+              "Invalid cross product child configuration!");
     }
 
     Node firstChild = this.getChildren().get(0);
@@ -92,15 +93,18 @@ public class CrossProductOperator extends Node implements BinaryOperator {
       holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
     }
 
-    if(CollectionUtils.isEmpty(holdingList)){
+    if (CollectionUtils.isEmpty(holdingList)) {
       return new ArrayList<>();
     }
+
     // if first child has rows and the second child has reached end,
     // then re-open the second child iterator and update the holding list
     // with the next values from first child.
-    if (firstChild.hasNext() && !secondChild.hasNext()) {
+    if (!holdingList.isEmpty() && !secondChild.hasNext()) {
 
-      holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
+//      System.out.println("Cross: " + holdingList);
+      ((ArrayList)holdingList).remove(0);
+//      System.out.println("Cross removed: " + holdingList);
 
       while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
         holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
@@ -116,10 +120,24 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     } // if
 
     final Collection<Collection<Tuple>> tuples = new ArrayList<>();
-    tuples.add(holdingList);
-    // add second child tuples
+
+    final Collection<Tuple> heldTuple = new ArrayList<>();
+    heldTuple.add((Tuple)((ArrayList)holdingList).get(0));
+    tuples.add(heldTuple);
     tuples.add(secondChild.getNext());
+/*    System.out.println("Cross: " + holdingList);
+    System.out.println("Cross: " + firstChild.hasNext());
+    System.out.println("Cross: " + secondChild.hasNext());
+    System.out.println("Cross: " + this.hasNext());
+    System.out.println("Cross: " + super.hasNext());
+    System.out.println(); */
+
     return process(tuples);
+  }
+
+  @Override
+  public boolean hasNext() throws IOException {
+    return super.hasNext() || !holdingList.isEmpty();
   }
 
   @Override
