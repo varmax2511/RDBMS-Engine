@@ -10,9 +10,9 @@ import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
-import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.RequiredBuiltSchema;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
@@ -54,28 +54,11 @@ public class PushDownSelection {
    *          pushes it
    */
   private static void verifyAndPushDownSelect(Node selectNode) {
-    // Schema for the required selection
-    final List<Pair<Integer, Integer>> selectSchema = new ArrayList<>();
-
     final Expression selectExpression = ((SelectionOperator) selectNode)
         .getExpression();
 
-    // since all where conditions will be a binary expression
-    if (selectExpression instanceof BinaryExpression) {
-      if (((BinaryExpression) selectExpression)
-          .getLeftExpression() instanceof Column) {
-        addToSelectSchema(
-            (Column) ((BinaryExpression) selectExpression).getLeftExpression(),
-            selectSchema);
-      }
-      if (((BinaryExpression) selectExpression)
-          .getRightExpression() instanceof Column) {
-        addToSelectSchema(
-            (Column) ((BinaryExpression) selectExpression).getRightExpression(),
-            selectSchema);
-      }
-    }
-
+    // Schema for the required selection
+    final List<Pair<Integer, Integer>> selectSchema = RequiredBuiltSchema.getRequiredSchema(selectExpression);
     // level on top of which Select node will be setup
     final Node pushDownLevel = getPushDownLevel(selectNode, selectSchema);
 
@@ -85,112 +68,18 @@ public class PushDownSelection {
     }
 
     // push down select to the appropriate level
-    pushDown(selectNode, pushDownLevel);
+    Optimizer.pushDown(selectNode, pushDownLevel);
 
     // if push level is a cross product, now select is above cross product
     // convert to join
     if (pushDownLevel instanceof CrossProductOperator) {
-      convertCrossToJoin((SelectionOperator) selectNode, pushDownLevel);
+      CrossToJoin.convertCrossToJoin((SelectionOperator) selectNode, pushDownLevel);
       return;
     }
 
   }
 
-  /**
-   * <pre>
-   * This method makes a tree of the form
-   * 
-   *     ...                  ...
-   *      |                    |
-   *    Select      ->        Join 
-   *      |                   /  \
-   *    Cross   
-   *    /   \
-   * 
-   * </pre>
-   * 
-   * @param selectNode
-   * @param pushDownLevel
-   */
-  public static void convertCrossToJoin(SelectionOperator selectNode,
-      Node pushDownLevel) {
-
-    final JoinOperator joinNode = new JoinOperator(selectNode.getExpression());
-    joinNode.setChildren(pushDownLevel.getChildren());
-    joinNode.setParent(selectNode.getParent());
-    joinNode.setSchema(pushDownLevel.getBuiltSchema());
-    
-
-    int index = 0;
-    // removing selectNode from the tree and updating references
-    for (final Node child : selectNode.getParent().getChildren()) {
-      // if no match or invalid select node
-      if (child != selectNode || selectNode.getChildren().isEmpty()) {
-        index++;
-        continue;
-      }
-
-      selectNode.getParent().getChildren().set(index, joinNode);
-      // selectNode.getChildren().get(0).setParent(selectNode.getParent());
-
-      index++;
-    } // for
-
-    // update references for pushdown or cross product children
-    for (final Node child : pushDownLevel.getChildren()) {
-      child.setParent(joinNode);
-    }
-
-  }
-
-  /**
-   * @param selectNode
-   * @param pushLevelNode
-   *
-   *          once verified, this pushes the select node to the required level
-   *          THIS CAN BE IMPLEMENTED COMMONLY FOR EACH OPTIMIZATION TYPE
-   */
-  private static void pushDown(Node selectNode, Node pushLevelNode) {
-    int index = 0;
-    // removing selectNode from the tree and updating references
-    for (final Node child : selectNode.getParent().getChildren()) {
-      // if no match or invalid select node
-      if (child != selectNode || selectNode.getChildren().isEmpty()) {
-        index++;
-        continue;
-      }
-
-      selectNode.getParent().getChildren().set(index,
-          selectNode.getChildren().get(0));
-      selectNode.getChildren().get(0).setParent(selectNode.getParent());
-
-      index++;
-    } // for
-
-    final Node parent = pushLevelNode.getParent();
-    index = 0;
-    for (final Node child : parent.getChildren()) {
-      // if no match, ignore
-      if (child != pushLevelNode) {
-        index++;
-        continue;
-      }
-
-      // set the pushLevelNode as child of select node
-      final List<Node> selectChildren = new ArrayList<>();
-      selectChildren.add(pushLevelNode);
-      selectNode.setChildren(selectChildren);
-      pushLevelNode.setParent(selectNode);
-
-      // adding select node as pushLevelNode's child at the position index of
-      // pushLevelNode
-      parent.getChildren().set(index, selectNode);
-      selectNode.setParent(parent);
-
-      index++;
-    } // for
-
-  }
+ 
 
   /**
    * @param node
@@ -220,32 +109,6 @@ public class PushDownSelection {
       }
     } // for
     return pushDownLevel;
-  }
-
-  /**
-   * @param column
-   * @param selectSchema
-   *
-   *          Adds all tableId,columnId pairs to the selectSchema
-   */
-  private static void addToSelectSchema(Column column,
-      List<Pair<Integer, Integer>> selectSchema) {
-    final Integer tableId = SchemaManager
-        .getTableId(column.getTable().getName());
-
-    // if no table id found, it means that its a simple expression
-    // like SELECT A,B FROM R WHERE C < 3;
-    // this doesn't need optimization, rather an attempt to optimize it
-    // by looking into the Select node children, getting the schema info
-    // and guessing the table is costly.
-    if (tableId == null) {
-      return;
-    }
-
-    final Integer columnId = SchemaManager.getColumnIdByTableId(tableId,
-        column.getColumnName());
-    selectSchema.add(new Pair<Integer, Integer>(tableId, columnId));
-
   }
 
   /**

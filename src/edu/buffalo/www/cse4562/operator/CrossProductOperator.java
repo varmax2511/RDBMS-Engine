@@ -102,9 +102,7 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     // with the next values from first child.
     if (!holdingList.isEmpty() && !secondChild.hasNext()) {
 
-//      System.out.println("Cross: " + holdingList);
       ((ArrayList)holdingList).remove(0);
-//      System.out.println("Cross removed: " + holdingList);
 
       while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
         holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
@@ -125,12 +123,6 @@ public class CrossProductOperator extends Node implements BinaryOperator {
     heldTuple.add((Tuple)((ArrayList)holdingList).get(0));
     tuples.add(heldTuple);
     tuples.add(secondChild.getNext());
-/*    System.out.println("Cross: " + holdingList);
-    System.out.println("Cross: " + firstChild.hasNext());
-    System.out.println("Cross: " + secondChild.hasNext());
-    System.out.println("Cross: " + this.hasNext());
-    System.out.println("Cross: " + super.hasNext());
-    System.out.println(); */
 
     return process(tuples);
   }
