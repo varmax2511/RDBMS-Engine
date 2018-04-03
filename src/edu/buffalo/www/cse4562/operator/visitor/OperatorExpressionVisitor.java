@@ -3,7 +3,6 @@ package edu.buffalo.www.cse4562.operator.visitor;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
