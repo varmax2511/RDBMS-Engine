@@ -1,10 +1,8 @@
 package edu.buffalo.www.cse4562.model;
 
-import edu.buffalo.www.cse4562.util.StringUtils;
-
 /**
  * 
- * @author snehameh
+ * @author Sneha Mehta
  *
  * @param <K>
  * @param <V>

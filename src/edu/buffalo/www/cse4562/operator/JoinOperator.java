@@ -86,26 +86,8 @@ public class JoinOperator extends Node implements BinaryOperator {
           // process expressions
 
           ColumnCell columnCell = null;
-          // try{
           columnCell = opVisitor.getValue(testTuple, this.expression);
-          /*
-           * }catch(Throwable t){
-           * 
-           * System.err.println(cnt); for(ColumnCell colCell :
-           * testTuple.getColumnCells()){
-           * System.err.println(colCell.getTableId() + "|" +
-           * colCell.getColumnId()); }
-           * 
-           * System.err.println("Holding Tuple"); for(ColumnCell colCell :
-           * tuple.getColumnCells()){ System.err.println(colCell.getTableId() +
-           * "|" + colCell.getColumnId()); }
-           * 
-           * System.err.println("BuiltSchema"); for(Pair<Integer, Integer> pair
-           * : builtSchema){ System.err.println(pair.getKey() + "|" +
-           * pair.getValue()); }
-           * 
-           * System.err.println("------------------"); }
-           */
+         
 
           // if operator returned a result and its value is true, then row can
           // get
@@ -150,9 +132,7 @@ public class JoinOperator extends Node implements BinaryOperator {
     // with the next values from first child.
     if (!holdingList.isEmpty() && !secondChild.hasNext()) {
 
-//      System.out.println("Join: " + holdingList);
       ((ArrayList)holdingList).remove(0);
-//      System.out.println("Join removed: " + holdingList);
 
       while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
         holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
@@ -173,12 +153,6 @@ public class JoinOperator extends Node implements BinaryOperator {
     heldTuple.add((Tuple)((ArrayList)holdingList).get(0));
     tuples.add(heldTuple);
     tuples.add(secondChild.getNext());
-/*    System.out.println("Join: " + holdingList);
-    System.out.println("Join: " + firstChild.hasNext());
-    System.out.println("Join: " + secondChild.hasNext());
-    System.out.println("Join: " + this.hasNext());
-    System.out.println("Join: " + super.hasNext());
-    System.out.println(); */
 
     return process(tuples);
   }

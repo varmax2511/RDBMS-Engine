@@ -93,39 +93,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
 
         final ColumnCell columnCell = opVisitor.getValue(tuple,
             expressionItem.getExpression());
-        // final Integer tableId = tuple.getColumnCells().iterator().next()
-        // .getTableId();
 
         if (null != columnCell) {
-          /*
-           * Integer tableId = columnCell.getTableId() == null ?
-           * tuple.getColumnCells().iterator().next().getTableId() :
-           * columnCell.getTableId();
-           */
-
-          // if alias is present
-          // if (!StringUtils.isBlank(expressionItem.getAlias())) {
-          /*
-           * If the expression has an alias then we add a new column to the
-           * table with the name of the alias. Any change in table schema should
-           * be registered with the Schema Manager
-           */
-
-          // register with Schema Manager
-          // addColumnAliasToSchema(expressionItem, tableId);
-
-          // Update the column id of Column Cell
-          /*
-           * columnCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
-           * expressionItem.getAlias()));
-           */
-          // Cell value returned from expressions like addition don't have
-          // table id or column id set, so set both for them as well.
-          // columnCell.setTableId(tableId);
           ColumnCell cCell = new ColumnCell(columnCell.getCellValue());
           cCell.setColumnId(builtSchema.get(cnt).getValue());
           cCell.setTableId(builtSchema.get(cnt).getKey());
-          // }
 
           columnCells.add(cCell);
         }
