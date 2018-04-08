@@ -5,11 +5,13 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
+import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.LimitOperator;
 import edu.buffalo.www.cse4562.operator.OrderByOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.FromItem;
@@ -52,6 +54,7 @@ public class SelectQueryVisitor
     final FromItem fromItem = plainSelect.getFromItem();
     final Expression where = plainSelect.getWhere();
     final List<Join> joins = plainSelect.getJoins();
+    final List<Column> groupByColumnReferences = plainSelect.getGroupByColumnReferences(); 
 
     // limit
     if (limit != null) {
@@ -62,6 +65,7 @@ public class SelectQueryVisitor
     if (!CollectionUtils.isEmpty(orderByElements)) {
       processOrderBy(orderByElements);
     }
+    
     // project
     /*
      * TODO: This needs to be worked out for later use of union, aggregate
@@ -69,6 +73,11 @@ public class SelectQueryVisitor
      */
     processProject(selectItems);
 
+    // Group by
+    if(!CollectionUtils.isEmpty(groupByColumnReferences)) {
+      processGroupBy(groupByColumnReferences);
+    }
+    
     // process WHERE
     processWhere(where);
 
@@ -86,6 +95,20 @@ public class SelectQueryVisitor
     //processCross(fromItem, joins);
     currentNode.addChild(processCross3(fromItem, joins.iterator()));
 
+  }
+
+  private void processGroupBy(final List<Column> groupByColumnReferences) {
+    final Node node = new GroupByOperator(groupByColumnReferences);
+
+    if (root == null) {
+      root = node;
+      currentNode = root;
+      return;
+    }
+
+    currentNode.addChild(node);
+    currentNode = node;
+    
   }
 
   private void processLimit(final Limit limit) {

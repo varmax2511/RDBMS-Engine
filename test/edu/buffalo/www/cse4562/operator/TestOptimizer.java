@@ -38,8 +38,8 @@ public class TestOptimizer {
     parser.Statement().accept(queryVisitor);
 
     // get the tree
-    final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
-    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    //final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(queryVisitor.getRoot());
     assertEquals(50, tuples.size());
 
   }
@@ -90,17 +90,12 @@ public class TestOptimizer {
     parser.Statement().accept(queryVisitor);
 
     // get the tree
-    final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
-    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    //final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(queryVisitor.getRoot());
     assertEquals(17, tuples.size());
 
   }
 
-  *//**
-   * This test should result in a no-op for the optimizer.
-   * 
-   * @throws Throwable
-   *//*
   @Test
   public void testOptimizer4() throws Throwable {
     CCJSqlParser parser = new CCJSqlParser(
@@ -120,5 +115,71 @@ public class TestOptimizer {
     assertEquals(5, tuples.size());
 
   }
-}
-*/
+  
+  @Test
+  public void testProjectionPushDown1() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(new StringReader("SELECT A,B FROM R WHERE A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    //final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(queryVisitor.getRoot());
+    assertEquals(5, tuples.size());
+
+  }
+  
+  @Test
+  public void testProjectionPushDown2() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(new StringReader("SELECT B FROM R WHERE A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(5, tuples.size());
+
+  }
+  
+  
+  @Test
+  public void testProjectionPushDown3() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE S(D INTEGER, E INTEGER, F DATE);"));
+
+    parser.Statement().accept(queryVisitor);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT R.*,S.A FROM R,S WHERE R.A = S.D AND R.A > 3;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    //final Node root = Optimizer.optimizeTree(queryVisitor.getRoot());
+    final Collection<Tuple> tuples = TreeProcessor.processTree(queryVisitor.getRoot());
+    assertEquals(17, tuples.size());
+
+  }
+}*/
