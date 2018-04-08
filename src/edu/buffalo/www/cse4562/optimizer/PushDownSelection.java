@@ -8,14 +8,11 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
-import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.RequiredBuiltSchema;
-import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Column;
 
 /**
  * * Approaches in pushDown Select: -get all selects -for each select -verify if
@@ -43,7 +40,7 @@ public class PushDownSelection {
   public static void pushDownSelect(Node root) {
     final List<Node> allSelectNodes = getAllSelectNodes(root);
     for (final Node selectNode : allSelectNodes) {
-      verifyAndPushDownSelect(selectNode);
+      verifyAndPushDownSelect(root,selectNode);
     }
   }
 
@@ -53,12 +50,12 @@ public class PushDownSelection {
    *          Given one select node, verifies if it can be pushed down and
    *          pushes it
    */
-  private static void verifyAndPushDownSelect(Node selectNode) {
+  private static void verifyAndPushDownSelect(Node root,Node selectNode) {
     final Expression selectExpression = ((SelectionOperator) selectNode)
         .getExpression();
 
     // Schema for the required selection
-    final List<Pair<Integer, Integer>> selectSchema = RequiredBuiltSchema.getRequiredSchema(selectExpression);
+    final List<Pair<Integer, Integer>> selectSchema = RequiredBuiltSchema.getRequiredSchema(selectExpression,selectNode);
     // level on top of which Select node will be setup
     final Node pushDownLevel = getPushDownLevel(selectNode, selectSchema);
 
@@ -68,7 +65,7 @@ public class PushDownSelection {
     }
 
     // push down select to the appropriate level
-    Optimizer.pushDown(selectNode, pushDownLevel);
+    Optimizer.pushDown(root, selectNode, pushDownLevel);
 
     // if push level is a cross product, now select is above cross product
     // convert to join
