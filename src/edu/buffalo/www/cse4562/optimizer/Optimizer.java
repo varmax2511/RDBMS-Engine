@@ -26,7 +26,9 @@ public class Optimizer {
     root.getBuiltSchema();
 
     PushDownSelection.pushDownSelect(root);
-    //PushDownProjection.pushDownProject(root);
+    //:TODO fix push down project for renaming
+    //like SELECT A AS C FROM R WHERE A=4;
+    //root =PushDownProjection.pushDownProject(root);
 
     // re-build schema
     root.getBuiltSchema();
@@ -37,7 +39,9 @@ public class Optimizer {
    * @param node
    * @param pushLevelNode
    */
-  public static void pushDown(Node node, Node pushLevelNode) {
+  public static Node pushDown1(Node root,Node node, Node pushLevelNode) {
+    if(node==root)
+      root=node.getChildren().get(0);
     int index = 0;
     // removing node from the tree and updating references
     if (node.getParent() != null) {
@@ -54,8 +58,15 @@ public class Optimizer {
         index++;
       } // for
     } // if
+    else{
+      node.getChildren().get(0).setParent(null);
+      final List<Node> children = new ArrayList<>();
+      children.add(node);
+      node.getChildren().get(0).setChildren(children);
+    }
     final Node parent = pushLevelNode.getParent();
     index = 0;
+    if(parent!=null) {
     for (final Node child : parent.getChildren()) {
       // if no match, ignore
       if (child != pushLevelNode) {
@@ -64,9 +75,9 @@ public class Optimizer {
       }
 
       // set the pushLevelNode as child of given node
-      final List<Node> projectChildren = new ArrayList<>();
-      projectChildren.add(pushLevelNode);
-      node.setChildren(projectChildren);
+      final List<Node> children = new ArrayList<>();
+      children.add(pushLevelNode);
+      node.setChildren(children);
       pushLevelNode.setParent(node);
 
       // adding given node as pushLevelNode's child at the position index of
@@ -76,7 +87,43 @@ public class Optimizer {
 
       index++;
     } // for
-
+    }
+    else {
+      final List<Node> projectChildren = new ArrayList<>();
+      projectChildren.add(pushLevelNode);
+      node.setChildren(projectChildren);
+      pushLevelNode.setParent(node); 
+    }
+    return root;
   }
 
+  public static Node pushDown(Node root,Node node, Node pushLevelNode) {
+    if(node==root)
+      root=node.getChildren().get(0);
+    //pop
+    Node parent = node.getParent();
+    for(Node child:node.getChildren()) {
+      child.setParent(parent);
+    }
+    if(parent!=null) {
+      parent.setChildren(node.getChildren());
+    }
+    
+    //push
+    Node parent1=pushLevelNode.getParent();
+    node.setParent(parent1);
+    pushLevelNode.setParent(node);
+    int index=0;
+    for(Node child:parent1.getChildren()) {
+      if(child==pushLevelNode) {
+        parent1.getChildren().set(index, node);
+        break;
+      }
+      index++;
+    }
+    final List<Node> children = new ArrayList<>();
+    children.add(pushLevelNode);
+    node.setChildren(children);    
+    return root;
+  }
 }

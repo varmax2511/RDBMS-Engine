@@ -15,12 +15,12 @@ import edu.buffalo.www.cse4562.query.QueryVisitor;
 import edu.buffalo.www.cse4562.util.TreeProcessor;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 
-*//**
+/**
  * 
  * @author varunjai
  *
- *//*
-public class TestOperator {
+ */
+/*public class TestOperator {
 
   @Test
   public void testOrderBy() throws Throwable {
@@ -44,6 +44,29 @@ public class TestOperator {
     assertEquals(10, tuples.size());
 
   }
+  @Test
+  public void testCount() throws Throwable {
+    CCJSqlParser parser = new CCJSqlParser(
+        new StringReader("CREATE TABLE R(A int, B int, C int);"));
+
+    final QueryVisitor queryVisitor = new QueryVisitor();
+    parser.Statement().accept(queryVisitor);
+
+    assertTrue(SchemaManager.getTableSchema("R") != null);
+
+    parser = new CCJSqlParser(
+        new StringReader("SELECT COUNT(A) FROM R;"));
+    parser.Statement().accept(queryVisitor);
+
+    // get the tree
+    final Node root = queryVisitor.getRoot();
+    // build schema
+
+    final Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(1, tuples.size());
+
+  }
+
 
   @Test
   public void testLimit() throws Throwable {
