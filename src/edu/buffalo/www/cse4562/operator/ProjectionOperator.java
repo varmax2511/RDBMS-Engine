@@ -139,28 +139,6 @@ public class ProjectionOperator extends Node implements UnaryOperator {
 
   }
 
-  /**
-   * Get the alias in the {@link SelectExpressionItem} and add it as a new
-   * column in the {@link TableSchema}. Register the changes in table schema
-   * with the {@link SchemaManager}.
-   * @param alias
-   *          TODO
-   * @param tableId
-   */
-  private void addColumnAliasToSchema(String alias,
-      Integer tableId) {
-    final TableSchema tableSchema = SchemaManager.getTableSchemaById(tableId);
-    final List<ColumnDefinition> columnDefinitions = tableSchema
-        .getColumnDefinitions();
-    final ColumnDefinition columnDefinition = new ColumnDefinition();
-    columnDefinition.setColumnName(alias);
-    columnDefinitions.add(columnDefinition);
-    tableSchema.setColumnDefinitions(columnDefinitions);
-
-    // update schema
-    SchemaManager.updateSchema(tableId, tableSchema);
-  }
-
   public boolean isAllColFlag() {
     return this.allColFlag;
   }
@@ -232,23 +210,22 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     // get schema based on expression items of project
     for (final SelectExpressionItem selectExprItem : this.selectExpressionItems) {
 
-      if (selectExprItem.getExpression() instanceof Column) {
-        final Column column = (Column) selectExprItem.getExpression();
+      // if not a column instance, process as expression
+      if (!(selectExprItem.getExpression() instanceof Column)) {
+        buildExpression(childSchema, selectExprItem);
+        continue;
+      }
 
-        // if no table name, get table id from child schema where the
-        // column name matches
-        if (StringUtils.isBlank(column.getTable().getName())) {
+      final Column column = (Column) selectExprItem.getExpression();
 
-          buildNoTableSchema(childSchema, selectExprItem,
-              column.getColumnName());
-          continue;
-        } // if no column name
+      // if no table name, get table id from child schema where the
+      // column name matches
+      if (StringUtils.isBlank(column.getTable().getName())) {
 
-        buildWithCidTid(selectExprItem, column);
+        buildNoTableSchema(childSchema, selectExprItem, column.getColumnName());
       } else {
-        //if (!StringUtils.isBlank(selectExprItem.getAlias())) {
-          buildExpression(childSchema, selectExprItem);
-       // }
+        // if no column name
+        buildWithCidTid(selectExprItem, column);
       }
 
     } // for
@@ -267,20 +244,6 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     final Integer tableId = SchemaManager
         .getTableId(column.getTable().getName());
 
-    // if alias is present, add to schema
-    if (!StringUtils.isBlank(selectExprItem.getAlias())) {
-
-      if (SchemaManager.getColumnIdByTableId(tableId,
-          selectExprItem.getAlias()) == null) {
-        addColumnAliasToSchema(selectExprItem.getAlias(), tableId);
-      }
-
-      builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
-          .getColumnIdByTableId(tableId, selectExprItem.getAlias())));
-      return;
-    }
-
-    // no alias present
     builtSchema.add(new Pair<Integer, Integer>(tableId,
         SchemaManager.getColumnIdByTableId(tableId, column.getColumnName())));
 
@@ -295,33 +258,24 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   private void buildNoTableSchema(List<Pair<Integer, Integer>> childSchema,
       final SelectExpressionItem selectExprItem, final String columnName) {
 
+    Pair<Integer, Integer> matchPair = null;
     for (final Pair<Integer, Integer> pair : childSchema) {
       // if matching
       if (!SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
           .equals(columnName)) {
         continue;
       }
-
-      // alias
-      if (!StringUtils.isBlank(selectExprItem.getAlias())) {
-
-        // if not already registered
-        if (SchemaManager.getColumnIdByTableId(pair.getKey(),
-            selectExprItem.getAlias()) == null) {
-          addColumnAliasToSchema(selectExprItem.getAlias(), pair.getKey());
-        }
-
-        builtSchema.add(new Pair<Integer, Integer>(pair.getKey(), SchemaManager
-            .getColumnIdByTableId(pair.getKey(), selectExprItem.getAlias())));
-        return;
-      } // if
-
-      // no alias present
-      builtSchema.add(new Pair<Integer, Integer>(pair.getKey(),
-          SchemaManager.getColumnIdByTableId(pair.getKey(), columnName)));
-
-      return;
+      matchPair = pair;
     } // for
+
+    // no matching pair - no-op
+    if (null == matchPair) {
+      return;
+    }
+
+    builtSchema.add(new Pair<Integer, Integer>(matchPair.getKey(),
+        SchemaManager.getColumnIdByTableId(matchPair.getKey(), columnName)));
+
   }
 
   /**
@@ -332,27 +286,14 @@ public class ProjectionOperator extends Node implements UnaryOperator {
    */
   private void buildExpression(List<Pair<Integer, Integer>> childSchema,
       final SelectExpressionItem selectExprItem) {
-    // alias
-    if (!StringUtils.isBlank(selectExprItem.getAlias())) {
-
-      // if not already registered
-      if (SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-          selectExprItem.getAlias()) == null) {
-        addColumnAliasToSchema(selectExprItem.getAlias(), childSchema.get(0).getKey());
-      }
-
-      builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
-          SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-              selectExprItem.getAlias())));
-      return;
-    }
 
     // no alias present
     // register expression as column
     // if not already registered
     if (SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-        selectExprItem.getAlias()) == null) {
-      addColumnAliasToSchema(selectExprItem.getExpression().toString(),
+        selectExprItem.getExpression().toString()) == null) {
+      SchemaManager.addColumnAliasToSchema(
+          selectExprItem.getExpression().toString(),
           childSchema.get(0).getKey());
     }
     builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),

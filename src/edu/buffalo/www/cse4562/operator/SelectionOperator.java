@@ -24,7 +24,6 @@ import net.sf.jsqlparser.expression.Expression;
 public class SelectionOperator extends Node implements UnaryOperator {
 
   private final Expression expression;
-  
 
   /**
    * 
@@ -77,10 +76,8 @@ public class SelectionOperator extends Node implements UnaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-   //  if (CollectionUtils.isEmpty(builtSchema)) {
-      builtSchema = getChildren().get(0).getBuiltSchema();
-   // }// if
-   
+    builtSchema = getChildren().get(0).getBuiltSchema();
+
     return builtSchema;
   }
 
