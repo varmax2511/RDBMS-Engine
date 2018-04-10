@@ -31,7 +31,8 @@ public class Evaluator extends Eval {
    * for the column.
    */
   private Map<ColumnKey, ColumnCell> column2ColumnCell = new TreeMap<>();
-  final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_YYYY_MM_DD);
+  final SimpleDateFormat dateFormat = new SimpleDateFormat(
+      DATE_FORMAT_YYYY_MM_DD);
 
   @Override
   public PrimitiveValue eval(Column column) throws SQLException {
@@ -43,14 +44,7 @@ public class Evaluator extends Eval {
         : null;
 
     ColumnKey columnKey = new ColumnKey(column.getColumnName(), tableName);
-    
-    /*ColumnCell cell = null;
-    for(Entry<ColumnKey, ColumnCell> entry : this.column2ColumnCell.entrySet()){
-      if(entry.getKey().hashCode() == columnKey.hashCode() && entry.getKey().equals(columnKey)){
-        cell = entry.getValue();
-      }
-    }
-    */
+
     final ColumnCell cell = this.column2ColumnCell.get(columnKey);
     return cell.getCellValue();
   }
@@ -72,12 +66,13 @@ public class Evaluator extends Eval {
 
     return super.eval(v);
   }
-  
+
   @Override
   public PrimitiveValue eval(Function function) throws SQLException {
-    //:TODO
+    // :TODO
     final ColumnCell columnCell = new ColumnCell();
-    columnCell.setCellValue(Aggregator.getValue(function.getName(),function.getParameters()));
+    columnCell.setCellValue(
+        Aggregator.getValue(function.getName(), function.getParameters()));
     return columnCell.getCellValue();
   }
   /**

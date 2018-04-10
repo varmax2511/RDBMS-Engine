@@ -7,6 +7,7 @@ import java.util.Map;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 
 /**
  * <pre>
@@ -173,6 +174,28 @@ public class SchemaManager {
     } // for
 
     return null;
+  }
+
+  /**
+   * Get the alias in the {@link SelectExpressionItem} and add it as a new
+   * column in the {@link TableSchema}. Register the changes in table schema
+   * with the {@link SchemaManager}.
+   *
+   * @param strVal
+   *          TODO
+   * @param tableId
+   */
+  public static void addColumnAliasToSchema(String strVal, Integer tableId) {
+    final TableSchema tableSchema = getTableSchemaById(tableId);
+    final List<ColumnDefinition> columnDefinitions = tableSchema
+        .getColumnDefinitions();
+    final ColumnDefinition columnDefinition = new ColumnDefinition();
+    columnDefinition.setColumnName(strVal);
+    columnDefinitions.add(columnDefinition);
+    tableSchema.setColumnDefinitions(columnDefinitions);
+  
+    // update schema
+    updateSchema(tableId, tableSchema);
   }
   
   
