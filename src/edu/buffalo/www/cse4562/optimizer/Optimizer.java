@@ -26,9 +26,9 @@ public class Optimizer {
     root.getBuiltSchema();
 
     PushDownSelection.pushDownSelect(root);
-    //:TODO fix push down project for renaming
-    //like SELECT A AS C FROM R WHERE A=4;
-    //root =PushDownProjection.pushDownProject(root);
+    // :TODO fix push down project for renaming
+    // like SELECT A AS C FROM R WHERE A=4;
+    //root = PushDownProjection.pushDownProject(root);
 
     // re-build schema
     root.getBuiltSchema();
@@ -39,9 +39,9 @@ public class Optimizer {
    * @param node
    * @param pushLevelNode
    */
-  public static Node pushDown1(Node root,Node node, Node pushLevelNode) {
-    if(node==root)
-      root=node.getChildren().get(0);
+  public static Node pushDown1(Node root, Node node, Node pushLevelNode) {
+    if (node == root)
+      root = node.getChildren().get(0);
     int index = 0;
     // removing node from the tree and updating references
     if (node.getParent() != null) {
@@ -58,7 +58,7 @@ public class Optimizer {
         index++;
       } // for
     } // if
-    else{
+    else {
       node.getChildren().get(0).setParent(null);
       final List<Node> children = new ArrayList<>();
       children.add(node);
@@ -66,56 +66,55 @@ public class Optimizer {
     }
     final Node parent = pushLevelNode.getParent();
     index = 0;
-    if(parent!=null) {
-    for (final Node child : parent.getChildren()) {
-      // if no match, ignore
-      if (child != pushLevelNode) {
+    if (parent != null) {
+      for (final Node child : parent.getChildren()) {
+        // if no match, ignore
+        if (child != pushLevelNode) {
+          index++;
+          continue;
+        }
+
+        // set the pushLevelNode as child of given node
+        final List<Node> children = new ArrayList<>();
+        children.add(pushLevelNode);
+        node.setChildren(children);
+        pushLevelNode.setParent(node);
+
+        // adding given node as pushLevelNode's child at the position index of
+        // pushLevelNode
+        parent.getChildren().set(index, node);
+        node.setParent(parent);
+
         index++;
-        continue;
-      }
-
-      // set the pushLevelNode as child of given node
-      final List<Node> children = new ArrayList<>();
-      children.add(pushLevelNode);
-      node.setChildren(children);
-      pushLevelNode.setParent(node);
-
-      // adding given node as pushLevelNode's child at the position index of
-      // pushLevelNode
-      parent.getChildren().set(index, node);
-      node.setParent(parent);
-
-      index++;
-    } // for
-    }
-    else {
+      } // for
+    } else {
       final List<Node> projectChildren = new ArrayList<>();
       projectChildren.add(pushLevelNode);
       node.setChildren(projectChildren);
-      pushLevelNode.setParent(node); 
+      pushLevelNode.setParent(node);
     }
     return root;
   }
 
-  public static Node pushDown(Node root,Node node, Node pushLevelNode) {
-    if(node==root)
-      root=node.getChildren().get(0);
-    //pop
+  public static Node pushDown(Node root, Node node, Node pushLevelNode) {
+    if (node == root)
+      root = node.getChildren().get(0);
+    // pop
     Node parent = node.getParent();
-    for(Node child:node.getChildren()) {
+    for (Node child : node.getChildren()) {
       child.setParent(parent);
     }
-    if(parent!=null) {
+    if (parent != null) {
       parent.setChildren(node.getChildren());
     }
-    
-    //push
-    Node parent1=pushLevelNode.getParent();
+
+    // push
+    Node parent1 = pushLevelNode.getParent();
     node.setParent(parent1);
     pushLevelNode.setParent(node);
-    int index=0;
-    for(Node child:parent1.getChildren()) {
-      if(child==pushLevelNode) {
+    int index = 0;
+    for (Node child : parent1.getChildren()) {
+      if (child == pushLevelNode) {
         parent1.getChildren().set(index, node);
         break;
       }
@@ -123,7 +122,7 @@ public class Optimizer {
     }
     final List<Node> children = new ArrayList<>();
     children.add(pushLevelNode);
-    node.setChildren(children);    
+    node.setChildren(children);
     return root;
   }
 }

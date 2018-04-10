@@ -9,19 +9,16 @@ import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.LimitOperator;
 import edu.buffalo.www.cse4562.operator.OrderByOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
+import edu.buffalo.www.cse4562.operator.RenamingOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.select.AllColumns;
-import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Limit;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
 /**
@@ -33,11 +30,9 @@ import net.sf.jsqlparser.statement.select.Union;
 public class SelectQueryVisitor
     implements
       SqlVisitor,
-      SelectVisitor,
-      SelectItemVisitor {
+      SelectVisitor {
 
   private Node root;
-  private ProjectionOperator node;
   private Node currentNode;
   @Override
   public void visit(PlainSelect plainSelect) {
@@ -54,7 +49,8 @@ public class SelectQueryVisitor
     final FromItem fromItem = plainSelect.getFromItem();
     final Expression where = plainSelect.getWhere();
     final List<Join> joins = plainSelect.getJoins();
-    final List<Column> groupByColumnReferences = plainSelect.getGroupByColumnReferences(); 
+    final List<Column> groupByColumnReferences = plainSelect
+        .getGroupByColumnReferences();
 
     // limit
     if (limit != null) {
@@ -65,19 +61,20 @@ public class SelectQueryVisitor
     if (!CollectionUtils.isEmpty(orderByElements)) {
       processOrderBy(orderByElements);
     }
-    
+
     // project
     /*
      * TODO: This needs to be worked out for later use of union, aggregate
      * operations
      */
+    processRename(selectItems);
     processProject(selectItems);
 
     // Group by
-    if(!CollectionUtils.isEmpty(groupByColumnReferences)) {
+    if (!CollectionUtils.isEmpty(groupByColumnReferences)) {
       processGroupBy(groupByColumnReferences);
     }
-    
+
     // process WHERE
     processWhere(where);
 
@@ -92,8 +89,8 @@ public class SelectQueryVisitor
     /*
      * Add a cross product
      */
-    //processCross(fromItem, joins);
-    currentNode.addChild(processCross3(fromItem, joins.iterator()));
+    // processCross(fromItem, joins);
+    currentNode.addChild(processCross(fromItem, joins.iterator()));
 
   }
 
@@ -108,7 +105,7 @@ public class SelectQueryVisitor
 
     currentNode.addChild(node);
     currentNode = node;
-    
+
   }
 
   private void processLimit(final Limit limit) {
@@ -138,64 +135,7 @@ public class SelectQueryVisitor
 
   }
 
-  /**
-   *
-   * @param fromItem
-   * @param joins
-   */
-  private void processCross2(final FromItem fromItem, final List<Join> joins) {
-    final CrossProductOperator crossProductOperator = new CrossProductOperator();
-    final Node node = crossProductOperator;
-    currentNode.addChild(node);
-    currentNode = node;
-
-    procesFrom(fromItem, currentNode);
-
-    // process each Join From Item
-    final Iterator<Join> joinItr = joins.iterator();
-    while (joinItr.hasNext()) {
-      final FromItem joinFromItem = joinItr.next().getRightItem();
-      procesFrom(joinFromItem, currentNode);
-    } // while
-  }
-
-  /**
-   *
-   * @param fromItem
-   * @param joins
-   * @throws IllegalAccessException
-   */
-  private void processCross(final FromItem fromItem, final List<Join> joins) {
-
-    final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
-    fromItem.accept(fromItemVisitor);
-    if (fromItemVisitor.getRoot() == null) {
-      return;
-    }
-
-    Node leftNode = fromItemVisitor.getRoot();
-
-    // process each Join From Item
-    final Iterator<Join> joinItr = joins.iterator();
-    while (joinItr.hasNext()) {
-      final FromItem joinFromItem = joinItr.next().getRightItem();
-      joinFromItem.accept(fromItemVisitor);
-
-      // null check
-      if (fromItemVisitor.getRoot() == null) {
-        continue;
-      }
-
-      final Node cNode = new CrossProductOperator();
-      cNode.addChild(leftNode);
-      cNode.addChild(fromItemVisitor.getRoot());
-      leftNode = cNode;
-    } // while
-
-    currentNode.addChild(leftNode);
-  }
-
-  private Node processCross3(final FromItem fromItem,
+  private Node processCross(final FromItem fromItem,
       final Iterator<Join> joinItr) {
 
     final QueryFromItemVisitor fromItemVisitor = new QueryFromItemVisitor();
@@ -213,7 +153,7 @@ public class SelectQueryVisitor
       return cNode;
     }
 
-    cNode.addChild(processCross3(fromItemNext, joinItr));
+    cNode.addChild(processCross(fromItemNext, joinItr));
     return cNode;
   }
 
@@ -254,16 +194,40 @@ public class SelectQueryVisitor
   }
 
   /**
+  *
+  * @param selectItems
+  */
+ private void processRename(final List<SelectItem> selectItems) {
+
+   final QuerySelectItemVisitor selectItemVisitor = new QuerySelectItemVisitor(
+       selectItems, RenamingOperator.class);
+  
+   Node node = selectItemVisitor.getRoot();
+   
+   if(node == null){
+     return;
+   }
+   
+   if (root == null) {
+     root = node;
+     currentNode = root;
+     return;
+   }
+   currentNode.addChild(node);
+   currentNode = node;
+
+ }
+
+  
+  /**
    *
    * @param selectItems
    */
   private void processProject(final List<SelectItem> selectItems) {
-    node = new ProjectionOperator();
-    final Iterator<SelectItem> selectItemItr = selectItems.iterator();
-    while (selectItemItr.hasNext()) {
-      selectItemItr.next().accept(this);
-    }
 
+    final QuerySelectItemVisitor selectItemVisitor = new QuerySelectItemVisitor(
+        selectItems, ProjectionOperator.class);
+    Node node = selectItemVisitor.getRoot(); 
     if (root == null) {
       root = node;
       currentNode = root;
@@ -279,34 +243,6 @@ public class SelectQueryVisitor
     if (null == union) {
       return;
     }
-  }
-
-  @Override
-  public void visit(AllColumns arg0) {
-    if (null == arg0) {
-      return;
-    }
-
-    // enable processing for *
-    node.setAllColFlag(true);
-  }
-
-  @Override
-  public void visit(AllTableColumns allTableColumns) {
-    if (null == allTableColumns) {
-      return;
-    }
-
-    node.addAllTableColumns(allTableColumns);
-  }
-
-  @Override
-  public void visit(SelectExpressionItem expression) {
-    if (null == expression) {
-      return;
-    }
-
-    node.addSelectExpressionItems(expression);
   }
 
   @Override
