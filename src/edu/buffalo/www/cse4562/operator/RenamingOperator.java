@@ -9,9 +9,8 @@ import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
-import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
-import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.SchemaUtils;
 import edu.buffalo.www.cse4562.util.StringUtils;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
@@ -218,16 +217,15 @@ public class RenamingOperator extends Node implements UnaryOperator {
       // process expressions
       final List<ColumnCell> columnCells = new ArrayList<>();
       int cnt = 0;
-      for (final SelectExpressionItem expressionItem : selectExpressionItems) {
-
-        // search for a match in the tuple column cells
-        for (final ColumnCell columnCell : tuple.getColumnCells()) {
+      // search for a match in the tuple column cells
+      for (final ColumnCell columnCell : tuple.getColumnCells()) {
+        boolean cellMatch = false;
+        for (final SelectExpressionItem expressionItem : selectExpressionItems) {
 
           // if not matching
-          if (columnCell == null || !SchemaManager
-              .getColumnNameById(columnCell.getTableId(),
-                  columnCell.getColumnId())
-              .equals(expressionItem.getExpression().toString())) {
+          if (columnCell == null
+              || !SchemaUtils.expressionMatch(expressionItem.getExpression(),
+                  columnCell.getTableId(), columnCell.getColumnId())) {
 
             continue;
           }
@@ -235,16 +233,20 @@ public class RenamingOperator extends Node implements UnaryOperator {
           // found match
           final ColumnCell cCell = new ColumnCell(columnCell.getCellValue());
           cCell.setColumnId(builtSchema.get(cnt).getValue());
-          cCell.setTableId(builtSchema.get(cnt).getKey());
+          cCell.setTableId(builtSchema.get(cnt++).getKey());
 
           // add to list, move over to next expression
           columnCells.add(cCell);
+          cellMatch = true;
           break;
-
         } // for
+        
+        // add cell even if it didn't match any expression as renaming doesnt'
+        // trim data it just updates ids for renamed column cells
+        if(!cellMatch){
+          columnCells.add(columnCell);
+        }
 
-        // increment count at all times
-        cnt++;
       } // for
 
       renamedOutput.add(new Tuple(columnCells));
@@ -270,5 +272,4 @@ public class RenamingOperator extends Node implements UnaryOperator {
       List<SelectExpressionItem> selectExpressionItems) {
     this.selectExpressionItems = selectExpressionItems;
   }
-
 }
