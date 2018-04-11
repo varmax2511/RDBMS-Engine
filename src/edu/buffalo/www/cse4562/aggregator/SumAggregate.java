@@ -13,35 +13,64 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.operator.GroupByOperator;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.PrimitiveValue.InvalidPrimitive;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author Sneha Mehta
  *
  */
-public class CountAggregate extends Node implements AggregateOperator {
-  private Function function;
-  private LongValue count;
+public class SumAggregate extends Node implements AggregateOperator {
 
-  public CountAggregate(Function function) {
+  protected Boolean resultTypeLong;
+  protected Function function;
+  protected LongValue longSum;
+  protected DoubleValue doubleSum;
+
+  public SumAggregate(Function function) {
     this.function = function;
-    count = new LongValue(0);
+    longSum = new LongValue(0);
+    doubleSum = new DoubleValue(0);
   }
 
   @Override
   public Tuple getAggregate(List<Tuple> tupleRecords) {
-    count.setValue(tupleRecords.size());
+    OperatorVisitor opExpVisitor = new OperatorExpressionVisitor();
+    for (Tuple tuple : tupleRecords) {
+      final ColumnCell columnCell = opExpVisitor.getValue(tuple, function);
+      resultTypeLong = (resultTypeLong == null)
+          ? (columnCell.getCellValue() instanceof LongValue) ? true : false
+          : resultTypeLong;
+      try {
+
+        if (resultTypeLong) {
+          longSum.setValue(
+              longSum.getValue() + columnCell.getCellValue().toLong());
+        } else {
+          doubleSum.setValue(
+              doubleSum.getValue() + columnCell.getCellValue().toDouble());
+        }
+      } catch (InvalidPrimitive e) {
+        System.err.println("Invalid primitive for sum: "
+            + columnCell.getCellValue().getType());
+      }
+    }
 
     final Tuple tuple = tupleRecords.get(0);
-    ColumnCell cCell = new ColumnCell(count);
+    ColumnCell cCell = new ColumnCell(resultTypeLong ? longSum : doubleSum);
     cCell.setTableId(builtSchema.get(0).getKey());
-    cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(), function.toString()));
-
+    cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(),
+        function.toString()));
     tuple.getColumnCells().add(cCell);
-    count = new LongValue(0);
+    longSum = new LongValue(0);
+    doubleSum = new DoubleValue(0);
     return tuple;
   }
 
@@ -67,7 +96,29 @@ public class CountAggregate extends Node implements AggregateOperator {
     aggregateOutputs.add(getAggregate(tupleRecords));
 
     return aggregateOutputs;
+  }
+  
+  @Override
+  public Collection<Tuple> getNext() throws Throwable {
+    // check child count, should be 1
+    if (this.getChildren() == null || this.getChildren().size() != 1) {
+      throw new IllegalArgumentException(
+          "Invalid Aggregation child configuration!");
+    }
+    final Collection<Tuple> tuples = new ArrayList<>();
+    if (getChildren().get(0) instanceof GroupByOperator && getChildren().get(0).hasNext()) {
+      tuples.addAll(getChildren().get(0).getNext());
+    }
+    else {
+      while(getChildren().get(0).hasNext()) {
+        tuples.addAll(getChildren().get(0).getNext());
+      }
+    }
 
+    final Collection<Collection<Tuple>> tupleCollection = new ArrayList<>();
+    tupleCollection.add(tuples);
+
+    return process(tupleCollection);
   }
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
@@ -99,5 +150,4 @@ public class CountAggregate extends Node implements AggregateOperator {
         SchemaManager.getColumnIdByTableId(tableId, fullName)));
     // return;
   }
-
 }
