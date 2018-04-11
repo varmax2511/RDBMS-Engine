@@ -238,9 +238,31 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(Multiplication arg0) {
-    // TODO Auto-generated method stub
+  public void visit(Multiplication multiplication) {
+ // null check
+    if (null == multiplication) {
+      return;
+    }
+    // evaluate LHS and RHS
+    multiplication.getLeftExpression().accept(this);
+    multiplication.getRightExpression().accept(this);
 
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(multiplication);
+    } catch (final SQLException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    this.outputColumnCell = new ColumnCell(cellValue);
   }
 
   @Override
