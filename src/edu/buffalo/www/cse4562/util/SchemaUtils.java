@@ -1,8 +1,16 @@
 package edu.buffalo.www.cse4562.util;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
+import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 
 public class SchemaUtils {
 
@@ -40,6 +48,30 @@ public class SchemaUtils {
     }
 
     return false;
+  }
+
+  public static void updateProjectNodeSchema(ProjectionOperator projectNode,
+      final List<Pair<Integer, Integer>> projectBuiltSchema,
+      final List<Pair<Integer, Integer>> requiredSchema) {
+    final Set<Pair<Integer, Integer>> project = new HashSet<>();
+    project.addAll(projectBuiltSchema);
+    final Set<Pair<Integer, Integer>> child = new HashSet<>();
+    child.addAll(requiredSchema);
+  
+    child.removeAll(project);
+  
+    for (final Pair<Integer, Integer> pair : child) {
+      final Column expr = new Column();
+      expr.setTable(new Table(SchemaManager.getTableName(pair.getKey())));
+      expr.setColumnName(
+          SchemaManager.getColumnNameById(pair.getKey(), pair.getValue()));
+      final SelectExpressionItem exprItem = new SelectExpressionItem();
+  
+      exprItem.setExpression(expr);
+      projectNode.addSelectExpressionItems(exprItem);
+    } // for
+  
+    projectNode.getBuiltSchema();
   }
 
 }

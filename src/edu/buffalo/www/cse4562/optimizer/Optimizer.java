@@ -28,7 +28,7 @@ public class Optimizer {
     PushDownSelection.pushDownSelect(root);
     // :TODO fix push down project for renaming
     // like SELECT A AS C FROM R WHERE A=4;
-    //root = PushDownProjection.pushDownProject(root);
+    root = PushDownProjection.pushDownProject(root);
 
     // re-build schema
     root.getBuiltSchema();
@@ -125,4 +125,43 @@ public class Optimizer {
     node.setChildren(children);
     return root;
   }
+
+  public static Node pushDownProject(Node root, Node node, Node addNode,
+      Node pushLevelNode) {
+    if (node == root) {
+      root = addNode;
+      addNode.addChild(node.getChildren().get(0));
+    } else {
+      Node father = node.getParent();
+      father.addChild(addNode);
+      addNode.setParent(father);
+    }
+
+    // pop
+    Node parent = node.getParent();
+    for (Node child : node.getChildren()) {
+      child.setParent(parent);
+    }
+    if (parent != null) {
+      parent.setChildren(node.getChildren());
+    }
+
+    // push
+    Node parent1 = pushLevelNode.getParent();
+    node.setParent(parent1);
+    pushLevelNode.setParent(node);
+    int index = 0;
+    for (Node child : parent1.getChildren()) {
+      if (child == pushLevelNode) {
+        parent1.getChildren().set(index, node);
+        break;
+      }
+      index++;
+    }
+    final List<Node> children = new ArrayList<>();
+    children.add(pushLevelNode);
+    node.setChildren(children);
+    return root;
+  }
+  
 }

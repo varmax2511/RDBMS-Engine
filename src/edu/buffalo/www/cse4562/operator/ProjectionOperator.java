@@ -2,7 +2,9 @@ package edu.buffalo.www.cse4562.operator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
@@ -51,11 +53,13 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   /**
    * List of {@link AllTableColumns}
    */
-  private List<AllTableColumns> allTableColumns;
+  private List<AllTableColumns> allTableColumns = new ArrayList<>();
   /**
    * List of {@link SelectExpressionItem}
    */
   private List<SelectExpressionItem> selectExpressionItems = new ArrayList<>();
+
+  private Map<Pair<Integer, Integer>, SelectExpressionItem> pair2SelectExprItem = new HashMap<>();
 
   @Override
   public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
@@ -87,8 +91,8 @@ public class ProjectionOperator extends Node implements UnaryOperator {
       int cnt = 0;
       for (final SelectExpressionItem expressionItem : selectExpressionItems) {
 
-        if(expressionItem.getExpression() instanceof Function) {
-       // search for a match in the tuple column cells
+        if (expressionItem.getExpression() instanceof Function) {
+          // search for a match in the tuple column cells
           for (final ColumnCell columnCell : tuple.getColumnCells()) {
 
             // if not matching
@@ -115,7 +119,7 @@ public class ProjectionOperator extends Node implements UnaryOperator {
           cnt++;
           continue;
         } // for
-        
+
         // TODO later in the project if the renaming is required as output this
         // can be used by setting as a column name
         // for now we don't need to output the column name or the rename(alias)
@@ -219,17 +223,17 @@ public class ProjectionOperator extends Node implements UnaryOperator {
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
     // if already set
-    if (!CollectionUtils.isEmpty(builtSchema)) {
-      return builtSchema;
+    if (CollectionUtils.isEmpty(builtSchema)) {
+      findAllTableColumns();
     }
 
+    builtSchema = new ArrayList<>();
     // invoke child schema for schema manager updation
-    final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
-        .getBuiltSchema();
+    final List<Pair<Integer, Integer>> childSchema = getChildren().get(0).getBuiltSchema();
 
     // expr like R.*
     // TODO: Rethink deep once doing projection pushdown
-    findAllTableColumns();
+   // findAllTableColumns();
 
     // if expression is SELECT * FROM R,S
     if (this.allColFlag || CollectionUtils.isEmpty(selectExpressionItems)) {
@@ -274,8 +278,10 @@ public class ProjectionOperator extends Node implements UnaryOperator {
     final Integer tableId = SchemaManager
         .getTableId(column.getTable().getName());
 
-    builtSchema.add(new Pair<Integer, Integer>(tableId,
-        SchemaManager.getColumnIdByTableId(tableId, column.getColumnName())));
+    final Pair<Integer, Integer> pair = new Pair<Integer, Integer>(tableId,
+        SchemaManager.getColumnIdByTableId(tableId, column.getColumnName()));
+    builtSchema.add(pair);
+    pair2SelectExprItem.put(pair, selectExprItem);
 
   }
 
@@ -303,8 +309,11 @@ public class ProjectionOperator extends Node implements UnaryOperator {
       return;
     }
 
-    builtSchema.add(new Pair<Integer, Integer>(matchPair.getKey(),
-        SchemaManager.getColumnIdByTableId(matchPair.getKey(), columnName)));
+    final Pair<Integer, Integer> pair = new Pair<Integer, Integer>(
+        matchPair.getKey(),
+        SchemaManager.getColumnIdByTableId(matchPair.getKey(), columnName));
+    builtSchema.add(pair);
+    pair2SelectExprItem.put(pair, selectExprItem);
 
   }
 
@@ -326,12 +335,51 @@ public class ProjectionOperator extends Node implements UnaryOperator {
           selectExprItem.getExpression().toString(),
           childSchema.get(0).getKey());
     }
-    builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
+
+    final Pair<Integer, Integer> pair = new Pair<Integer, Integer>(
+        childSchema.get(0).getKey(),
         SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-            selectExprItem.getExpression().toString())));
+            selectExprItem.getExpression().toString()));
+    builtSchema.add(pair);
+    pair2SelectExprItem.put(pair, selectExprItem);
 
     return;
 
+  }
+  
+  public Map<Pair<Integer, Integer>, SelectExpressionItem> getPair2SelectExprItem() {
+    return pair2SelectExprItem;
+  }
+
+  public void setPair2SelectExprItem(
+      Map<Pair<Integer, Integer>, SelectExpressionItem> pair2SelectExprItem) {
+    this.pair2SelectExprItem = pair2SelectExprItem;
+  }
+
+  public Node getDeepCopy() {
+    ProjectionOperator node = new ProjectionOperator();
+
+    List<Node> children = new ArrayList<>();
+    node.setChildren(children);
+    for (Node child : this.getChildren()) {
+      // node.addChild(child);
+    }
+
+    // node.setParent(this.getParent());
+    node.builtSchema = new ArrayList<>(this.builtSchema);
+    node.pair2SelectExprItem = new HashMap<>(this.getPair2SelectExprItem());
+    node.setAllColFlag(this.allColFlag);
+
+    for (AllTableColumns allTableColumns : this.getAllTableColumns()) {
+      node.addAllTableColumns(allTableColumns);
+    }
+
+    for (SelectExpressionItem selectExprItem : this
+        .getSelectExpressionItems()) {
+      node.addSelectExpressionItems(selectExprItem);
+    } // for
+
+    return node;
   }
 
 }
