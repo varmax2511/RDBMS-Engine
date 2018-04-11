@@ -13,35 +13,71 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import net.sf.jsqlparser.expression.DateValue;
+import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.PrimitiveValue;
+import net.sf.jsqlparser.expression.PrimitiveValue.InvalidPrimitive;
+import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author Sneha Mehta
  *
  */
-public class CountAggregate extends Node implements AggregateOperator {
-  private Function function;
-  private LongValue count;
+public class MinAggregate extends Node implements AggregateOperator {
 
-  public CountAggregate(Function function) {
+  private Function function;
+  private PrimitiveValue min;
+
+  public MinAggregate(Function function) {
     this.function = function;
-    count = new LongValue(0);
   }
 
   @Override
   public Tuple getAggregate(List<Tuple> tupleRecords) {
-    count.setValue(tupleRecords.size());
+    OperatorVisitor opExpVisitor = new OperatorExpressionVisitor();
+    for (Tuple tuple : tupleRecords) {
+      final ColumnCell columnCell = opExpVisitor.getValue(tuple, function);
+      try {
 
+        if (min == null) {
+          min = columnCell.getCellValue();
+        } else if (columnCell.getCellValue() instanceof LongValue) {
+          min = (min.toLong() > columnCell.getCellValue().toLong())
+              ? columnCell.getCellValue()
+              : min;
+        } else if (columnCell.getCellValue() instanceof DoubleValue) {
+          min = (min.toDouble() > columnCell.getCellValue().toDouble())
+              ? columnCell.getCellValue()
+              : min;
+        } else if (columnCell.getCellValue() instanceof StringValue) {
+          min = (min.toString()
+              .compareTo(columnCell.getCellValue().toString()) > 0)
+                  ? columnCell.getCellValue()
+                  : min;
+        } else {
+          DateValue minDate = (DateValue) min;
+          DateValue resultDate = (DateValue) columnCell.getCellValue();
+          min = (minDate.getValue().getTime() > resultDate.getValue().getTime())
+              ? resultDate
+              : min;
+        }
+      } catch (InvalidPrimitive e) {
+        System.err.println("Invalid primitive for MIN: " + min.getType());
+      }
+    }
     final Tuple tuple = tupleRecords.get(0);
-    ColumnCell cCell = new ColumnCell(count);
+    ColumnCell cCell = new ColumnCell(min);
     cCell.setTableId(builtSchema.get(0).getKey());
     cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(), function.toString()));
 
     tuple.getColumnCells().add(cCell);
-    count = new LongValue(0);
+    min=null;
     return tuple;
   }
 
@@ -99,5 +135,4 @@ public class CountAggregate extends Node implements AggregateOperator {
         SchemaManager.getColumnIdByTableId(tableId, fullName)));
     // return;
   }
-
 }
