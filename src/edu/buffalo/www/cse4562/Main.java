@@ -24,7 +24,7 @@ public class Main {
     System.out.println(ApplicationConstants.BASH);
     System.out.flush();
     String dataPath = args[1];
-    ApplicationConstants.DATA_DIR_PATH = dataPath;
+    ApplicationConstants.DATA_DIR_PATH = dataPath +  "/";
     
     final CCJSqlParser parser = new CCJSqlParser(System.in);
     Statement statement = parser.Statement();
