@@ -3,6 +3,11 @@ package edu.buffalo.www.cse4562.query;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.buffalo.www.cse4562.aggregator.AverageAggregate;
+import edu.buffalo.www.cse4562.aggregator.CountAggregate;
+import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
+import edu.buffalo.www.cse4562.aggregator.MinAggregate;
+import edu.buffalo.www.cse4562.aggregator.SumAggregate;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.GroupByOperator;
@@ -12,12 +17,14 @@ import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.operator.RenamingOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Limit;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
@@ -231,13 +238,57 @@ public class SelectQueryVisitor
     if (root == null) {
       root = node;
       currentNode = root;
+      for(SelectExpressionItem expressionItem :((ProjectionOperator)node).getSelectExpressionItems()) {
+        if(expressionItem.getExpression() instanceof Function) {
+          processAggregate((Function)expressionItem.getExpression());
+        }
+      }
       return;
     }
     currentNode.addChild(node);
     currentNode = node;
 
+    for(SelectExpressionItem expressionItem :((ProjectionOperator)node).getSelectExpressionItems()) {
+      if(expressionItem.getExpression() instanceof Function) {
+        processAggregate((Function)expressionItem.getExpression());
+      }
+    }
+
   }
 
+  private void processAggregate(Function function) {
+    Node node = null;
+    switch (function.getName().toUpperCase()) {
+      case "SUM" :
+        node = new SumAggregate(function);
+        break;
+      case "COUNT" :
+        node = new CountAggregate(function);
+        break;
+      case "AVG":
+        node = new AverageAggregate(function);
+        break;
+      case "MIN":
+        node = new MinAggregate(function);
+        break;
+      case "MAX":
+        node = new MaxAggregate(function);
+        break;
+      default: System.err.println("This function is not handled: "+function.getName());
+      
+    }
+
+
+    if (root == null) {
+      root = node;
+      currentNode = root;
+      return;
+    }
+
+    currentNode.addChild(node);
+    currentNode = node;    
+  }
+  
   @Override
   public void visit(Union union) {
     if (null == union) {

@@ -14,6 +14,7 @@ import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.StringUtils;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
@@ -86,6 +87,35 @@ public class ProjectionOperator extends Node implements UnaryOperator {
       int cnt = 0;
       for (final SelectExpressionItem expressionItem : selectExpressionItems) {
 
+        if(expressionItem.getExpression() instanceof Function) {
+       // search for a match in the tuple column cells
+          for (final ColumnCell columnCell : tuple.getColumnCells()) {
+
+            // if not matching
+            if (columnCell == null || !SchemaManager
+                .getColumnNameById(columnCell.getTableId(),
+                    columnCell.getColumnId())
+                .equals(expressionItem.getExpression().toString())) {
+
+              continue;
+            }
+
+            // found match
+            final ColumnCell cCell = new ColumnCell(columnCell.getCellValue());
+            cCell.setColumnId(builtSchema.get(cnt).getValue());
+            cCell.setTableId(builtSchema.get(cnt).getKey());
+
+            // add to list, move over to next expression
+            columnCells.add(cCell);
+            break;
+
+          } // for
+
+          // increment count at all times
+          cnt++;
+          continue;
+        } // for
+        
         // TODO later in the project if the renaming is required as output this
         // can be used by setting as a column name
         // for now we don't need to output the column name or the rename(alias)

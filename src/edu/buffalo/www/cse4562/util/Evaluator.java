@@ -4,15 +4,12 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import edu.buffalo.www.cse4562.aggregator.Aggregator;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor.ColumnKey;
 import net.sf.jsqlparser.eval.Eval;
 import net.sf.jsqlparser.expression.DateValue;
-import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.PrimitiveValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.schema.Column;
@@ -67,14 +64,18 @@ public class Evaluator extends Eval {
     return super.eval(v);
   }
 
-  @Override
-  public PrimitiveValue eval(Function function) throws SQLException {
-    // :TODO
-    final ColumnCell columnCell = new ColumnCell();
-    columnCell.setCellValue(
-        Aggregator.getValue(function.getName(), function.getParameters()));
-    return columnCell.getCellValue();
-  }
+//  @Override
+//  public PrimitiveValue eval(Function function) throws SQLException {
+//    // :TODO
+//    List<Expression> expressions= function.getParameters().getExpressions();
+//    for(Expression exp:expressions) {
+//      exp.accept(null);
+//    }
+//    final ColumnCell columnCell = new ColumnCell();
+//    columnCell.setCellValue(
+//        Aggregator.getValue(function.getName(), function.getParameters()));
+//    return columnCell.getCellValue();
+//  }
   /**
    * {@link #column2ColumnCell}
    * 

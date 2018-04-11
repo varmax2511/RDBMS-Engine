@@ -2,7 +2,6 @@ package edu.buffalo.www.cse4562.operator.visitor;
 
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.buffalo.www.cse4562.model.SchemaManager;
@@ -42,7 +41,6 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
@@ -132,7 +130,6 @@ public class OperatorExpressionVisitor
 
   @Override
   public void visit(Function function) {
-    System.out.println("here");
     // null check
     if (null == function) {
       return;
@@ -145,24 +142,6 @@ public class OperatorExpressionVisitor
         }
       }
     }
-
-    //final String functionName = function.getName();
-    PrimitiveValue cellValue = null;
-    // pass column values map to evaluator for processing.
-    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
-    try {
-      cellValue = evaluator.eval(function);
-    } catch (final SQLException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    // if null, no-op
-    if (null == cellValue) {
-      return;
-    }
-
-    this.outputColumnCell = new ColumnCell(cellValue);
   }
 
   @Override
