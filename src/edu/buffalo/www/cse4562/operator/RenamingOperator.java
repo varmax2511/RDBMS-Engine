@@ -75,11 +75,12 @@ public class RenamingOperator extends Node implements UnaryOperator {
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
-    // if already set
+   /* // if already set
     if (!CollectionUtils.isEmpty(builtSchema)) {
       return builtSchema;
-    }
+    }*/
 
+    builtSchema = new ArrayList<>();
     // invoke child schema for schema manager updation
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
         .getBuiltSchema();
