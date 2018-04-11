@@ -42,7 +42,6 @@ public class QueryFromItemVisitor implements SqlVisitor, FromItemVisitor {
 
   @Override
   public void visit(SubJoin subJoin) {
-    System.out.println("hello");
 
   }
 

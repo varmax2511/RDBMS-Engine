@@ -7,7 +7,7 @@ package edu.buffalo.www.cse4562.model;
  * @param <K>
  * @param <V>
  */
-public class Pair<K, V> {
+public class Pair<K, V> implements Cloneable{
 
   private final K key;
   private final V value;
@@ -63,5 +63,11 @@ public class Pair<K, V> {
     builder.append("|");
     builder.append(this.value == null ? "" : this.value);
     return builder.toString();
+  }
+  
+  @Override
+  protected Object clone() throws CloneNotSupportedException {
+    final Pair<K, V> pair= new Pair<K, V>(this.getKey(), this.getValue());
+    return pair;
   }
 }
