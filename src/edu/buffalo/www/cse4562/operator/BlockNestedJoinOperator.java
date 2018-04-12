@@ -17,12 +17,12 @@ import edu.buffalo.www.cse4562.util.TuplePrinter;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.Expression;
 
-public class JoinOperator2 extends Node implements BinaryOperator {
+public class BlockNestedJoinOperator extends Node implements BinaryOperator,JoinOperator {
 
   private final Expression expression;
   private Collection<Tuple> holdingList = new ArrayList<>();
 
-  public JoinOperator2(Expression expression) {
+  public BlockNestedJoinOperator(Expression expression) {
     Validate.notNull(expression);
 
     this.expression = expression;

@@ -8,12 +8,15 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
+import edu.buffalo.www.cse4562.operator.BlockNestedJoinOperator;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
+import edu.buffalo.www.cse4562.operator.HashJoinOperator;
 import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.RequiredBuiltSchema;
 import edu.buffalo.www.cse4562.util.SchemaUtils;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 
 /**
  * @author Sneha Mehta
@@ -39,11 +42,21 @@ public class CrossToJoin {
    */
   public static void convertCrossToJoin(SelectionOperator selectNode,
       Node pushDownLevel) {
+     Node joinNode; 
 
-    final JoinOperator joinNode = new JoinOperator(selectNode.getExpression());
-    joinNode.setChildren(pushDownLevel.getChildren());
-    joinNode.setParent(selectNode.getParent());
-    joinNode.setSchema(pushDownLevel.getBuiltSchema());
+    if(selectNode.getExpression() instanceof EqualsTo) {
+      joinNode = new HashJoinOperator(selectNode.getExpression());
+      joinNode.setChildren(pushDownLevel.getChildren());
+      joinNode.setParent(selectNode.getParent());
+      ((HashJoinOperator) joinNode).setSchema(pushDownLevel.getBuiltSchema());
+    }
+    else {
+      joinNode = new BlockNestedJoinOperator(selectNode.getExpression());
+      joinNode.setChildren(pushDownLevel.getChildren());
+      joinNode.setParent(selectNode.getParent());
+      ((BlockNestedJoinOperator) joinNode).setSchema(pushDownLevel.getBuiltSchema());
+    }
+    
 
     int index = 0;
     // removing selectNode from the tree and updating references
