@@ -71,7 +71,7 @@ public class CountAggregate extends Node implements AggregateOperator {
   }
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    builtSchema = getChildren().get(0).getBuiltSchema();
+    builtSchema = new ArrayList<>(getChildren().get(0).getBuiltSchema());
     String fullName = function.toString();
     addFunctionToSchema(fullName, builtSchema);
     return builtSchema;
@@ -98,6 +98,12 @@ public class CountAggregate extends Node implements AggregateOperator {
     builtSchema.add(new Pair<Integer, Integer>(tableId,
         SchemaManager.getColumnIdByTableId(tableId, fullName)));
     // return;
+  }
+
+  @Override
+  public Function getFunction() {
+    // TODO Auto-generated method stub
+    return this.function;
   }
 
 }

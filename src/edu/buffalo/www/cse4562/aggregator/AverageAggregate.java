@@ -34,10 +34,10 @@ public class AverageAggregate extends Node implements AggregateOperator {
   protected Function function;
   protected LongValue longSum;
   protected DoubleValue doubleSum;
-  
+
   public AverageAggregate(Function function) {
     this.function = function;
-    avg= new DoubleValue(0);
+    avg = new DoubleValue(0);
     longSum = new LongValue(0);
     doubleSum = new DoubleValue(0);
   }
@@ -65,39 +65,40 @@ public class AverageAggregate extends Node implements AggregateOperator {
 
     return aggregateOutputs;
   }
-  
+
   @Override
   public Tuple getAggregate(List<Tuple> tupleRecords) {
     OperatorVisitor opExpVisitor = new OperatorExpressionVisitor();
     for (Tuple tuple : tupleRecords) {
-    final ColumnCell columnCell = opExpVisitor.getValue(tuple, function);
-    resultTypeLong = (resultTypeLong == null)
-        ? (columnCell.getCellValue() instanceof LongValue) ? true : false
-        : resultTypeLong;
-    try {
+      final ColumnCell columnCell = opExpVisitor.getValue(tuple, function);
+      resultTypeLong = (resultTypeLong == null)
+          ? (columnCell.getCellValue() instanceof LongValue) ? true : false
+          : resultTypeLong;
+      try {
 
-      if (resultTypeLong) {
-        longSum.setValue(
-            longSum.getValue() + columnCell.getCellValue().toLong());
-      } else {
-        doubleSum.setValue(
-            doubleSum.getValue() + columnCell.getCellValue().toDouble());
+        if (resultTypeLong) {
+          longSum.setValue(
+              longSum.getValue() + columnCell.getCellValue().toLong());
+        } else {
+          doubleSum.setValue(
+              doubleSum.getValue() + columnCell.getCellValue().toDouble());
+        }
+      } catch (InvalidPrimitive e) {
+        System.err.println("Invalid primitive for avg: "
+            + columnCell.getCellValue().getType());
       }
-    } catch (InvalidPrimitive e) {
-      System.err.println("Invalid primitive for avg: "
-          + columnCell.getCellValue().getType());
     }
-  }
-    avg.setValue((resultTypeLong?longSum.toDouble():doubleSum.toDouble())/tupleRecords.size());
-    
+    avg.setValue((resultTypeLong ? longSum.toDouble() : doubleSum.toDouble())
+        / tupleRecords.size());
+
     final Tuple tuple = tupleRecords.get(0);
     ColumnCell cCell = new ColumnCell(avg);
     cCell.setTableId(builtSchema.get(0).getKey());
-    cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(), function.toString()));
-
+    cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(),
+        function.toString()));
 
     tuple.getColumnCells().add(cCell);
-    avg= new DoubleValue(0);
+    avg = new DoubleValue(0);
 
     longSum = new LongValue(0);
     doubleSum = new DoubleValue(0);
@@ -112,11 +113,11 @@ public class AverageAggregate extends Node implements AggregateOperator {
           "Invalid Aggregation child configuration!");
     }
     final Collection<Tuple> tuples = new ArrayList<>();
-    if (getChildren().get(0) instanceof GroupByOperator && getChildren().get(0).hasNext()) {
+    if (getChildren().get(0) instanceof GroupByOperator
+        && getChildren().get(0).hasNext()) {
       tuples.addAll(getChildren().get(0).getNext());
-    }
-    else {
-      while(getChildren().get(0).hasNext()) {
+    } else {
+      while (getChildren().get(0).hasNext()) {
         tuples.addAll(getChildren().get(0).getNext());
       }
     }
@@ -126,10 +127,10 @@ public class AverageAggregate extends Node implements AggregateOperator {
 
     return process(tupleCollection);
   }
-  
+
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    builtSchema = getChildren().get(0).getBuiltSchema();
+    builtSchema = new ArrayList<>(getChildren().get(0).getBuiltSchema());
     String fullName = function.toString();
     addFunctionToSchema(fullName, builtSchema);
     return builtSchema;
@@ -156,6 +157,10 @@ public class AverageAggregate extends Node implements AggregateOperator {
     builtSchema.add(new Pair<Integer, Integer>(tableId,
         SchemaManager.getColumnIdByTableId(tableId, fullName)));
     // return;
+  }
+
+  public Function getFunction() {
+    return this.function;
   }
 
 }
