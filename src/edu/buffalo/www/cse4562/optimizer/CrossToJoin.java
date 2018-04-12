@@ -8,7 +8,6 @@ import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
-import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
@@ -85,7 +84,8 @@ public class CrossToJoin {
     if (pushDownLevel instanceof JoinOperator) {
       // when selection see what is required by the operator is satisfied by
       // the projection schema or not
-      final List<Pair<Integer, Integer>> requiredSchema = RequiredBuiltSchema
+      RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+      final List<Pair<Integer, Integer>> requiredSchema = requiredBuiltSchema
           .getRequiredSchema(((JoinOperator) pushDownLevel).getExpression(),
               pushDownLevel);
 

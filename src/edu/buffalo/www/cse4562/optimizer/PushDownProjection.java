@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import edu.buffalo.www.cse4562.aggregator.AggregateOperator;
-import edu.buffalo.www.cse4562.aggregator.CountAggregate;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
@@ -135,6 +134,7 @@ public class PushDownProjection {
     orignalProject.setChildren(children);
     orignalProject.addChild(projectNode);
     projectNode.setParent(orignalProject);
+    projectNode.setSelectExpressionItems(((ProjectionOperator)orignalProject).getSelectExpressionItems());
 
     if (root == projectNode) {
       root = orignalProject;
@@ -201,7 +201,8 @@ public class PushDownProjection {
       if (nextLevel instanceof SelectionOperator) {
         // when selection see what is required by the operator is satisfied by
         // the projection schema or not
-        final List<Pair<Integer, Integer>> requiredSchema = RequiredBuiltSchema
+        RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+        final List<Pair<Integer, Integer>> requiredSchema = requiredBuiltSchema
             .getRequiredSchema(((SelectionOperator) nextLevel).getExpression(),
                 nextLevel);
 
@@ -215,7 +216,8 @@ public class PushDownProjection {
       } else if (nextLevel instanceof JoinOperator) {
         // when selection see what is required by the operator is satisfied by
         // the projection schema or not
-        final List<Pair<Integer, Integer>> requiredSchema = RequiredBuiltSchema
+        RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+        final List<Pair<Integer, Integer>> requiredSchema = requiredBuiltSchema
             .getRequiredSchema(((JoinOperator) nextLevel).getExpression(),
                 nextLevel);
 
@@ -239,8 +241,9 @@ public class PushDownProjection {
         final List<Pair<Integer, Integer>> requiredSchema = new ArrayList<>();
         for (final Expression expr : nextOpr.getFunction().getParameters()
             .getExpressions()) {
+          RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
           requiredSchema
-              .addAll(RequiredBuiltSchema.getRequiredSchema(expr, nextLevel));
+              .addAll(requiredBuiltSchema.getRequiredSchema(expr, nextLevel));
         }// for
 
         // update

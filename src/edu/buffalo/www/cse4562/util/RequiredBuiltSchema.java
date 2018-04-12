@@ -11,34 +11,41 @@ import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 
 /**
- * @author Sneha
+ * @author Sneha Mehta
  *
  */
 public class RequiredBuiltSchema {
+  
+  private  List<Pair<Integer, Integer>> schema = new ArrayList<>();
 
-  public static List<Pair<Integer, Integer>> getRequiredSchema(
+
+  public  List<Pair<Integer, Integer>> getRequiredSchema(
       Expression expression, Node node) {
-    final List<Pair<Integer, Integer>> schema = new ArrayList<>();
 
+    if(expression instanceof OrExpression) {
+      getRequiredSchema(((OrExpression) expression).getLeftExpression(), node) ;
+      getRequiredSchema(((OrExpression) expression).getRightExpression(), node) ;
+    }
     // since all where conditions will be a binary expression
-    if (expression instanceof BinaryExpression) {
+    else if (expression instanceof BinaryExpression) {
       if (((BinaryExpression) expression)
           .getLeftExpression() instanceof Column) {
         addToSchema(
-            (Column) ((BinaryExpression) expression).getLeftExpression(),
-            schema, node);
+            (Column) ((BinaryExpression) expression).getLeftExpression(),node);
       }
       if (((BinaryExpression) expression)
           .getRightExpression() instanceof Column) {
         addToSchema(
-            (Column) ((BinaryExpression) expression).getRightExpression(),
-            schema, node);
+            (Column) ((BinaryExpression) expression).getRightExpression(),node);
       }
-    } else {
-      addToSchema((Column) expression, schema, node);
+    }
+    
+    else {
+      addToSchema((Column) expression, node);
     }
 
     return schema;
@@ -50,8 +57,7 @@ public class RequiredBuiltSchema {
    *
    *          Adds all tableId,columnId pairs to the selectSchema
    */
-  private static void addToSchema(Column column,
-      List<Pair<Integer, Integer>> schema, Node node) {
+  private void addToSchema(Column column, Node node) {
     Integer tableId = SchemaManager.getTableId(column.getTable().getName());
 
     // if no table id found, it means that its a simple expression
