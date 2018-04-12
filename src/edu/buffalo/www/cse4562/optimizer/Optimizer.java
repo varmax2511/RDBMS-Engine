@@ -31,7 +31,7 @@ public class Optimizer {
     root = PushDownProjection.pushDownProject(root);
 
     // re-build schema
-    root.getBuiltSchema();
+    //root.getBuiltSchema();
     return root;
   }
 
@@ -62,6 +62,7 @@ public class Optimizer {
     final List<Node> children = new ArrayList<>();
     children.add(pushLevelNode);
     node.setChildren(children);
+    root.getBuiltSchema();
     return root;
   }
 

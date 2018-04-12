@@ -1,6 +1,6 @@
 package edu.buffalo.www.cse4562.operator;
 /**
- * Operators like ORDER BY
+ * Operators like ORDER BY, Group By, OrderBy
  * 
  * @author varunjai
  *
