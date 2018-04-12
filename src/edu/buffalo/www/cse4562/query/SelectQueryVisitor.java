@@ -1,5 +1,6 @@
 package edu.buffalo.www.cse4562.query;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
 import edu.buffalo.www.cse4562.aggregator.MinAggregate;
 import edu.buffalo.www.cse4562.aggregator.SumAggregate;
 import edu.buffalo.www.cse4562.model.Node;
+import edu.buffalo.www.cse4562.operator.AggregateOperator1;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.LimitOperator;
@@ -238,46 +240,35 @@ public class SelectQueryVisitor
     if (root == null) {
       root = node;
       currentNode = root;
+      
+      List<Function> functions = new ArrayList<>();
       for(SelectExpressionItem expressionItem :((ProjectionOperator)node).getSelectExpressionItems()) {
         if(expressionItem.getExpression() instanceof Function) {
-          processAggregate((Function)expressionItem.getExpression());
+          functions.add((Function)expressionItem.getExpression());
         }
+      }
+      if(!functions.isEmpty()) {
+        processAggregate(functions);
       }
       return;
     }
     currentNode.addChild(node);
     currentNode = node;
 
+    List<Function> functions = new ArrayList<>();
     for(SelectExpressionItem expressionItem :((ProjectionOperator)node).getSelectExpressionItems()) {
       if(expressionItem.getExpression() instanceof Function) {
-        processAggregate((Function)expressionItem.getExpression());
+        functions.add((Function)expressionItem.getExpression());
       }
+    }
+    if(!functions.isEmpty()) {
+      processAggregate(functions);
     }
 
   }
 
-  private void processAggregate(Function function) {
-    Node node = null;
-    switch (function.getName().toUpperCase()) {
-      case "SUM" :
-        node = new SumAggregate(function);
-        break;
-      case "COUNT" :
-        node = new CountAggregate(function);
-        break;
-      case "AVG":
-        node = new AverageAggregate(function);
-        break;
-      case "MIN":
-        node = new MinAggregate(function);
-        break;
-      case "MAX":
-        node = new MaxAggregate(function);
-        break;
-      default: System.err.println("This function is not handled: "+function.getName());
-      
-    }
-
+  private void processAggregate(List<Function> functions) {
+    final Node node = new AggregateOperator1(functions);
 
     if (root == null) {
       root = node;
@@ -286,7 +277,29 @@ public class SelectQueryVisitor
     }
 
     currentNode.addChild(node);
-    currentNode = node;    
+    currentNode = node;
+
+//    Node node = null;
+//    switch (function.getName().toUpperCase()) {
+//      case "SUM" :
+//        node = new SumAggregate(function);
+//        break;
+//      case "COUNT" :
+//        node = new CountAggregate(function);
+//        break;
+//      case "AVG":
+//        node = new AverageAggregate(function);
+//        break;
+//      case "MIN":
+//        node = new MinAggregate(function);
+//        break;
+//      case "MAX":
+//        node = new MaxAggregate(function);
+//        break;
+//      default: System.err.println("This function is not handled: "+function.getName());
+//      
+//    }
+    
   }
   
   @Override
