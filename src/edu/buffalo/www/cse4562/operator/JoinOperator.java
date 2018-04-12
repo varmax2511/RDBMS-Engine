@@ -1,10 +1,15 @@
+/**
+ * 
+ */
 package edu.buffalo.www.cse4562.operator;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
@@ -13,14 +18,21 @@ import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
 import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
-import edu.buffalo.www.cse4562.util.TuplePrinter;
+import edu.buffalo.www.cse4562.util.ExpressionDecoder;
+import edu.buffalo.www.cse4562.util.MapUtils;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 
-public class JoinOperator extends Node implements BinaryOperator {
+/**
+ * @author Sneha Mehta
+ *
+ */
+public class JoinOperator extends Node implements BinaryOperator{
 
   private final Expression expression;
-  private Collection<Tuple> holdingList = new ArrayList<>();
+  Map<Integer,List<Tuple>> hashTable= new HashMap<>();
+
 
   public JoinOperator(Expression expression) {
     Validate.notNull(expression);
@@ -30,7 +42,7 @@ public class JoinOperator extends Node implements BinaryOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-   // if (CollectionUtils.isEmpty(builtSchema)) {
+    
      builtSchema = new ArrayList<>();
       final Iterator<Node> childItr = getChildren().iterator();
 
@@ -39,7 +51,6 @@ public class JoinOperator extends Node implements BinaryOperator {
         builtSchema.addAll(childItr.next().getBuiltSchema());
       } // while
 
-    //} // if
     return builtSchema;
   }
 
@@ -115,57 +126,59 @@ public class JoinOperator extends Node implements BinaryOperator {
       throw new IllegalArgumentException(
           "Invalid cross product child configuration!");
     }
+    ExpressionDecoder expDecoder = new ExpressionDecoder(expression);
+    List<Column> decodedColumns = expDecoder.getDecodedColumns();
+
 
     Node firstChild = this.getChildren().get(0);
     Node secondChild = this.getChildren().get(1);
 
-    // update relation 1 tuples
-    while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
-      holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
+    //if hashTable is empty then populate it
+    if(MapUtils.isEmpty(hashTable)) {
+      hashTable = HashJoin.populateHashTable(firstChild, expression);
     }
-
-    if (CollectionUtils.isEmpty(holdingList)) {
-      return new ArrayList<>();
+    
+    if(MapUtils.isEmpty(hashTable) && !secondChild.hasNext()) {
+      return new ArrayList<Tuple>();
     }
+      
+      Collection<Tuple> tuples = new ArrayList<>();
+      Collection<Tuple> secondChildTuples = secondChild.getNext();
+      
+      for(final Tuple tuple:secondChildTuples) {
+        
+        Collection<Collection<Tuple>> tuplesForProcess = new ArrayList<>();
+        int hashedValue=1;
+        for(Column column: decodedColumns) {
 
-    // if first child has rows and the second child has reached end,
-    // then re-open the second child iterator and update the holding list
-    // with the next values from first child.
-    if (!holdingList.isEmpty() && !secondChild.hasNext()) {
-
-      ((ArrayList)holdingList).remove(0);
-
-      while (CollectionUtils.isEmpty(holdingList) && firstChild.hasNext()) {
-        holdingList = TuplePrinter.getTupleCopy(firstChild.getNext());
+        for(ColumnCell cell : tuple.getColumnCells()) {
+            if(HashJoin.columnsMatch(cell,column)) {
+              hashedValue = HashJoin.getHashedValue(cell.getCellValue(),hashedValue);
+              break ;
+            }
+          }
       }
-
-      if (CollectionUtils.isEmpty(holdingList)) {
-        return new ArrayList<>();
+        
+        if(hashTable.containsKey(hashedValue)) {
+          tuplesForProcess.add(hashTable.get(hashedValue));
+          List<Tuple> tuple1= new ArrayList<>();
+          tuple1.add(tuple);
+          tuplesForProcess.add(tuple1);
+          tuples.addAll(process(tuplesForProcess));
+        }
       }
-
-      secondChild.close();
-      secondChild.open();
-
-    } // if
-
-    final Collection<Collection<Tuple>> tuples = new ArrayList<>();
-
-    final Collection<Tuple> heldTuple = new ArrayList<>();
-    heldTuple.add((Tuple)((ArrayList)holdingList).get(0));
-    tuples.add(heldTuple);
-    tuples.add(secondChild.getNext());
-
-    return process(tuples);
+      
+      return tuples;
   }
 
   @Override
   public boolean hasNext() throws IOException {
-    return super.hasNext() || !holdingList.isEmpty();
+    return super.hasNext() || this.getChildren().get(1).hasNext();
   }
 
   @Override
   public void close() throws Throwable {
-    this.holdingList = null;
+    this.hashTable = null;
   }
 
   public void setSchema(List<Pair<Integer, Integer>> builtSchema) {
