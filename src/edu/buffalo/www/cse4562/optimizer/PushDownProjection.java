@@ -8,6 +8,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.buffalo.www.cse4562.aggregator.AggregateOperator;
+import edu.buffalo.www.cse4562.aggregator.CountAggregate;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
@@ -15,6 +17,7 @@ import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.operator.ScannerOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
+import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.ExpressionDecoder;
 import edu.buffalo.www.cse4562.util.RequiredBuiltSchema;
 import edu.buffalo.www.cse4562.util.SchemaUtils;
@@ -222,6 +225,32 @@ public class PushDownProjection {
         }
 
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
+      } else if (nextLevel instanceof AggregateOperator) {
+
+        final AggregateOperator nextOpr = (AggregateOperator) nextLevel;
+        // expr like count(*)
+        if (nextOpr.getFunction().getParameters() == null || CollectionUtils
+            .isEmpty(nextOpr.getFunction().getParameters().getExpressions())) {
+
+          pushDownLevel = getPushDownLevel(nextLevel, projectNode);
+          continue;
+        } //
+
+        final List<Pair<Integer, Integer>> requiredSchema = new ArrayList<>();
+        for (final Expression expr : nextOpr.getFunction().getParameters()
+            .getExpressions()) {
+          requiredSchema
+              .addAll(RequiredBuiltSchema.getRequiredSchema(expr, nextLevel));
+        }// for
+
+        // update
+        if (!projectBuiltSchema.containsAll(requiredSchema)) {
+          SchemaUtils.updateProjectNodeSchema(projectNode, projectBuiltSchema,
+              requiredSchema);
+        }
+
+        pushDownLevel = getPushDownLevel(nextLevel, projectNode);
+
       } else if (node.getBuiltSchema()
           .containsAll(nextLevel.getBuiltSchema())) {
         // for any other node match the schemas
@@ -257,7 +286,7 @@ public class PushDownProjection {
       }
       idx++;
     }
-    
+
     parent.getChildren().remove(idx);
     parent.getChildren().addAll(children);
 
