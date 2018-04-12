@@ -74,4 +74,18 @@ public class SchemaUtils {
     projectNode.getBuiltSchema();
   }
 
+  public static boolean isTableNameColNameAvailable(Column column) {
+  
+    if (column == null) {
+      throw new IllegalArgumentException("Null expression");
+    }
+  
+    if (column.getTable() == null
+        || StringUtils.isBlank(column.getTable().getName())) {
+      return false;
+    }
+  
+    return true;
+  }
+
 }
