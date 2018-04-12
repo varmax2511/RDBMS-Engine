@@ -12,9 +12,9 @@ import edu.buffalo.www.cse4562.aggregator.AggregateOperator;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
+import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.JoinOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
-import edu.buffalo.www.cse4562.operator.ScannerOperator;
 import edu.buffalo.www.cse4562.operator.SelectionOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.ExpressionDecoder;
@@ -208,8 +208,9 @@ public class PushDownProjection {
        */
       // if not the below list, break
       if (!(nextLevel instanceof SelectionOperator)
-          || !(nextLevel instanceof JoinOperator)
-          || !(nextLevel instanceof AggregateOperator)) {
+          && !(nextLevel instanceof JoinOperator)
+          && !(nextLevel instanceof AggregateOperator)
+          && !(nextLevel instanceof GroupByOperator)) {
         pushDownLevel = nextLevel;
         break;
       }
@@ -268,6 +269,24 @@ public class PushDownProjection {
               requiredSchema);
         }
 
+        pushDownLevel = getPushDownLevel(nextLevel, projectNode);
+
+      } else if (nextLevel instanceof GroupByOperator) {
+
+        // when selection see what is required by the operator is satisfied by
+        // the projection schema or not
+        final List<Pair<Integer, Integer>> requiredSchema = new ArrayList<>();
+        for (final Expression expr : ((GroupByOperator) nextLevel)
+            .getGroupByColumnReferences()) {
+          RequiredBuiltSchema requiredBuiltSchema = new RequiredBuiltSchema();
+          requiredSchema
+              .addAll(requiredBuiltSchema.getRequiredSchema(expr, nextLevel));
+        } // for
+
+        if (!projectBuiltSchema.containsAll(requiredSchema)) {
+          SchemaUtils.updateProjectNodeSchema(projectNode, projectBuiltSchema,
+              requiredSchema);
+        }
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
 
       } else if (projectBuiltSchema.containsAll(nextLevel.getBuiltSchema())) {
