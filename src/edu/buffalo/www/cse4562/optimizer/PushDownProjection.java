@@ -21,6 +21,7 @@ import edu.buffalo.www.cse4562.util.ExpressionDecoder;
 import edu.buffalo.www.cse4562.util.RequiredBuiltSchema;
 import edu.buffalo.www.cse4562.util.SchemaUtils;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 
 /**
@@ -106,7 +107,8 @@ public class PushDownProjection {
     Node pushDownLevel = getPushDownLevel(projectNode, projectNode);
 
     // if pushlevel is same as select node, no optimization can be done
-    if (pushDownLevel == projectNode) {
+    if (pushDownLevel == projectNode
+        || pushDownLevel.getParent() == projectNode) {
       root = appendProject(root, projectNode, orignalProject);
       return removeNode(root, projectNode);
     }
@@ -134,7 +136,7 @@ public class PushDownProjection {
     orignalProject.setChildren(children);
     orignalProject.addChild(projectNode);
     projectNode.setParent(orignalProject);
-    projectNode.setSelectExpressionItems(((ProjectionOperator)orignalProject).getSelectExpressionItems());
+    // projectNode.setSelectExpressionItems(((ProjectionOperator)orignalProject).getSelectExpressionItems());
 
     if (root == projectNode) {
       root = orignalProject;
@@ -154,6 +156,14 @@ public class PushDownProjection {
     return root;
   }
 
+  /**
+   * If the project consists of any expression or function, then we want to
+   * extract the {@link Column} required to compute that expression or function
+   * and add it to the projection operator {@link SelectExpressionItem} list if
+   * its not already present.
+   * 
+   * @param projectNode
+   */
   private static void decodeExprNFunctions(ProjectionOperator projectNode) {
     final Set<SelectExpressionItem> projectExprs = new LinkedHashSet<>();
     for (SelectExpressionItem exprItem : projectNode
@@ -192,8 +202,14 @@ public class PushDownProjection {
       final List<Pair<Integer, Integer>> projectBuiltSchema = projectNode
           .getBuiltSchema();
       // Don't go below scanner or join, cross
-      if (nextLevel instanceof ScannerOperator
-          || nextLevel instanceof BinaryOperator) {
+      /*
+       * if (nextLevel instanceof ScannerOperator || nextLevel instanceof
+       * BinaryOperator) { pushDownLevel = nextLevel; break; }
+       */
+      // if not the below list, break
+      if (!(nextLevel instanceof SelectionOperator)
+          || !(nextLevel instanceof JoinOperator)
+          || !(nextLevel instanceof AggregateOperator)) {
         pushDownLevel = nextLevel;
         break;
       }
@@ -201,7 +217,7 @@ public class PushDownProjection {
       if (nextLevel instanceof SelectionOperator) {
         // when selection see what is required by the operator is satisfied by
         // the projection schema or not
-        RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+        RequiredBuiltSchema requiredBuiltSchema = new RequiredBuiltSchema();
         final List<Pair<Integer, Integer>> requiredSchema = requiredBuiltSchema
             .getRequiredSchema(((SelectionOperator) nextLevel).getExpression(),
                 nextLevel);
@@ -216,7 +232,7 @@ public class PushDownProjection {
       } else if (nextLevel instanceof JoinOperator) {
         // when selection see what is required by the operator is satisfied by
         // the projection schema or not
-        RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+        RequiredBuiltSchema requiredBuiltSchema = new RequiredBuiltSchema();
         final List<Pair<Integer, Integer>> requiredSchema = requiredBuiltSchema
             .getRequiredSchema(((JoinOperator) nextLevel).getExpression(),
                 nextLevel);
@@ -241,10 +257,10 @@ public class PushDownProjection {
         final List<Pair<Integer, Integer>> requiredSchema = new ArrayList<>();
         for (final Expression expr : nextOpr.getFunction().getParameters()
             .getExpressions()) {
-          RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+          RequiredBuiltSchema requiredBuiltSchema = new RequiredBuiltSchema();
           requiredSchema
               .addAll(requiredBuiltSchema.getRequiredSchema(expr, nextLevel));
-        }// for
+        } // for
 
         // update
         if (!projectBuiltSchema.containsAll(requiredSchema)) {
@@ -254,12 +270,13 @@ public class PushDownProjection {
 
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
 
-      } else if (projectBuiltSchema
-          .containsAll(nextLevel.getBuiltSchema())) {
+      } else if (projectBuiltSchema.containsAll(nextLevel.getBuiltSchema())) {
         // for any other node match the schemas
 
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
-
+      } else {
+        pushDownLevel = nextLevel;
+        break;
       }
     }
     return pushDownLevel;
