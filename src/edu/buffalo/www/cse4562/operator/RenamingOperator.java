@@ -244,6 +244,7 @@ public class RenamingOperator extends Node implements UnaryOperator {
         // trim data it just updates ids for renamed column cells
         if (!cellMatch) {
           columnCells.add(columnCell);
+          cnt++;
         }
 
       } // for

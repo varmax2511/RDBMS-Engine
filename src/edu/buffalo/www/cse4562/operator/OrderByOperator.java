@@ -3,14 +3,18 @@ package edu.buffalo.www.cse4562.operator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
+import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.SchemaUtils;
 import edu.buffalo.www.cse4562.util.TupleComparator;
 import edu.buffalo.www.cse4562.util.Validate;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 
 /**
@@ -22,7 +26,7 @@ import net.sf.jsqlparser.statement.select.OrderByElement;
 public class OrderByOperator extends Node implements BlockingOperator {
 
   private final List<OrderByElement> orderByElements;
-
+  private List<Pair<Integer, Integer>> orderByPairs = new ArrayList<>();
   /**
    *
    * @param orderByElements
@@ -53,7 +57,12 @@ public class OrderByOperator extends Node implements BlockingOperator {
       return selectOutputs;
     }
 
-    Collections.sort(tupleRecords, new TupleComparator(builtSchema));
+    // populate orderby pairs if not populated already
+    if (CollectionUtils.isEmpty(this.orderByPairs)) {
+      getOrderByPairs();
+    }
+
+    Collections.sort(tupleRecords, new TupleComparator(orderByPairs));
     // sort in reverse
     if (!orderByElements.get(0).isAsc()) {
       Collections.reverse(tupleRecords);
@@ -64,9 +73,9 @@ public class OrderByOperator extends Node implements BlockingOperator {
 
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
-    //if (CollectionUtils.isEmpty(builtSchema)) {
-      builtSchema = getChildren().get(0).getBuiltSchema();
-    //} // if
+    // if (CollectionUtils.isEmpty(builtSchema)) {
+    builtSchema = getChildren().get(0).getBuiltSchema();
+    // } // if
 
     return builtSchema;
   }
@@ -88,5 +97,38 @@ public class OrderByOperator extends Node implements BlockingOperator {
     tupleCollection.add(tuples);
 
     return process(tupleCollection);
+  }
+
+  /**
+   * Get the {@link Pair} associated with {@link OrderByElement}
+   */
+  private void getOrderByPairs() {
+
+    final Iterator<OrderByElement> orderByItr = orderByElements.iterator();
+
+    while (orderByItr.hasNext()) {
+      final Column column = (Column) orderByItr.next().getExpression();
+      final boolean flag = SchemaUtils.isTableNameColNameAvailable(column);
+      l1 : for (final Pair<Integer, Integer> pair : builtSchema) {
+        // if table name and column name is present
+        if (flag) {
+          if (SchemaManager.getTableId(column.getTable().getName()) == pair
+              .getKey()
+              && SchemaManager.getColumnIdByTableId(pair.getKey(),
+                  column.getColumnName()) == pair.getValue()) {
+            this.orderByPairs.add(pair);
+            break l1;
+          }
+        } else {
+          // no table id present, checking using pair tableid
+          if (SchemaManager.getColumnIdByTableId(pair.getKey(),
+              column.getColumnName()) == pair.getValue()) {
+            this.orderByPairs.add(pair);
+            break l1;
+          }
+        } // else
+
+      } // for
+    } // while
   }
 }
