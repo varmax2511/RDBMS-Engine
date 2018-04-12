@@ -251,7 +251,7 @@ public class PushDownProjection {
 
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
 
-      } else if (node.getBuiltSchema()
+      } else if (projectBuiltSchema
           .containsAll(nextLevel.getBuiltSchema())) {
         // for any other node match the schemas
 
