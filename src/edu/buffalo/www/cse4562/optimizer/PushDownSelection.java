@@ -55,7 +55,8 @@ public class PushDownSelection {
         .getExpression();
 
     // Schema for the required selection
-    final List<Pair<Integer, Integer>> selectSchema = RequiredBuiltSchema.getRequiredSchema(selectExpression,selectNode);
+    RequiredBuiltSchema requiredBuiltSchema= new RequiredBuiltSchema();
+    final List<Pair<Integer, Integer>> selectSchema = requiredBuiltSchema.getRequiredSchema(selectExpression,selectNode);
     // level on top of which Select node will be setup
     final Node pushDownLevel = getPushDownLevel(selectNode, selectSchema);
 

@@ -28,7 +28,7 @@ public class Optimizer {
     PushDownSelection.pushDownSelect(root);
     // :TODO fix push down project for renaming
     // like SELECT A AS C FROM R WHERE A=4;
-    //root = PushDownProjection.pushDownProject(root);
+    root = PushDownProjection.pushDownProject(root);
 
     // re-build schema
     root.getBuiltSchema();
