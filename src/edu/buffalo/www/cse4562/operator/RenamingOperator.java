@@ -75,91 +75,64 @@ public class RenamingOperator extends Node implements UnaryOperator {
   @Override
   public List<Pair<Integer, Integer>> getBuiltSchema() {
 
-   /* // if already set
-    if (!CollectionUtils.isEmpty(builtSchema)) {
-      return builtSchema;
-    }*/
-
     builtSchema = new ArrayList<>();
     // invoke child schema for schema manager updation
+    /*
+     * Renaming operator will receive the schema prepared from below It is
+     * responsible for only replacing the value of the schema pair where
+     * renaming AS is required as per its expression
+     */
     final List<Pair<Integer, Integer>> childSchema = getChildren().get(0)
         .getBuiltSchema();
 
-    // get schema based on expression items of project
-    for (final SelectExpressionItem selectExprItem : this.selectExpressionItems) {
+    // iterate each pair
+    for (Pair<Integer, Integer> pair : childSchema) {
+      int schemaSize = builtSchema.size();
+      
+      // iterate each expression and see if this pair is a match
+      for (final SelectExpressionItem selectExprItem : this.selectExpressionItems) {
 
-      // if the expression is not an alias by error
-      if (StringUtils.isBlank(selectExprItem.getAlias())) {
-        continue;
+        // if the expression is not an alias by error
+        if (StringUtils.isBlank(selectExprItem.getAlias())) {
+          continue;
+        }
+
+        if (selectExprItem.getExpression() instanceof Column) {
+          handleColumnExpr(selectExprItem,
+              (Column) selectExprItem.getExpression(), pair);
+          continue;
+        }
+
+        handleExpr(selectExprItem, pair);
+      } // for
+
+      // not an renaming pair, so add directly
+      // all renamed pair are added by the above methods
+      if (schemaSize == builtSchema.size()) {
+        builtSchema.add(pair);
       }
-
-      // if column instance
-      if (!(selectExprItem.getExpression() instanceof Column)) {
-        buildExpression(childSchema, selectExprItem);
-        continue;
-      }
-
-      final Column column = (Column) selectExprItem.getExpression();
-
-      // if no table name, get table id from child schema where the
-      // column name matches
-      if (StringUtils.isBlank(column.getTable().getName())) {
-
-        buildNoTableSchema(childSchema, selectExprItem, column.getColumnName());
-      } else {
-        // if no column name
-        buildWithCidTid(selectExprItem, column);
-      }
-
     } // for
 
     return builtSchema;
   }
 
   /**
-   *
+   * 
    * @param selectExprItem
-   * @param column
-   * @return
+   * @param pair
    */
-  private void buildWithCidTid(final SelectExpressionItem selectExprItem,
-      final Column column) {
-    final Integer tableId = SchemaManager
-        .getTableId(column.getTable().getName());
-
-    if (SchemaManager.getColumnIdByTableId(tableId,
-        selectExprItem.getAlias()) == null) {
-      SchemaManager.addColumnAliasToSchema(selectExprItem.getAlias(), tableId);
-    }
-
-    builtSchema.add(new Pair<Integer, Integer>(tableId, SchemaManager
-        .getColumnIdByTableId(tableId, selectExprItem.getAlias())));
-    return;
-
-  }
-
-  /**
-   *
-   * @param childSchema
-   * @param selectExprItem
-   * @param column
-   */
-  private void buildNoTableSchema(List<Pair<Integer, Integer>> childSchema,
-      final SelectExpressionItem selectExprItem, final String columnName) {
+  private void handleExpr(SelectExpressionItem selectExprItem,
+      Pair<Integer, Integer> pair) {
 
     Pair<Integer, Integer> matchPair = null;
-    for (final Pair<Integer, Integer> pair : childSchema) {
-      // if matching
-      if (!SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
-          .equals(columnName)) {
-        continue;
-      }
 
+    if (SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
+        .equals(selectExprItem.getExpression().toString())) {
       matchPair = pair;
-    } // for
+    }
 
-    // no matching pair - no-op
-    if (null == matchPair) {
+    // no match
+    if (matchPair == null) {
       return;
     }
 
@@ -175,25 +148,50 @@ public class RenamingOperator extends Node implements UnaryOperator {
   }
 
   /**
-   *
-   * @param childSchema
+   * 
    * @param selectExprItem
    * @param column
+   * @param pair
    */
-  private void buildExpression(List<Pair<Integer, Integer>> childSchema,
-      final SelectExpressionItem selectExprItem) {
+  private void handleColumnExpr(SelectExpressionItem selectExprItem,
+      Column column, Pair<Integer, Integer> pair) {
 
-    // if not already registered
-    if (SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-        selectExprItem.getAlias()) == null) {
-      SchemaManager.addColumnAliasToSchema(selectExprItem.getAlias(),
-          childSchema.get(0).getKey());
+    Pair<Integer, Integer> matchPair = null;
+    if (column.getTable() == null
+        || StringUtils.isBlank(column.getTable().getName())) {
+
+      if (SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
+          .equals(column.getColumnName())) {
+        matchPair = pair;
+      }
+
+    } else {
+
+      if (SchemaManager.getTableName(pair.getKey())
+          .equals(column.getTable().getName())
+          && SchemaManager.getColumnNameById(pair.getKey(), pair.getValue())
+              .equals(column.getColumnName())) {
+
+        matchPair = pair;
+
+      } // if
+
+    } // else
+
+    // no match
+    if (matchPair == null) {
+      return;
     }
 
-    builtSchema.add(new Pair<Integer, Integer>(childSchema.get(0).getKey(),
-        SchemaManager.getColumnIdByTableId(childSchema.get(0).getKey(),
-            selectExprItem.getAlias())));
-    return;
+    if (SchemaManager.getColumnIdByTableId(matchPair.getKey(),
+        selectExprItem.getAlias()) == null) {
+      SchemaManager.addColumnAliasToSchema(selectExprItem.getAlias(),
+          matchPair.getKey());
+    }
+
+    builtSchema.add(new Pair<Integer, Integer>(matchPair.getKey(), SchemaManager
+        .getColumnIdByTableId(matchPair.getKey(), selectExprItem.getAlias())));
+
   }
 
   @Override
@@ -241,10 +239,10 @@ public class RenamingOperator extends Node implements UnaryOperator {
           cellMatch = true;
           break;
         } // for
-        
+
         // add cell even if it didn't match any expression as renaming doesnt'
         // trim data it just updates ids for renamed column cells
-        if(!cellMatch){
+        if (!cellMatch) {
           columnCells.add(columnCell);
         }
 
