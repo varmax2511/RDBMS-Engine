@@ -6,6 +6,7 @@
 import static org.junit.Assert.*;
 
 import java.io.StringReader;
+import java.util.Collection;
 
 import org.junit.Test;
 
@@ -55,7 +56,13 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
     
     // get the tree
     Node root = queryVisitor.getRoot();
-    assertEquals(15048, TreeProcessor.processTree(root).size());
+    Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(20, tuples.size());
+
+    for(Tuple tuple :tuples){
+      TuplePrinter.printTuple(tuple);
+      System.out.println();
+    }
 }
   
   @Test
@@ -77,7 +84,13 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
     
     // get the tree
     Node root = queryVisitor.getRoot();
-    assertEquals(15048, TreeProcessor.processTree(root).size());
+    Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(1, tuples.size());
+
+    for(Tuple tuple :tuples){
+      TuplePrinter.printTuple(tuple);
+      System.out.println();
+    }
 }
   
   @Test
@@ -107,9 +120,16 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
     parser = new CCJSqlParser(new StringReader("SELECT LINEITEM.L_ORDERKEY, SUM(LINEITEM.L_EXTENDEDPRICE*(1-LINEITEM.L_DISCOUNT)) AS REVENUE, ORDERS.O_ORDERDATE, ORDERS.O_SHIPPRIORITY FROM CUSTOMER, ORDERS, LINEITEM WHERE CUSTOMER.C_MKTSEGMENT = 'BUILDING' AND CUSTOMER.C_CUSTKEY = ORDERS.O_CUSTKEY AND LINEITEM.L_ORDERKEY = ORDERS.O_ORDERKEY AND (LINEITEM.L_DISCOUNT < .06 OR LINEITEM.L_QUANTITY < 24) GROUP BY ORDERS.O_ORDERDATE, ORDERS.O_SHIPPRIORITY, LINEITEM.L_ORDERKEY ORDER BY REVENUE DESC, ORDERS.O_ORDERDATE;"));
     parser.Statement().accept(queryVisitor);
     
-    // get the tree
+ // get the tree
     Node root = queryVisitor.getRoot();
-    assertEquals(15048, TreeProcessor.processTree(root).size());
+    Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(104, tuples.size());
+
+    for(Tuple tuple :tuples){
+      TuplePrinter.printTuple(tuple);
+      System.out.println();
+    }
+
 }
   
   @Test
@@ -153,9 +173,10 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
     
     // get the tree
     Node root = queryVisitor.getRoot();
-    assertEquals(100, TreeProcessor.processTree(root).size());
+    Collection<Tuple> tuples = TreeProcessor.processTree(root);
+    assertEquals(1, tuples.size());
 
-    for(Tuple tuple :TreeProcessor.processTree(root)){
+    for(Tuple tuple :tuples){
       TuplePrinter.printTuple(tuple);
       System.out.println();
     }

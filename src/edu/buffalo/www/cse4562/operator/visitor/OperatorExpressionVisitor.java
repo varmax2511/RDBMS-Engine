@@ -266,9 +266,31 @@ public class OperatorExpressionVisitor
   }
 
   @Override
-  public void visit(Subtraction arg0) {
-    // TODO Auto-generated method stub
+  public void visit(Subtraction substraction) {
+ // null check
+    if (null == substraction) {
+      return;
+    }
+    // evaluate LHS and RHS
+    substraction.getLeftExpression().accept(this);
+    substraction.getRightExpression().accept(this);
 
+    PrimitiveValue cellValue = null;
+    // pass column values map to evaluator for processing.
+    evaluator.setColumn2ColumnCell(this.column2ColumnCell);
+    try {
+      cellValue = evaluator.eval(substraction);
+    } catch (final SQLException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    // if null, no-op
+    if (null == cellValue) {
+      return;
+    }
+
+    this.outputColumnCell = new ColumnCell(cellValue);
   }
 
   @Override
