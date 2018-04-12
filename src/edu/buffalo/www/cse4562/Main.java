@@ -35,7 +35,7 @@ public class Main {
 
     while (statement != null) {
 
-      try {
+      //try {
         // process query to generate Tree
         final QueryVisitor queryVisitor = new QueryVisitor();
         statement.accept(queryVisitor);
@@ -57,12 +57,12 @@ public class Main {
         // prompt
         System.out.println(ApplicationConstants.BASH);
         System.out.flush();
-      } catch (Throwable t) {
-        System.out.println("1|1" + "|" + t.getMessage());
-        // prompt
-        System.out.println(ApplicationConstants.BASH);
-        System.out.flush();
-      }
+//      } catch (Throwable t) {
+//        System.out.println("1|1" + "|" + t.getMessage());
+//        // prompt
+//        System.out.println(ApplicationConstants.BASH);
+//        System.out.flush();
+//      }
 
       statement = parser.Statement();
     } // while
