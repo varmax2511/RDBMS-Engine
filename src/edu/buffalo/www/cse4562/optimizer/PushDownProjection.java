@@ -8,10 +8,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.buffalo.www.cse4562.aggregator.AggregateOperator;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
-import edu.buffalo.www.cse4562.operator.AggregateOperator1;
+import edu.buffalo.www.cse4562.operator.AggregateOperator;
 import edu.buffalo.www.cse4562.operator.BinaryOperator;
 import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.JoinOperator;
@@ -211,7 +210,7 @@ public class PushDownProjection {
       // if not the below list, break
       if (!(nextLevel instanceof SelectionOperator)
           && !(nextLevel instanceof JoinOperator)
-          && !(nextLevel instanceof AggregateOperator1)
+          && !(nextLevel instanceof AggregateOperator)
           && !(nextLevel instanceof GroupByOperator)) {
         pushDownLevel = nextLevel;
         break;
@@ -246,13 +245,13 @@ public class PushDownProjection {
         }
 
         pushDownLevel = getPushDownLevel(nextLevel, projectNode);
-      } else if (nextLevel instanceof AggregateOperator1) {
+      } else if (nextLevel instanceof AggregateOperator) {
 
-        final AggregateOperator1 nextOpr = (AggregateOperator1) nextLevel;
+        final AggregateOperator nextOpr = (AggregateOperator) nextLevel;
         // expr like count(*)
         List<Expression> expressions = new ArrayList<>();
         
-        for(Function function: ((AggregateOperator1) nextLevel).getFunctions()) {
+        for(Function function: ((AggregateOperator) nextLevel).getFunctions()) {
           if(function.getParameters() == null)
             continue;
           expressions.addAll(function.getParameters().getExpressions());
