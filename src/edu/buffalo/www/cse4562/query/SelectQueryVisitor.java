@@ -4,13 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.buffalo.www.cse4562.aggregator.AverageAggregate;
-import edu.buffalo.www.cse4562.aggregator.CountAggregate;
-import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
-import edu.buffalo.www.cse4562.aggregator.MinAggregate;
-import edu.buffalo.www.cse4562.aggregator.SumAggregate;
 import edu.buffalo.www.cse4562.model.Node;
-import edu.buffalo.www.cse4562.operator.AggregateOperator1;
+import edu.buffalo.www.cse4562.operator.AggregateOperator;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.LimitOperator;
@@ -268,7 +263,7 @@ public class SelectQueryVisitor
   }
 
   private void processAggregate(List<Function> functions) {
-    final Node node = new AggregateOperator1(functions);
+    final Node node = new AggregateOperator(functions);
 
     if (root == null) {
       root = node;
