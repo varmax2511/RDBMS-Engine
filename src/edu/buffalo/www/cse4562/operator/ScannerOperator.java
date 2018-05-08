@@ -1,13 +1,11 @@
 package edu.buffalo.www.cse4562.operator;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Scanner;
 
 import javax.print.DocFlavor.READER;
 
@@ -33,13 +31,9 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  */
 public class ScannerOperator extends Node implements UnaryOperator {
 
-  //private Iterator<CSVRecord> recordIterator;
   private FileReader reader;
   private BufferedReader br;
-  //private CSVParser csvParser;
   private final Config config;
-  //File file;
-  //Scanner scnr;
   /**
    *
    * @param config
@@ -52,19 +46,9 @@ public class ScannerOperator extends Node implements UnaryOperator {
 
   @Override
   public void open() throws IOException {
-    /*reader = Files.newBufferedReader(
-        Paths.get(config.getDataParentPath() + config.getTableName()
-            + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
-    csvParser = new CSVParser(reader, CSVFormat.newFormat('|'));
-    final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-    recordIterator = csvRecords.iterator();*/
     reader = new FileReader(config.getDataParentPath() + config.getTableName()
     + ApplicationConstants.SUPPORTED_FILE_EXTENSION);
     br = new BufferedReader(reader);
-     //file = new File(config.getDataParentPath() + config.getTableName()
-    //+ ApplicationConstants.SUPPORTED_FILE_EXTENSION);
-     //scnr = new Scanner(file);
-    
   }
 
   /**
@@ -92,7 +76,6 @@ public class ScannerOperator extends Node implements UnaryOperator {
      */
 
     // if no records left to iterate
-    //String line;
     if (!br.ready()) {
       close();
       return new ArrayList<>();
@@ -230,7 +213,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
    */
   public static class Config {
     private final String dataParentPath;
-    private int chunkSize = 10;
+    private int chunkSize = 50;
     private final String tableName;
     private final String alias;
 
