@@ -1,0 +1,67 @@
+/**
+ * 
+ */
+package edu.buffalo.www.cse4562.aggregator;
+
+import java.util.List;
+
+import edu.buffalo.www.cse4562.model.Pair;
+import edu.buffalo.www.cse4562.model.SchemaManager;
+import edu.buffalo.www.cse4562.model.Tuple;
+import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorExpressionVisitor;
+import edu.buffalo.www.cse4562.operator.visitor.OperatorVisitor;
+import net.sf.jsqlparser.expression.DoubleValue;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.PrimitiveValue.InvalidPrimitive;
+
+/**
+ * @author Sneha Mehta
+ *
+ */
+public class SumAggregate {
+  protected Boolean resultTypeLong;
+  protected Function function;
+  protected LongValue longSum;
+  protected DoubleValue doubleSum;
+
+  public SumAggregate(Function function) {
+    this.function = function;
+    longSum = new LongValue(0);
+    doubleSum = new DoubleValue(0);
+  }
+
+  public ColumnCell getAggregate(List<Tuple> tupleRecords,Integer tableId) {
+    OperatorVisitor opExpVisitor = new OperatorExpressionVisitor();
+    for (Tuple tuple : tupleRecords) {
+      final ColumnCell columnCell = opExpVisitor.getValue(tuple, function);
+      resultTypeLong = (resultTypeLong == null)
+          ? (columnCell.getCellValue() instanceof LongValue) ? true : false
+          : resultTypeLong;
+      try {
+
+        if (resultTypeLong) {
+          longSum.setValue(
+              longSum.getValue() + columnCell.getCellValue().toLong());
+        } else {
+          doubleSum.setValue(
+              doubleSum.getValue() + columnCell.getCellValue().toDouble());
+        }
+      } catch (InvalidPrimitive e) {
+        System.err.println("Invalid primitive for sum: "
+            + columnCell.getCellValue().getType());
+      }
+    }
+
+    //final Tuple tuple = tupleRecords.get(0);
+    ColumnCell cCell = new ColumnCell(resultTypeLong ? longSum : doubleSum);
+    cCell.setTableId(tableId);
+    cCell.setColumnId(SchemaManager.getColumnIdByTableId(cCell.getTableId(),
+        function.toString()));
+    //tuple.getColumnCells().add(cCell);
+    longSum = new LongValue(0);
+    doubleSum = new DoubleValue(0);
+    return cCell;
+  }
+}

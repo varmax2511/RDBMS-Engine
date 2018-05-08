@@ -1,0 +1,533 @@
+Deliverable:
+-------------
+
+1. Print prompt '$>' on begin and on completion of each query.
+2. Process CREATE table requests and generate schema in Java.
+3. Load data from CSV file in table generated above.
+4. Implement SELECT queries and nested queries.
+5. Implement AS feature.
+6. Extensible model to support future changes like aggregate functions and joins.
+7. Use tools provided to identify query type, fields, operators and tables.
+8. Parse input query into RA tree. 
+
+Info:
+1. Data present in CSV
+2. Use '|' as delimiter,  Dates are stored in YYYY-MM-DD form.
+
+Q. From where to load CSV files ?
+   The project document says that CSV file will be used to load data but it doesn't
+   explain how the CSV file name be provided, will it be passed from cmd arguments,
+   do we need to assume table name as CSV file name and try auto loading it ?
+ Ans. "That means that the data directory contains a data file called 'R.dat' that might look like this "
+
+
+Q. Are we using Set RA or Bag RA?   
+Ans.   Bag RA
+   
+Q. What does A + B signitfy?
+
+   
+Design Notes:
+-------------
+1. Design should be modular and extensible.
+2. It should support pluggable features like indexes (multi-layer cache, optimization features,
+   Support for future enhancements, etc...
+   
+3. We need to return results in sorted fashion, this requires deciding whether to
+   store data in sorted fashion or just sort the results.
+      -- If we plan to store data in sorted fashion, it would mean sorting data
+         every time an input happens which may be costly with large data sizes.
+         The output results may be a smaller subset.
+         However, data accessing costs may increase unless we employ indexes.
+         
+   Sneha:  Natural order is required only.    
+   Gokhan: Sorting when with oprt  
+         
+         
+4. As per class discussion, in future multiple data sources will be provided, these will
+   represent our persistent storage.
+   
+   a). We need to assign a unique id to each record. Based on example input data,
+       there is no unique field. This field will help us in indexing.
+   b). This field will also represent the line number for each row.    
+   
+   - Indexing data can help us reduce response time. We can index data such that
+     we can store the line range of each record. (Applicable only when input is 
+     very large, I assume this in later checkpoints.)
+   - Indexes will stay in memory for quick access.  
+        
+      --   We can do a pre-computation and generate indexes
+           which can generate a hash of the primary key chosen in each table and 
+           segment the entire data in virtual segments formed based on line numbers
+           within each document, identified by field Lno.
+           Example:  If we wish to access record of employee ID 123
+           - We can get the segment range of the employee ID 123 say Lno (20-40).
+           - We can then load these 20 lines in memory and work on record with
+             employee ID 123.
+         
+          Pros:
+          1. This approach will reduce the index size as we will be holding              
+          
+          Cons:
+          1. Its not applicable when searching data by other fields
+   
+   Chunk retrieval:
+   Rather than using volcano approach of fetching 1 record we can use the second 
+   approach of retrieving multiple records in one iteration to balance I/O reads.
+   
+   Out of scope  
+   This applies only when we are responsible for deciding tables.
+   Normalization: Normalizing the data can help us in efficient retrieval and reduce
+   the number of fields in each record.This will add the complexity of creating multiple tables.
+    
+   Q. How to do indexing? 
+
+CREATE Table:
+CREATE TABLE R (A int, B date, C string, ... )
+
+App1:
+1. On getting the given query, we parse the query using the parser and identify the
+   Table name, field names and corresponding java types.
+2. Create a class with name of table and said fields such that this class represents
+   one row of the table.
+   
+   
+ Q. How to spawn a class at runtime?
+    Maybe reflection: https://stackoverflow.com/questions/2320404/creating-classes-dynamically-with-java
+    
+ Q. How to implement foreign key reference in the record?
+ 
+TODO: Identify operation with joins and other scenarios
+TODO: Identify extensibility
+
+Gokhan: not suitable
+
+Pros:
+Modular
+
+Cons:
+Mandatory type conversion for each record field during load.
+
+ 
+App2:
+We parse create query and create a mapping
+such that the key is an object of type Column
+ColumnX{
+  String colName;
+  class type;
+  Foreign key
+  
+}
+
+
+Map<Column, Value>, this includes unnecessary heat
+Map<Column, List<Value>>
+
+
+So a representation of table holding say 100 records in memory.
+chunk_size = 1 or 100
+Gokhan: simple, 1
+
+
+N
+TableX_Chunk{
+   String name;
+   Map<ColumnX, List<Value>>
+}
+ 
+TODO: Identify operation with joins and other scenarios
+TODO: Identify extensibility
+ 
+Pros:
+1. Quick access
+2. Type conversion on demand.
+
+
+Approach 3:
+
+Store table schema in data structure
+
+Map< tableName, TableData>
+
+TableData{
+  String tableName
+  List<ColumnDef>
+}  
+  
+1. For now we are holding the column definitions in a list and not a map, so
+   that we don't lose the natural order of the column names.
+2. This means that we have to iterate the column def list to find a particular 
+   column.
+   For now, it seems ok, if issues arise we can change it in future.   
+
+
+ScannerObj
+1. This class is responsible for reading data from file.
+2. It will accept a table name and table schema and return a List of Objects.
+3. It will read a chunk of rows from file, chunk defaults to 1, then parse each
+   column value as per column definition and then store it in a list of objects.
+4. It will then send this list to its caller who using the column defintion will
+   type cast each column value.
+   We expect typecasting cost to be less than string parsing at each level  
+
+
+Q. How to convert from column definition to Java type a particular String.
+
+
+
+
+Caching:
+LRU
+
+TODO: How to create execution plan
+Approach1:
+Create a Binary tree where each node contains the Operator (parent class for each
+operator type). It holds left and right child based on its subtypes as per slide
+Once tree is created, its root is passed for processing where each node operator
+calls its child and so on till we reach leaf node. 
+
+Data is processed at each level and then passed to parent.
+
+Example: SELECT A, B, ... FROM R
+Here the select is actually a Projection of columns A and B from table R
+A tree will be created which will identify the operator as Projection and Scanner
+
+  Project (A, B)
+    |
+  Scanner (R)   
+
+Once the tree is created, it will be passed to the query processor
+This will invoke the root of the tree and do say process()
+The root operator here is Project, this will first invoke its left and right
+child nodes. 
+Here it has only one child - Scanner. Scanner will find that it has no children
+and will start processing data, one line at a time.
+The project will receive this data and do a projection of column A and B
+Q. The node has operator, operator type and children, where will the node get the
+   query?
+   Each node's operator will hold that info. Each operator will have query and 
+   know its specific attributes to work on.
+   Like Project operator is designed such that it holds a list of columns it needs
+   to project
+   
+Example 2: SELECT R.A, ... FROM R WHERE R.A > 5
+Here we have three operators, 
+   Project (R.A)
+     |   
+   Select (R.A > 5)
+     |
+   Scanner (R)
+   
+Example 3: SELECT Q.C, ... FROM (SELECT A, C, ... FROM R) Q WHERE ...
+
+      Project (Q.C)
+        |
+      Select (Where)
+        |
+      Project(A, C)
+        |
+      Scanner(R)        
+   
+Here we see that column definitions are changing, which means once we return
+a result of inner query, we need to update the column definitions to reflect
+changes   
+
+
+
+
+
+
+Pros:
+1. We can process data at no added cost then approach2
+2. We can use this model later for rebalancing RA for optimization.
+3. Allows us to identify atomic operations like two children of one node and 
+   can try using multi threading for performance.
+   
+Cons:
+Complex design, may turn out to be a futile effort.   
+
+Approach 2:
+We process the statment by breaking it into parts and calling simultaneously
+
+Pros:
+Simple design
+
+Cons:
+Will bite us once we introduce optimization.
+
+
+
+
+
+
+
+
+TODO: How to use eval Lib
+
+ 
+Execution Plan (RA)
+Q. How to create RA tree? 
+Q. How to analyze the RA tree and minimize it??
+
+
+Identifying and evaluating an expression
+-------------------------------------------
+JSQLParser provides several visitor interfaces which can be implemented such that
+a type of visitor will invoke the particular method or query type that qualifies
+
+Query: Select A, B from R;
+In this example, we pass this query through a Statement Visitor which identifies it
+as a select query and invokes the corresponding method.
+Now within this method, we invoke call to a Select Visitor which is also a SelectItem Visitor.
+This identifies that the query is a PlainSelect and not a Union.
+
+In the PlainSelect we presently try to find out 3 components
+                      ---------
+1. SelectItems
+2. FromItems
+3. Where/Expression
+
+SelectItems
+-----------
+Here each select item is a SelectExpressionItem, such that they have an expression,
+a string alias, a table
+In our case for the example query, the expression in the SelectExpressionItem is
+an instance of column, which contains the column name
+
+However, an expression can be a subselect or maybe an arithmetic expression
+example: SELECT A + B FROM R;
+
+Presently we pass the list of select items to the Projection Operator, assuming that
+each SELECTItem is a column expression.
+Q. Should the ProjectionOperator be passed the expressions in each select item
+   and the operator may itself be made as an expression visitor?
+   This levies 2 responsibilities on the Projection operator to identify the expression
+   type and the do projection over it
+   But it allows it to decide what and how to project
+
+Q. What if the expression in the projection is itself a subselect?
+   Ideally at the time of tree generation we should concretely identify the operator
+   to be used at each step and not at execution level.
+   This means that a projection operator should be assigned an expression when
+   we know it is something in the realm of projection only.
+   
+One thing that can be done is that, we can check each expression and see if its
+instance of subselect, function. If this is the case we can invoke a new instance
+of SelectQueryVisitor and call its getRoot and append it to the root of the current
+SelectQueryVisitor.
+If its not instance of subselect or function, we can add it to the list of expression
+for Projection. In projection, when evaluating an expression, it will check each
+expression type and process it accordingly.
+Say it has two expressions, A, (A + B)
+Then projection will select column A and add another column (A+B) which will have
+the addition evaluation performed on the value A and B.
+
+The same can be followed for SELECT or WHERE, here also if its a simple evaluation
+it will be passed to the operator who will process it accordingly or passed to
+a new instance to generate a new node.
+        
+
+ALIASES
+-------
+SELECT A+B AS C, ... FROM R
+SELECT Q.C, ... FROM (SELECT A, C, ... FROM R) Q WHERE Q.C > 1
+SELECT A+B AS C, ... FROM R WHERE C > 1
+SELECT R.A, S.A FROM R, S WHERE R.A = S.A
+
+
+We observe that all our current operators can have aliases, be it selection, 
+projection and scanner.
+
+Case 1: SELECT A+B AS C, ... FROM R
+This is simple, we have an expression with alias, in columncell we can add a new 
+field called relation id which will correspond to the alias value
+when we evaluate this expression in operator visitor, addition will check for
+any alias associated with the expression and append its id in the new column
+cell that it creates
+
+
+CASE 2: SELECT Q.C, ... FROM (SELECT A, C, ... FROM R) Q WHERE Q.C > 1
+
+This one's tricky. Now first we process the subselect as its the lowest part
+of the tree. When project its result, the tuples returned by it should be appended
+with relation name as Q. 
+Q. who will do this append?
+     project (Q.C)
+        |
+     select (Q.C > 1)
+        |
+     project(A, C)
+        |
+     scanner(R)         
+
+once the fromitem visitor finds that the query is a subselect, it will delegate it to
+the next operator for node generation. Once the child node is returned back to
+fromitemvisitor it needs to somehow encode the information in the node that the
+result is of type Q, such that when this child node returns its results, it
+appends to the result tuples, the relation name as Q, and each tuple in turn
+updates its column cells, that alias is now Q.
+
+when the parent select opn now seaches for column, it will look for alias/table
+name and then column name. The map for the visitor should also be able to
+store value not just by column name but by alias or table name and column name.
+Hence a new structure needs to be created to be used as key which happens to be
+comparable as well.
+
+CASE 3: SELECT A+B  ... FROM R AS C WHERE C.A > 1
+The earlier case should cover this.
+
+
+
+
+===================
+CHECKPOINT - 2
+==================
+Objective:
+1. Implement Cross-Product 
+            - Block Nested Join 
+2. Implement Join
+            - Block Nested Join (scope for utility)
+3. Implement Order By
+            - Sorting
+            - With keywords ASC or DESC
+            - can be ordered by multiple attributes
+4. Implement LIMIT 
+           - 
+5. Implement query optimization
+           - Push Down Select
+           - Push Down Project
+           - Identify Join
+           - Change tree structure
+           - Deep copy for NODE!!!
+6. Implement Foreign Key  TBD
+
+Cross- product 
+---------------
+Block-nested
+Ideally a cross product will fetch each row from one table and union it with 
+every row of the other table
+
+Eg: SELECT R.A, S.B from R,S
+
+If we pick say 20 tuples from table R and 20 tuples from table S,
+then we get 400 combinations of these tuples
+
+1. In our model we can change the number of rows that our Scanner picks up
+2. Or we call the scanner getNext 20 times
+
+Option 1: We configure the scanner object to pick a number of tuples. Presently,
+this is done via an application constant. Maybe we can pass configuration in
+Scanner during query processing and can provide a different number when instantiating
+Scanner for a query with cross join. This needs to be standardized and may
+run into issues in future.
+ 
+Option 2: The second option requires that the Cross Join Operator can control 
+the Scanner operator, but in our model the cross join operator just receives 
+records via Node, which means that the node should know how many records to pull.
+This means that we have change our model altogether and come up with a different
+approach 
+
+
+The Cross-Product operator will receive the records for two tables, it will run
+a double for loop for these two collections and return the result
+Once the operator above has processed those records, it will ask for more data
+from the Cross Join and it will hit the scanners again.
+
+
+Join
+------
+Although Join is a selection over Cross-product, we should define join as a 
+separate operator with access to the join condition, this is because
+Cross-Product is an expensive operation and we can reduce the number of tuples
+in memory 
+
+Select R.A, S.B from R,S where R.A = S.D
+
+so the join expression is in where clause and tables are From.
+
+
+ 
+OR expression
+--------------
+In QueryExpressionVisitor, when it encounters a Binary expression:
+
+1. AND
+   Break the expression into left and right and recursively process them. In the
+   end add left followed by right.
+   
+   SELECT A, B FROM R WHERE A > 10 AND B < 30
+   
+        project(A, B)
+           |
+        SELECT(A > 10)
+           |
+        SELECT(B < 30)
+           |
+         SCAN(R)
+         
+2. 1. AND
+   Break the expression into left and right and recursively process them. In the
+   end add a Project(*) then add children, left followed by right.
+   
+   SELECT A, B FROM R WHERE A > 10 OR B < 30
+   
+        project(A, B)
+           |
+        PROJECT(*)
+        /           \  
+  SELECT(A > 10)    SELECT(B < 30)
+        |               |
+      SCAN(R)         SCAN(R)
+      
+ 
+TODO: QueryVisitor - add new child in the leaf child of current node      
+         
+Optimizer
+- Traverse each node
+- identify node type
+
+
+
+For blocking operator like Sort/Order By 
+ - Define a new type of operator -> Blocking Operator
+ - Each node will check if its child is a blocking operator then it will
+   calls its child's getNext until it hasNext.
+ 
+ 
+ For Operators like Limit
+ These will be Terminating Operators which will signal the Node when to stop.         
+                  
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+   
+   
+   
+ 
+
+
+
+
+
+
+
+
+
+             
