@@ -1,19 +1,17 @@
 package edu.buffalo.www.cse4562.operator;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.print.DocFlavor.READER;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
@@ -35,10 +33,13 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  */
 public class ScannerOperator extends Node implements UnaryOperator {
 
-  private Iterator<CSVRecord> recordIterator;
-  private Reader reader;
-  private CSVParser csvParser;
+  //private Iterator<CSVRecord> recordIterator;
+  private FileReader reader;
+  private BufferedReader br;
+  //private CSVParser csvParser;
   private final Config config;
+  //File file;
+  //Scanner scnr;
   /**
    *
    * @param config
@@ -51,12 +52,19 @@ public class ScannerOperator extends Node implements UnaryOperator {
 
   @Override
   public void open() throws IOException {
-    reader = Files.newBufferedReader(
+    /*reader = Files.newBufferedReader(
         Paths.get(config.getDataParentPath() + config.getTableName()
             + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
     csvParser = new CSVParser(reader, CSVFormat.newFormat('|'));
     final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-    recordIterator = csvRecords.iterator();
+    recordIterator = csvRecords.iterator();*/
+    reader = new FileReader(config.getDataParentPath() + config.getTableName()
+    + ApplicationConstants.SUPPORTED_FILE_EXTENSION);
+    br = new BufferedReader(reader);
+     //file = new File(config.getDataParentPath() + config.getTableName()
+    //+ ApplicationConstants.SUPPORTED_FILE_EXTENSION);
+     //scnr = new Scanner(file);
+    
   }
 
   /**
@@ -84,7 +92,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
      */
 
     // if no records left to iterate
-    if (!recordIterator.hasNext()) {
+    //String line;
+    if (!br.ready()) {
       close();
       return new ArrayList<>();
     }
@@ -106,22 +115,22 @@ public class ScannerOperator extends Node implements UnaryOperator {
     for (int i = 0; i < config.getChunkSize(); i++) {
 
       // no value to iterate
-      if (!recordIterator.hasNext()) {
+      if (!br.ready()) {
         close();
         break;
       }
 
       // fetch a row
-      final CSVRecord record = recordIterator.next();
+      final String[] record = br.readLine().split("\\|");
       final List<ColumnCell> columnCells = new ArrayList<>();
 
-      for (int j = 0; j < record.size(); j++) {
+      for (int j = 0; j < record.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 
         final ColumnCell colCell = new ColumnCell(
             PrimitiveTypeConverter.getPrimitiveValueByColDataType(
-                colDefinition.getColDataType(), record.get(j)));
+                colDefinition.getColDataType(), record[j]));
 
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
@@ -147,15 +156,19 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return;
     }
 
-    try {
-      csvParser.close();
-      reader.close();
-    } catch (final IOException e) {
+    //try {
+      //csvParser.close();
+      //br.close();
+      //reader.close();
+      //scnr.close();
+    //} catch (final IOException e) {
 
       // re-attempt
-      csvParser.close();
-      reader.close();
-    }
+      //csvParser.close();
+      //br.close();
+      //reader.close();
+      //scnr.close();
+    //}
 
   }
 
@@ -171,7 +184,9 @@ public class ScannerOperator extends Node implements UnaryOperator {
     if (null == reader) {
       return false;
     }
-    return this.recordIterator.hasNext();
+    return br.ready();
+//return scnr.hasNextLine();
+    //return this.recordIterator.hasNext();
   }
 
   @Override
