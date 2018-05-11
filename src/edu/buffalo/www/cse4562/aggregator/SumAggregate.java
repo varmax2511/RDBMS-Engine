@@ -5,7 +5,6 @@ package edu.buffalo.www.cse4562.aggregator;
 
 import java.util.List;
 
-import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;

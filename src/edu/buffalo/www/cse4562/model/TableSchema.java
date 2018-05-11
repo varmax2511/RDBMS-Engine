@@ -2,6 +2,7 @@ package edu.buffalo.www.cse4562.model;
 
 import java.util.List;
 
+import edu.buffalo.www.cse4562.preprocessor.TableStats;
 import edu.buffalo.www.cse4562.util.Validate;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 /**
@@ -11,6 +12,7 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 public class TableSchema {
   private String tableName;
   private List<ColumnDefinition> columnDefinitions;
+  private TableStats tableStats;
 
   /**
    * 
@@ -41,6 +43,14 @@ public class TableSchema {
 
   public void setColumnDefinitions(List<ColumnDefinition> columnDefinitions) {
     this.columnDefinitions = columnDefinitions;
+  }
+
+  public TableStats getTableStats() {
+    return tableStats;
+  }
+
+  public void setTableStats(TableStats tableStats) {
+    this.tableStats = tableStats;
   }
 
 }

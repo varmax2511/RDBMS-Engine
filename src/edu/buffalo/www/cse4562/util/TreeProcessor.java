@@ -33,7 +33,7 @@ public class TreeProcessor {
     root.open();
     // move iteratively
     while (root.hasNext()) {
-      tuples = root.getNext();
+      tuples = root.getNext(null);
       
       if(tuples.isEmpty()){
         continue;
