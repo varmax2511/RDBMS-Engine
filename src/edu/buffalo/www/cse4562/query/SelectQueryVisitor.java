@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
-
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.operator.AggregateOperator;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
