@@ -35,7 +35,7 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * @author Sneha Mehta
  *
  */
-public class AggregateOperator extends Node{
+public class AggregateOperator extends Node implements UnaryOperator{
   
   private List<Function> functions = new ArrayList<>();
   
