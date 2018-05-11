@@ -209,7 +209,7 @@ public class PushDownProjection {
        */
       // if not the below list, break
       if (!(nextLevel instanceof SelectionOperator)
-          && !(nextLevel instanceof JoinOperator)
+         // && !(nextLevel instanceof JoinOperator)
           && !(nextLevel instanceof AggregateOperator)
           && !(nextLevel instanceof GroupByOperator)) {
         pushDownLevel = nextLevel;
