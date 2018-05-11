@@ -63,7 +63,8 @@ public class PushDownProjection {
   /**
    * @param root
    */
-  public static Node pushDownProject(Node root, final List<ProjectionOperator> allProjectNodes) {
+  public static Node pushDownProject(Node root) {
+    final List<ProjectionOperator> allProjectNodes = getAllProjectNodes(root);
 
     for (final ProjectionOperator projectNode : allProjectNodes) {
       // No pointing pushing it down for select *

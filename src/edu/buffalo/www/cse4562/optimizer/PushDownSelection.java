@@ -37,7 +37,8 @@ public class PushDownSelection {
    *          static method called from Optimizer to push all selects down
    *          wherever possible
    */
-  public static void pushDownSelect(Node root,final List<Node> allSelectNodes) {
+  public static void pushDownSelect(Node root) {
+    final List<Node> allSelectNodes = getAllSelectNodes(root);
     for (final Node selectNode : allSelectNodes) {
       verifyAndPushDownSelect(root,selectNode);
     }
