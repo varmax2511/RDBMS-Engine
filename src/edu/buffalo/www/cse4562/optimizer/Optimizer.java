@@ -40,7 +40,6 @@ public class Optimizer {
     return root;
   }
   private static void populateProjectAndSelectNodes(Node root) {
-    final List<ProjectionOperator> allProjectNodes = new ArrayList<ProjectionOperator>();
     if (root instanceof ProjectionOperator) {
       allProjectNodes.add((ProjectionOperator) root);
     }
