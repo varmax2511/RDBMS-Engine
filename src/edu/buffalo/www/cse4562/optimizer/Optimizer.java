@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.model.Node;
-import edu.buffalo.www.cse4562.operator.ProjectionOperator;
-import edu.buffalo.www.cse4562.operator.SelectionOperator;
 
 /**
  * Optimize operations: -all selections split to unary operations -push down
@@ -20,37 +18,22 @@ import edu.buffalo.www.cse4562.operator.SelectionOperator;
  */
 public class Optimizer {
 
-  final static List<Node> allSelectNodes = new ArrayList<>();
-  final static List<ProjectionOperator> allProjectNodes = new ArrayList<>();
   /**
    * @param root
    */
   public static Node optimizeTree(Node root) {
     // build schema
     root.getBuiltSchema();
-    populateProjectAndSelectNodes(root);
-    PushDownSelection.pushDownSelect(root,allSelectNodes);
+
+    PushDownSelection.pushDownSelect(root);
     // :TODO fix push down project for renaming
     // like SELECT A AS C FROM R WHERE A=4;
-    root = PushDownProjection.pushDownProject(root,allProjectNodes);
+    root = PushDownProjection.pushDownProject(root);
     //IndexJoinOptimizer.generateIndexJoin(root);
     // re-build schema
     //root.getBuiltSchema();
 
     return root;
-  }
-  private static void populateProjectAndSelectNodes(Node root) {
-    if (root instanceof ProjectionOperator) {
-      allProjectNodes.add((ProjectionOperator) root);
-    }
-    else if (root instanceof SelectionOperator) {
-      allSelectNodes.add(root);
-    }
-
-    for (final Node node : root.getChildren()) {
-      populateProjectAndSelectNodes(node);
-    } // for
-
   }
 
   public static Node pushDown(Node root, Node node, Node pushLevelNode) {
