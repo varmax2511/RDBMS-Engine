@@ -12,6 +12,7 @@ import edu.buffalo.www.cse4562.aggregator.CountAggregate;
 import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
 import edu.buffalo.www.cse4562.aggregator.MinAggregate;
 import edu.buffalo.www.cse4562.aggregator.SumAggregate;
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
@@ -130,7 +131,7 @@ public class AggregateOperator extends Node{
 
   
   @Override
-  public Collection<Tuple> getNext() throws Throwable {
+  public Collection<Tuple> getNext(Container container) throws Throwable {
     // check child count, should be 1
     if (this.getChildren() == null || this.getChildren().size() != 1) {
       throw new IllegalArgumentException(
@@ -138,11 +139,11 @@ public class AggregateOperator extends Node{
     }
     final Collection<Tuple> tuples = new ArrayList<>();
     if (getChildren().get(0) instanceof GroupByOperator && getChildren().get(0).hasNext()) {
-      tuples.addAll(getChildren().get(0).getNext());
+      tuples.addAll(getChildren().get(0).getNext( container));
     }
     else {
       while(getChildren().get(0).hasNext()) {
-        tuples.addAll(getChildren().get(0).getNext());
+        tuples.addAll(getChildren().get(0).getNext( container));
       }
     }
 

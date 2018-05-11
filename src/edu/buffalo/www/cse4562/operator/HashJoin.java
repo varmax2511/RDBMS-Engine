@@ -46,7 +46,7 @@ public class HashJoin {
     List<Column> decodedColumns = expDecoder.getDecodedColumns();
 
     while(firstChild.hasNext()) {
-      Collection<Tuple> firstTuples =  firstChild.getNext();
+      Collection<Tuple> firstTuples =  firstChild.getNext(null);
       
       for(Tuple tuple: firstTuples) {
         int hashedValue = 1;

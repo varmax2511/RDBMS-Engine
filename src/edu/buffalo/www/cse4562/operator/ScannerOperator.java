@@ -1,6 +1,7 @@
 package edu.buffalo.www.cse4562.operator;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,12 +12,16 @@ import javax.print.DocFlavor.READER;
 
 import org.apache.commons.csv.CSVParser;
 
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
+import edu.buffalo.www.cse4562.model.ScannerContainer;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.preprocessor.Preprocessor;
+import edu.buffalo.www.cse4562.preprocessor.TableStats;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
@@ -57,11 +62,56 @@ public class ScannerOperator extends Node implements UnaryOperator {
    * @throws IOException
    */
   @Override
-  public Collection<Tuple> getNext() throws IOException {
-
+  public Collection<Tuple> getNext(Container container) throws IOException {
+    //check for container and make index scan
+    if(container!=null && container instanceof ScannerContainer) {
+      return processIndexScan((ScannerContainer) container);
+    }
     return process();
   }
 
+  private Collection<Tuple> processIndexScan(ScannerContainer container) throws NumberFormatException, IOException {
+    TableSchema tableSchema = SchemaManager.getTableSchema(container.getTableName());
+    TableStats tableStats = tableSchema.getTableStats();
+    int max = tableStats.getColumnStats().get(container.getColumnId()).getKey();
+    int min = tableStats.getColumnStats().get(container.getColumnId()).getValue();
+    int tableId = SchemaManager.getTableId(container.getTableName());
+    int bucketNo = Preprocessor.hashedValue(max, min, container.getValue());
+    Collection<Tuple> tuples = new ArrayList<>();
+    File file = new File(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
+    if(!file.exists()) return tuples;
+    reader = new FileReader(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
+    br = new BufferedReader(reader);
+    String line;
+    while((line=br.readLine())!=null) {
+      String[] record = line.split("\\|");
+      if(Integer.parseInt(record[container.getColumnId()-1]) == container.getValue()) {
+        final List<ColumnCell> columnCells = new ArrayList<>();
+
+        for (int j = 0; j < record.length; j++) {
+          final ColumnDefinition colDefinition = tableSchema
+              .getColumnDefinitions().get(j);
+
+          final ColumnCell colCell = new ColumnCell(
+              PrimitiveTypeConverter.getPrimitiveValueByColDataType(
+                  colDefinition.getColDataType(), record[j]));
+
+          colCell.setTableId(tableId);
+          colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+              colDefinition.getColumnName()));
+          columnCells.add(colCell);
+
+        } // for
+
+        tuples.add(new Tuple(columnCells));
+      }
+    }
+    return tuples;
+  }
+  private static String getTablePath(int indexNo, int bucketNo, String tableName) {
+    return ApplicationConstants.INDEX_DIR_PATH+indexNo+"_"+ bucketNo+"_"+ tableName
+    + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
+  }
   /**
    * process the request.
    *
@@ -158,7 +208,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
   @Override
   public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
       throws IOException {
-    return getNext();
+    return getNext(null);
   }
 
   @Override

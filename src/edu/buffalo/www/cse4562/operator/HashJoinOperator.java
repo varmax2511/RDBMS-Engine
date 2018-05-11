@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.Tuple;
@@ -120,7 +121,7 @@ public class HashJoinOperator extends Node implements BinaryOperator,JoinOperato
   }
 
   @Override
-  public Collection<Tuple> getNext() throws Throwable {
+  public Collection<Tuple> getNext(Container container) throws Throwable {
     // check child count, should be 2
     if (this.getChildren() == null || this.getChildren().size() != 2) {
       throw new IllegalArgumentException(
@@ -143,7 +144,7 @@ public class HashJoinOperator extends Node implements BinaryOperator,JoinOperato
     }
       
       Collection<Tuple> tuples = new ArrayList<>();
-      Collection<Tuple> secondChildTuples = secondChild.getNext();
+      Collection<Tuple> secondChildTuples = secondChild.getNext(null);
       
       for(final Tuple tuple:secondChildTuples) {
         
@@ -167,7 +168,7 @@ public class HashJoinOperator extends Node implements BinaryOperator,JoinOperato
           tuples.addAll(process(tuplesForProcess));
         }
       }
-      
+      //System.out.println(tuples.size());
       return tuples;
   }
 

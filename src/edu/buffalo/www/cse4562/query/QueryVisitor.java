@@ -1,11 +1,16 @@
 package edu.buffalo.www.cse4562.query;
 
+import java.io.IOException;
+import java.util.List;
+
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
+import edu.buffalo.www.cse4562.preprocessor.Preprocessor;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitor;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.table.Index;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.insert.Insert;
@@ -73,9 +78,14 @@ public class QueryVisitor implements StatementVisitor, SqlVisitor {
 
     final String tableName = createStatement.getTable().getName();
     // add to Schema Manager
-    SchemaManager.addTableSchema(tableName,
-        new TableSchema(tableName, createStatement.getColumnDefinitions()));
-
+    TableSchema tableSchema = new TableSchema(tableName, createStatement.getColumnDefinitions());
+    SchemaManager.addTableSchema(tableName,tableSchema);
+    try {
+      Preprocessor.preprocess(tableSchema,createStatement.getIndexes());
+      
+    } catch (IOException e) {
+      System.err.println("IO Exception while preprocessing!");
+    }
   }
 
   @Override
