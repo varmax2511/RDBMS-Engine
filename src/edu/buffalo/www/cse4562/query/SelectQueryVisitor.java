@@ -4,13 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.buffalo.www.cse4562.aggregator.AverageAggregate;
-import edu.buffalo.www.cse4562.aggregator.CountAggregate;
-import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
-import edu.buffalo.www.cse4562.aggregator.MinAggregate;
-import edu.buffalo.www.cse4562.aggregator.SumAggregate;
 import edu.buffalo.www.cse4562.model.Node;
-import edu.buffalo.www.cse4562.operator.AggregateOperator1;
+import edu.buffalo.www.cse4562.operator.AggregateOperator;
 import edu.buffalo.www.cse4562.operator.CrossProductOperator;
 import edu.buffalo.www.cse4562.operator.GroupByOperator;
 import edu.buffalo.www.cse4562.operator.LimitOperator;
@@ -18,6 +13,7 @@ import edu.buffalo.www.cse4562.operator.OrderByOperator;
 import edu.buffalo.www.cse4562.operator.ProjectionOperator;
 import edu.buffalo.www.cse4562.operator.RenamingOperator;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.JoinComparator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.schema.Column;
@@ -99,8 +95,14 @@ public class SelectQueryVisitor
      * Add a cross product
      */
     // processCross(fromItem, joins);
+    //:TODO
+    //orderJoinsOnCardinality(joins);
     currentNode.addChild(processCross(fromItem, joins.iterator()));
 
+  }
+
+  private void orderJoinsOnCardinality(List<Join> joins) {
+    joins.sort(new JoinComparator());
   }
 
   private void processGroupBy(final List<Column> groupByColumnReferences) {
@@ -268,7 +270,7 @@ public class SelectQueryVisitor
   }
 
   private void processAggregate(List<Function> functions) {
-    final Node node = new AggregateOperator1(functions);
+    final Node node = new AggregateOperator(functions);
 
     if (root == null) {
       root = node;
@@ -278,27 +280,6 @@ public class SelectQueryVisitor
 
     currentNode.addChild(node);
     currentNode = node;
-
-//    Node node = null;
-//    switch (function.getName().toUpperCase()) {
-//      case "SUM" :
-//        node = new SumAggregate(function);
-//        break;
-//      case "COUNT" :
-//        node = new CountAggregate(function);
-//        break;
-//      case "AVG":
-//        node = new AverageAggregate(function);
-//        break;
-//      case "MIN":
-//        node = new MinAggregate(function);
-//        break;
-//      case "MAX":
-//        node = new MaxAggregate(function);
-//        break;
-//      default: System.err.println("This function is not handled: "+function.getName());
-//      
-//    }
     
   }
   

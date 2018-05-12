@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
@@ -117,7 +118,7 @@ public class GroupByOperator extends Node implements BlockingOperator{
   
   @Override
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public Collection<Tuple> getNext() throws Throwable {
+  public Collection<Tuple> getNext(Container container) throws Throwable {
     // check child count, should be 1
     if(MapUtils.isEmpty(groupByRows)) {
     if (this.getChildren() == null || this.getChildren().size() != 1) {
@@ -126,7 +127,7 @@ public class GroupByOperator extends Node implements BlockingOperator{
     }
     final Collection<Tuple> tuples = new ArrayList<>();
     while (getChildren().get(0).hasNext()) {
-      tuples.addAll(getChildren().get(0).getNext());
+      tuples.addAll(getChildren().get(0).getNext( container));
     } // add all
 
     final Collection<Collection<Tuple>> tupleCollection = new ArrayList<>();

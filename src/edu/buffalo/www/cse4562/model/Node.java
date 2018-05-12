@@ -155,7 +155,7 @@ public abstract class Node {
    * @return
    * @throws Throwable
    */
-  public Collection<Tuple> getNext() throws Throwable {
+  public Collection<Tuple> getNext(Container container) throws Throwable {
     // if leaf node
     if (this.isLeaf) {
       return process(null);
@@ -169,7 +169,7 @@ public abstract class Node {
     // of collection
     while (iterator.hasNext()) {
 
-      Collection<Tuple> tuplesGen = iterator.next().getNext();
+      Collection<Tuple> tuplesGen = iterator.next().getNext(container);
       if (!CollectionUtils.isEmpty(tuplesGen)) {
         tuples.add(tuplesGen);
       }

@@ -42,6 +42,8 @@ public class SchemaManager {
   private static final Map<String, TableSchema> tableName2Schema = new HashMap<>();
   private static final Map<String, Integer> tableName2Id = new HashMap<>();
   private static final Map<Integer, Map<String, Integer>> tableId2ColName2Id = new HashMap<>();
+  private static final Map<Integer, Map<Integer, Integer>> tableId2ColId2Index = new HashMap<>();
+
 
   /**
    * Add table schema entry. Assign a table id to the table name and assign
@@ -198,5 +200,39 @@ public class SchemaManager {
     updateSchema(tableId, tableSchema);
   }
   
+  public static void addIndexToColumn(String tableName,String columnName ) {
+    if(tableId2ColId2Index.containsKey(getTableId(tableName))) {
+      Integer indexKey = tableId2ColId2Index.get(getTableId(tableName)).size();
+      tableId2ColId2Index.get(getTableId(tableName)).put(getColumnIdByTableId(getTableId(tableName), columnName), indexKey);
+      return;
+    }
+    Map<Integer,Integer> col2Index = new HashMap<>();
+    col2Index.put(getColumnIdByTableId(getTableId(tableName), columnName), 0);
+    tableId2ColId2Index.put(getTableId(tableName), col2Index);
+  }
+  
+  public static Integer getIndexValueForColumnId(Integer tableId, Integer columnId) {
+    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
+    return tableId2ColId2Index.get(tableId).get(columnId);
+    return null;
+  }
+  public static Integer getIndexValueForColumnName(String tableName, String columnName) {
+    int tableId=getTableId(tableName);
+    int columnId = getColumnIdByTableId(tableId, columnName);
+    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
+    return tableId2ColId2Index.get(tableId).get(columnId);
+    return null;
+  }
+  
+  public static Map<Integer,Integer> getIndexedColumnsMap(Integer tableId) {
+    if(tableId2ColId2Index.containsKey(tableId)) return tableId2ColId2Index.get(tableId);
+    return null;
+  }
+  
+  public static boolean isColumnIndexed(Integer tableId, Integer columnId) {
+    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
+      return true;
+    return false;
+  }
   
 }

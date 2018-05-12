@@ -1,5 +1,7 @@
 package edu.buffalo.www.cse4562;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Iterator;
 
 import edu.buffalo.www.cse4562.model.Node;
@@ -21,6 +23,17 @@ public class Main {
    * @throws Throwable
    */
   public static void main(String[] args) throws Throwable {
+  //flush all existing index files
+   /* File file = new File(ApplicationConstants.INDEX_DIR_PATH);      
+    String[] files;    
+        if(file.isDirectory()){
+          files = file.list();
+            for (int i=0; i<files.length; i++) {
+                File file1 = new File(file, files[i]); 
+                file1.delete();
+            }
+         }*/
+        
     // prompt
     System.out.println(ApplicationConstants.BASH);
     System.out.flush();
@@ -29,7 +42,7 @@ public class Main {
     if (StringUtils.isBlank(dataPath)) {
       ApplicationConstants.DATA_DIR_PATH = dataPath;
     }
-
+        
     final CCJSqlParser parser = new CCJSqlParser(System.in);
     Statement statement = parser.Statement();
 

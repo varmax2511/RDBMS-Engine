@@ -1,26 +1,27 @@
 package edu.buffalo.www.cse4562.operator;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.print.DocFlavor.READER;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
+import edu.buffalo.www.cse4562.model.ScannerContainer;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
 import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
+import edu.buffalo.www.cse4562.preprocessor.Preprocessor;
+import edu.buffalo.www.cse4562.preprocessor.TableStats;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import edu.buffalo.www.cse4562.util.PrimitiveTypeConverter;
@@ -35,9 +36,8 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  */
 public class ScannerOperator extends Node implements UnaryOperator {
 
-  private Iterator<CSVRecord> recordIterator;
-  private Reader reader;
-  private CSVParser csvParser;
+  private FileReader reader;
+  private BufferedReader br;
   private final Config config;
   /**
    *
@@ -51,12 +51,9 @@ public class ScannerOperator extends Node implements UnaryOperator {
 
   @Override
   public void open() throws IOException {
-    reader = Files.newBufferedReader(
-        Paths.get(config.getDataParentPath() + config.getTableName()
-            + ApplicationConstants.SUPPORTED_FILE_EXTENSION));
-    csvParser = new CSVParser(reader, CSVFormat.newFormat('|'));
-    final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-    recordIterator = csvRecords.iterator();
+    reader = new FileReader(config.getDataParentPath() + config.getTableName()
+    + ApplicationConstants.SUPPORTED_FILE_EXTENSION);
+    br = new BufferedReader(reader);
   }
 
   /**
@@ -65,11 +62,56 @@ public class ScannerOperator extends Node implements UnaryOperator {
    * @throws IOException
    */
   @Override
-  public Collection<Tuple> getNext() throws IOException {
-
+  public Collection<Tuple> getNext(Container container) throws IOException {
+    //check for container and make index scan
+    if(container!=null && container instanceof ScannerContainer) {
+      return processIndexScan((ScannerContainer) container);
+    }
     return process();
   }
 
+  private Collection<Tuple> processIndexScan(ScannerContainer container) throws NumberFormatException, IOException {
+    TableSchema tableSchema = SchemaManager.getTableSchema(container.getTableName());
+    TableStats tableStats = tableSchema.getTableStats();
+    int max = tableStats.getColumnStats().get(container.getColumnId()).getKey();
+    int min = tableStats.getColumnStats().get(container.getColumnId()).getValue();
+    int tableId = SchemaManager.getTableId(container.getTableName());
+    int bucketNo = Preprocessor.hashedValue(max, min, container.getValue());
+    Collection<Tuple> tuples = new ArrayList<>();
+    File file = new File(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
+    if(!file.exists()) return tuples;
+    reader = new FileReader(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
+    br = new BufferedReader(reader);
+    String line;
+    while((line=br.readLine())!=null) {
+      String[] record = line.split("\\|");
+      if(Integer.parseInt(record[container.getColumnId()-1]) == container.getValue()) {
+        final List<ColumnCell> columnCells = new ArrayList<>();
+
+        for (int j = 0; j < record.length; j++) {
+          final ColumnDefinition colDefinition = tableSchema
+              .getColumnDefinitions().get(j);
+
+          final ColumnCell colCell = new ColumnCell(
+              PrimitiveTypeConverter.getPrimitiveValueByColDataType(
+                  colDefinition.getColDataType(), record[j]));
+
+          colCell.setTableId(tableId);
+          colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+              colDefinition.getColumnName()));
+          columnCells.add(colCell);
+
+        } // for
+
+        tuples.add(new Tuple(columnCells));
+      }
+    }
+    return tuples;
+  }
+  private static String getTablePath(int indexNo, int bucketNo, String tableName) {
+    return ApplicationConstants.INDEX_DIR_PATH+indexNo+"_"+ bucketNo+"_"+ tableName
+    + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
+  }
   /**
    * process the request.
    *
@@ -84,7 +126,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
      */
 
     // if no records left to iterate
-    if (!recordIterator.hasNext()) {
+    if (!br.ready()) {
       close();
       return new ArrayList<>();
     }
@@ -106,22 +148,22 @@ public class ScannerOperator extends Node implements UnaryOperator {
     for (int i = 0; i < config.getChunkSize(); i++) {
 
       // no value to iterate
-      if (!recordIterator.hasNext()) {
+      if (!br.ready()) {
         close();
         break;
       }
 
       // fetch a row
-      final CSVRecord record = recordIterator.next();
+      final String[] record = br.readLine().split("\\|");
       final List<ColumnCell> columnCells = new ArrayList<>();
 
-      for (int j = 0; j < record.size(); j++) {
+      for (int j = 0; j < record.length; j++) {
         final ColumnDefinition colDefinition = tableSchema
             .getColumnDefinitions().get(j);
 
         final ColumnCell colCell = new ColumnCell(
             PrimitiveTypeConverter.getPrimitiveValueByColDataType(
-                colDefinition.getColDataType(), record.get(j)));
+                colDefinition.getColDataType(), record[j]));
 
         colCell.setTableId(tableId);
         colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
@@ -147,22 +189,26 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return;
     }
 
-    try {
-      csvParser.close();
-      reader.close();
-    } catch (final IOException e) {
+    //try {
+      //csvParser.close();
+      //br.close();
+      //reader.close();
+      //scnr.close();
+    //} catch (final IOException e) {
 
       // re-attempt
-      csvParser.close();
-      reader.close();
-    }
+      //csvParser.close();
+      //br.close();
+      //reader.close();
+      //scnr.close();
+    //}
 
   }
 
   @Override
   public Collection<Tuple> process(Collection<Collection<Tuple>> tuples)
       throws IOException {
-    return getNext();
+    return getNext(null);
   }
 
   @Override
@@ -171,7 +217,9 @@ public class ScannerOperator extends Node implements UnaryOperator {
     if (null == reader) {
       return false;
     }
-    return this.recordIterator.hasNext();
+    return br.ready();
+//return scnr.hasNextLine();
+    //return this.recordIterator.hasNext();
   }
 
   @Override

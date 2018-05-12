@@ -8,21 +8,16 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.buffalo.www.cse4562.aggregator.AverageAggregate;
-import edu.buffalo.www.cse4562.aggregator.AverageAggregate1;
 import edu.buffalo.www.cse4562.aggregator.CountAggregate;
-import edu.buffalo.www.cse4562.aggregator.CountAggregate1;
 import edu.buffalo.www.cse4562.aggregator.MaxAggregate;
-import edu.buffalo.www.cse4562.aggregator.MaxAggregate1;
 import edu.buffalo.www.cse4562.aggregator.MinAggregate;
-import edu.buffalo.www.cse4562.aggregator.MinAggregate1;
 import edu.buffalo.www.cse4562.aggregator.SumAggregate;
-import edu.buffalo.www.cse4562.aggregator.SumAggregate1;
+import edu.buffalo.www.cse4562.model.Container;
 import edu.buffalo.www.cse4562.model.Node;
 import edu.buffalo.www.cse4562.model.Pair;
 import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.model.Tuple;
-import edu.buffalo.www.cse4562.model.Tuple.ColumnCell;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -40,11 +35,11 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * @author Sneha Mehta
  *
  */
-public class AggregateOperator1 extends Node{
+public class AggregateOperator extends Node implements UnaryOperator{
   
   private List<Function> functions = new ArrayList<>();
   
-  public AggregateOperator1(List<Function> functions) {
+  public AggregateOperator(List<Function> functions) {
     this.functions = functions;
   }
 
@@ -106,23 +101,23 @@ public class AggregateOperator1 extends Node{
     for(Function function : functions) {
     switch (function.getName().toUpperCase()) {
       case "SUM" :
-        SumAggregate1 sumAggregate = new SumAggregate1(function);
+        SumAggregate sumAggregate = new SumAggregate(function);
         tuple.getColumnCells().add(sumAggregate.getAggregate(tupleRecords,tableId));
         break;
       case "COUNT" :
-        CountAggregate1 countAggregate = new CountAggregate1(function);
+        CountAggregate countAggregate = new CountAggregate(function);
         tuple.getColumnCells().add(countAggregate.getAggregate(tupleRecords,tableId));
         break;
       case "AVG":
-        AverageAggregate1 avgAggregate = new AverageAggregate1(function);
+        AverageAggregate avgAggregate = new AverageAggregate(function);
         tuple.getColumnCells().add(avgAggregate.getAggregate(tupleRecords,tableId));
         break;
       case "MIN":
-        MinAggregate1 minAggregate = new MinAggregate1(function);
+        MinAggregate minAggregate = new MinAggregate(function);
         tuple.getColumnCells().add(minAggregate.getAggregate(tupleRecords,tableId));
         break;
       case "MAX":
-        MaxAggregate1 maxAggregate = new MaxAggregate1(function);
+        MaxAggregate maxAggregate = new MaxAggregate(function);
         tuple.getColumnCells().add(maxAggregate.getAggregate(tupleRecords,tableId));
         break;
       default: System.err.println("This function is not handled: "+function.getName());
@@ -136,7 +131,7 @@ public class AggregateOperator1 extends Node{
 
   
   @Override
-  public Collection<Tuple> getNext() throws Throwable {
+  public Collection<Tuple> getNext(Container container) throws Throwable {
     // check child count, should be 1
     if (this.getChildren() == null || this.getChildren().size() != 1) {
       throw new IllegalArgumentException(
@@ -144,11 +139,11 @@ public class AggregateOperator1 extends Node{
     }
     final Collection<Tuple> tuples = new ArrayList<>();
     if (getChildren().get(0) instanceof GroupByOperator && getChildren().get(0).hasNext()) {
-      tuples.addAll(getChildren().get(0).getNext());
+      tuples.addAll(getChildren().get(0).getNext( container));
     }
     else {
       while(getChildren().get(0).hasNext()) {
-        tuples.addAll(getChildren().get(0).getNext());
+        tuples.addAll(getChildren().get(0).getNext( container));
       }
     }
 
