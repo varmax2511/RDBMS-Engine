@@ -145,6 +145,7 @@ public class CrossToJoin {
     projectNode.setChildren(null);
     projectNode.setParent(null);
     projectNode = null;
+    
     if (!project1.isAllColFlag()) {
       root = PushDownProjection.verifyAndPushDownProject(root, project1);
      }

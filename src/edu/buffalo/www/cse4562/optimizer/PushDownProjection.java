@@ -109,7 +109,7 @@ public class PushDownProjection {
 
     // if pushlevel is same as select node, no optimization can be done
     if (pushDownLevel == projectNode
-        || pushDownLevel.getParent() == projectNode) {
+        || pushDownLevel.getParent() == projectNode && !(pushDownLevel instanceof BinaryOperator)) {
       root = appendProject(root, projectNode, orignalProject);
       return removeNode(root, projectNode);
     }
