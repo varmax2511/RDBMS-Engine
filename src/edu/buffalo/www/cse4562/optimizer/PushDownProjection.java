@@ -96,7 +96,7 @@ public class PushDownProjection {
   /**
    * @param projectNode
    */
-  private static Node verifyAndPushDownProject(Node root,
+  public static Node verifyAndPushDownProject(Node root,
       ProjectionOperator projectNode) {
 
     Node orignalProject = projectNode.getDeepCopy();
