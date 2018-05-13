@@ -52,7 +52,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
   @Override
   public void open() throws IOException {
     reader = new FileReader(config.getDataParentPath() + config.getTableName()
-    + ApplicationConstants.SUPPORTED_FILE_EXTENSION);
+        + ApplicationConstants.SUPPORTED_FILE_EXTENSION);
     br = new BufferedReader(reader);
   }
 
@@ -63,29 +63,36 @@ public class ScannerOperator extends Node implements UnaryOperator {
    */
   @Override
   public Collection<Tuple> getNext(Container container) throws IOException {
-    //check for container and make index scan
-    if(container!=null && container instanceof ScannerContainer) {
+    // check for container and make index scan
+    if (container != null && container instanceof ScannerContainer) {
       return processIndexScan((ScannerContainer) container);
     }
     return process();
   }
 
-  private Collection<Tuple> processIndexScan(ScannerContainer container) throws NumberFormatException, IOException {
-    TableSchema tableSchema = SchemaManager.getTableSchema(container.getTableName());
+  private Collection<Tuple> processIndexScan(ScannerContainer container)
+      throws NumberFormatException, IOException {
+    TableSchema tableSchema = SchemaManager
+        .getTableSchema(container.getTableName());
     TableStats tableStats = tableSchema.getTableStats();
     int max = tableStats.getColumnStats().get(container.getColumnId()).getKey();
-    int min = tableStats.getColumnStats().get(container.getColumnId()).getValue();
+    int min = tableStats.getColumnStats().get(container.getColumnId())
+        .getValue();
     int tableId = SchemaManager.getTableId(container.getTableName());
     int bucketNo = Preprocessor.hashedValue(max, min, container.getValue());
     Collection<Tuple> tuples = new ArrayList<>();
-    File file = new File(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
-    if(!file.exists()) return tuples;
-    reader = new FileReader(getTablePath(container.getIndexNo(),bucketNo ,container.getTableName()));
+    File file = new File(getTablePath(container.getIndexNo(), bucketNo,
+        container.getTableName()));
+    if (!file.exists())
+      return tuples;
+    reader = new FileReader(getTablePath(container.getIndexNo(), bucketNo,
+        container.getTableName()));
     br = new BufferedReader(reader);
     String line;
-    while((line=br.readLine())!=null) {
+    while ((line = br.readLine()) != null) {
       String[] record = line.split("\\|");
-      if(Integer.parseInt(record[container.getColumnId()-1]) == container.getValue()) {
+      if (Integer.parseInt(record[container.getColumnId() - 1]) == container
+          .getValue()) {
         final List<ColumnCell> columnCells = new ArrayList<>();
 
         for (int j = 0; j < record.length; j++) {
@@ -108,9 +115,10 @@ public class ScannerOperator extends Node implements UnaryOperator {
     }
     return tuples;
   }
-  private static String getTablePath(int indexNo, int bucketNo, String tableName) {
-    return ApplicationConstants.INDEX_DIR_PATH+indexNo+"_"+ bucketNo+"_"+ tableName
-    + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
+  private static String getTablePath(int indexNo, int bucketNo,
+      String tableName) {
+    return ApplicationConstants.INDEX_DIR_PATH + indexNo + "_" + bucketNo + "_"
+        + tableName + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
   }
   /**
    * process the request.
@@ -154,7 +162,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
       }
 
       // fetch a row
-      final String[] record = br.readLine().split("\\|");
+      final String[] record = br.readLine()
+          .split(ApplicationConstants.DATA_DELIMITER);
       final List<ColumnCell> columnCells = new ArrayList<>();
 
       for (int j = 0; j < record.length; j++) {
@@ -189,19 +198,19 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return;
     }
 
-    //try {
-      //csvParser.close();
-      //br.close();
-      //reader.close();
-      //scnr.close();
-    //} catch (final IOException e) {
+    // try {
+    // csvParser.close();
+    // br.close();
+    // reader.close();
+    // scnr.close();
+    // } catch (final IOException e) {
 
-      // re-attempt
-      //csvParser.close();
-      //br.close();
-      //reader.close();
-      //scnr.close();
-    //}
+    // re-attempt
+    // csvParser.close();
+    // br.close();
+    // reader.close();
+    // scnr.close();
+    // }
 
   }
 
@@ -218,8 +227,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
       return false;
     }
     return br.ready();
-//return scnr.hasNextLine();
-    //return this.recordIterator.hasNext();
+    // return scnr.hasNextLine();
+    // return this.recordIterator.hasNext();
   }
 
   @Override
