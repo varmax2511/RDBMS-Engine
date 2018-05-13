@@ -29,7 +29,7 @@ public class Optimizer {
     // :TODO fix push down project for renaming
     // like SELECT A AS C FROM R WHERE A=4;
     root = PushDownProjection.pushDownProject(root);
-    //IndexJoinOptimizer.generateIndexJoin(root);
+    IndexJoinOptimizer.generateIndexJoin(root);
     // re-build schema
     //root.getBuiltSchema();
 
