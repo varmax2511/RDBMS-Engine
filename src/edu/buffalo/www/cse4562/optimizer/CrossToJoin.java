@@ -145,6 +145,12 @@ public class CrossToJoin {
     projectNode.setChildren(null);
     projectNode.setParent(null);
     projectNode = null;
+    if (!project1.isAllColFlag()) {
+      root = PushDownProjection.verifyAndPushDownProject(root, project1);
+     }
+     if (!project2.isAllColFlag()) {
+       root =PushDownProjection.verifyAndPushDownProject(root, project2);
+     }
     root.getBuiltSchema();
   }
 
