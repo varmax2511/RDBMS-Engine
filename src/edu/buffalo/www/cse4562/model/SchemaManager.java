@@ -261,4 +261,23 @@ public class SchemaManager {
     return false;
   }
 
+  /**
+   * Search for the passed column name across all tables in the
+   * {@link #tableId2ColName2Id}.
+   * 
+   * @param columnName
+   */
+  public static Integer getTableIdFromColumnName(String columnName) {
+
+    for (Map.Entry<Integer, Map<String, Integer>> entry : tableId2ColName2Id
+        .entrySet()) {
+
+      if (entry.getValue().containsKey(columnName)) {
+        return entry.getKey();
+      }
+    }// for
+    
+    // no match found
+    return null;
+  }
 }

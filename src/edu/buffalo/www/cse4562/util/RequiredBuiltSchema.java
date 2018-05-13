@@ -19,31 +19,31 @@ import net.sf.jsqlparser.schema.Column;
  *
  */
 public class RequiredBuiltSchema {
-  
-  private  List<Pair<Integer, Integer>> schema = new ArrayList<>();
 
+  private List<Pair<Integer, Integer>> schema = new ArrayList<>();
 
-  public  List<Pair<Integer, Integer>> getRequiredSchema(
-      Expression expression, Node node) {
+  public List<Pair<Integer, Integer>> getRequiredSchema(Expression expression,
+      Node node) {
 
-    if(expression instanceof OrExpression) {
-      getRequiredSchema(((OrExpression) expression).getLeftExpression(), node) ;
-      getRequiredSchema(((OrExpression) expression).getRightExpression(), node) ;
+    if (expression instanceof OrExpression) {
+      getRequiredSchema(((OrExpression) expression).getLeftExpression(), node);
+      getRequiredSchema(((OrExpression) expression).getRightExpression(), node);
     }
     // since all where conditions will be a binary expression
     else if (expression instanceof BinaryExpression) {
       if (((BinaryExpression) expression)
           .getLeftExpression() instanceof Column) {
         addToSchema(
-            (Column) ((BinaryExpression) expression).getLeftExpression(),node);
+            (Column) ((BinaryExpression) expression).getLeftExpression(), node);
       }
       if (((BinaryExpression) expression)
           .getRightExpression() instanceof Column) {
         addToSchema(
-            (Column) ((BinaryExpression) expression).getRightExpression(),node);
+            (Column) ((BinaryExpression) expression).getRightExpression(),
+            node);
       }
     }
-    
+
     else {
       addToSchema((Column) expression, node);
     }
@@ -66,10 +66,14 @@ public class RequiredBuiltSchema {
     // by looking into the Select node children, getting the schema info
     // and guessing the table is costly.
     if (tableId == null) {
-      final Pair<Integer, Integer> p = node.getBuiltSchema().get(0);
-      tableId = new Integer(p.getKey());
-      // System.out.println(tableId);
 
+      tableId = SchemaManager.getTableIdFromColumnName(column.getColumnName());
+
+      if (tableId == null) {
+        throw new IllegalArgumentException("Unknown column encountered!!!!");
+ //       final Pair<Integer, Integer> p = node.getBuiltSchema().get(0);
+ //       tableId = new Integer(p.getKey());
+      }
     }
 
     final Integer columnId = SchemaManager.getColumnIdByTableId(tableId,
