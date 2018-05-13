@@ -148,6 +148,12 @@ public class CrossToJoin {
     root.getBuiltSchema();
   }
 
+  /**
+   * 
+   * @param parentProjection
+   * @param pairs
+   * @return
+   */
   private static ProjectionOperator getDifProjection(
       ProjectionOperator parentProjection, List<Pair<Integer, Integer>> pairs) {
 

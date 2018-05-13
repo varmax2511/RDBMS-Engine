@@ -44,7 +44,6 @@ public class SchemaManager {
   private static final Map<Integer, Map<String, Integer>> tableId2ColName2Id = new HashMap<>();
   private static final Map<Integer, Map<Integer, Integer>> tableId2ColId2Index = new HashMap<>();
 
-
   /**
    * Add table schema entry. Assign a table id to the table name and assign
    * column ids to columns in each table.
@@ -56,13 +55,13 @@ public class SchemaManager {
    * @param tableSchema
    */
   public static void addTableSchema(String tableName, TableSchema tableSchema) {
-    
-    if(tableName2Schema.containsKey(tableName)){
+
+    if (tableName2Schema.containsKey(tableName)) {
       tableName2Schema.put(tableName, tableSchema);
       addColumnIds(tableName2Id.get(tableName), tableSchema);
       return;
     }
-    
+
     tableName2Schema.put(tableName, tableSchema);
     tableName2Id.put(tableName, tableCount);
     tableCount++;
@@ -72,7 +71,7 @@ public class SchemaManager {
 
   /**
    * Add new columns to existing tables.
-   * 
+   *
    * @param tableId
    * @param tableSchema
    */
@@ -112,7 +111,7 @@ public class SchemaManager {
 
   /**
    * Get the table id for a table name.
-   * 
+   *
    * @param tableName
    * @return
    */
@@ -122,7 +121,7 @@ public class SchemaManager {
 
   /**
    * Get the column id by table id and column name.
-   * 
+   *
    * @param tableId
    * @param columnName
    * @return
@@ -135,7 +134,7 @@ public class SchemaManager {
   /**
    * Returns the column name against a given table id and column id. This is an
    * O(n) call where n is the number of columns in the table.
-   * 
+   *
    * @param tableId
    * @param columnId
    * @return null when no match found
@@ -146,8 +145,8 @@ public class SchemaManager {
       return null;
     }
 
-    for (Map.Entry<String, Integer> entry : tableId2ColName2Id.get(tableId)
-        .entrySet()) {
+    for (final Map.Entry<String, Integer> entry : tableId2ColName2Id
+        .get(tableId).entrySet()) {
       if (entry.getValue() == columnId) {
         return entry.getKey();
       }
@@ -159,7 +158,7 @@ public class SchemaManager {
   /**
    * Get the table name corresponding to a tableid. This is O(n) call where n is
    * the number of tables in the system.
-   * 
+   *
    * @param tableId
    * @return null when no match found
    */
@@ -169,7 +168,7 @@ public class SchemaManager {
       return null;
     }
 
-    for (Map.Entry<String, Integer> entry : tableName2Id.entrySet()) {
+    for (final Map.Entry<String, Integer> entry : tableName2Id.entrySet()) {
       if (entry.getValue() == tableId) {
         return entry.getKey();
       }
@@ -195,44 +194,71 @@ public class SchemaManager {
     columnDefinition.setColumnName(strVal);
     columnDefinitions.add(columnDefinition);
     tableSchema.setColumnDefinitions(columnDefinitions);
-  
+
     // update schema
     updateSchema(tableId, tableSchema);
   }
-  
-  public static void addIndexToColumn(String tableName,String columnName ) {
-    if(tableId2ColId2Index.containsKey(getTableId(tableName))) {
-      Integer indexKey = tableId2ColId2Index.get(getTableId(tableName)).size();
-      tableId2ColId2Index.get(getTableId(tableName)).put(getColumnIdByTableId(getTableId(tableName), columnName), indexKey);
+
+  /**
+   * Add the tablename and column name entry to the {@link #tableId2ColId2Index}
+   * 
+   * @param tableName
+   * @param columnName
+   */
+  public static void addIndexToColumn(String tableName, String columnName) {
+    int tableId = getTableId(tableName);
+    // if table id is already available in index map
+    if (tableId2ColId2Index.containsKey(tableId)) {
+      final Integer indexKey = tableId2ColId2Index.get(tableId).size();
+      tableId2ColId2Index.get(tableId)
+          .put(getColumnIdByTableId(tableId, columnName), indexKey);
       return;
+    } // if
+
+    // add new entry to map
+    final Map<Integer, Integer> col2Index = new HashMap<>();
+    col2Index.put(getColumnIdByTableId(tableId, columnName), 0);
+    tableId2ColId2Index.put(tableId, col2Index);
+  }
+
+  public static Integer getIndexValueForColumnId(Integer tableId,
+      Integer columnId) {
+    if (tableId2ColId2Index.containsKey(tableId)
+        && tableId2ColId2Index.get(tableId).containsKey(columnId)) {
+      return tableId2ColId2Index.get(tableId).get(columnId);
     }
-    Map<Integer,Integer> col2Index = new HashMap<>();
-    col2Index.put(getColumnIdByTableId(getTableId(tableName), columnName), 0);
-    tableId2ColId2Index.put(getTableId(tableName), col2Index);
-  }
-  
-  public static Integer getIndexValueForColumnId(Integer tableId, Integer columnId) {
-    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
-    return tableId2ColId2Index.get(tableId).get(columnId);
     return null;
   }
-  public static Integer getIndexValueForColumnName(String tableName, String columnName) {
-    int tableId=getTableId(tableName);
-    int columnId = getColumnIdByTableId(tableId, columnName);
-    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
-    return tableId2ColId2Index.get(tableId).get(columnId);
+  public static Integer getIndexValueForColumnName(String tableName,
+      String columnName) {
+    final int tableId = getTableId(tableName);
+    final int columnId = getColumnIdByTableId(tableId, columnName);
+    if (tableId2ColId2Index.containsKey(tableId)
+        && tableId2ColId2Index.get(tableId).containsKey(columnId)) {
+      return tableId2ColId2Index.get(tableId).get(columnId);
+    }
     return null;
   }
-  
-  public static Map<Integer,Integer> getIndexedColumnsMap(Integer tableId) {
-    if(tableId2ColId2Index.containsKey(tableId)) return tableId2ColId2Index.get(tableId);
-    return null;
+
+  /**
+   * Return the Map of ColumnId to the index.
+   * 
+   * @param tableId
+   * @return can be null
+   */
+  public static Map<Integer, Integer> getIndexedColumnsMap(Integer tableId) {
+    // if (tableId2ColId2Index.containsKey(tableId)) {
+    return tableId2ColId2Index.get(tableId);
+    // }
+    // return null;
   }
-  
+
   public static boolean isColumnIndexed(Integer tableId, Integer columnId) {
-    if(tableId2ColId2Index.containsKey(tableId) && tableId2ColId2Index.get(tableId).containsKey(columnId))
+    if (tableId2ColId2Index.containsKey(tableId)
+        && tableId2ColId2Index.get(tableId).containsKey(columnId)) {
       return true;
+    }
     return false;
   }
-  
+
 }
