@@ -40,7 +40,7 @@ public class Preprocessor {
   private static final String REFERENCES = "REFERENCES";
   private static final String PRIMARY = "PRIMARY";
   // configurable bucket count
-  public static int BUCKETS = 10;
+  public static int BUCKETS = 30;
 
   /**
    * Perform pre-processing.
