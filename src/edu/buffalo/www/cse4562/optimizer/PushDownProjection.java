@@ -96,7 +96,7 @@ public class PushDownProjection {
   /**
    * @param projectNode
    */
-  private static Node verifyAndPushDownProject(Node root,
+  public static Node verifyAndPushDownProject(Node root,
       ProjectionOperator projectNode) {
 
     Node orignalProject = projectNode.getDeepCopy();
@@ -109,7 +109,7 @@ public class PushDownProjection {
 
     // if pushlevel is same as select node, no optimization can be done
     if (pushDownLevel == projectNode
-        || pushDownLevel.getParent() == projectNode) {
+        || pushDownLevel.getParent() == projectNode && !(pushDownLevel instanceof BinaryOperator)) {
       root = appendProject(root, projectNode, orignalProject);
       return removeNode(root, projectNode);
     }
