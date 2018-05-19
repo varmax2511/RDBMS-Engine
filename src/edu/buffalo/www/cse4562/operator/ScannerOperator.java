@@ -70,7 +70,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
     // check for container and make index scan
     if (container != null && container instanceof ScannerContainer) {
       //return processIndexScan((ScannerContainer) container);
-      System.out.println("index scan"+ i++);
+     // System.out.println("index scan"+ i++);
       return processIndexScanRandomAccess((ScannerContainer)container);
     }
     return process();
@@ -271,10 +271,13 @@ public class ScannerOperator extends Node implements UnaryOperator {
 
   @Override
   public boolean hasNext() throws IOException {
+
     // if method invoked first time without connection being opened
     if (null == reader) {
       return false;
     }
+    
+    
     return br.ready();
     // return scnr.hasNextLine();
     // return this.recordIterator.hasNext();

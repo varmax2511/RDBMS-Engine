@@ -194,7 +194,7 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
     Collection<Tuple> t=process(tuples);
 
     //System.out.println(t.size());
-    System.out.println(t.toString());
+   
 
     return  t;
     }
@@ -212,6 +212,6 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
 
   @Override
   public boolean hasNext() throws IOException {
-    return super.hasNext() || !holdingList.isEmpty();
+    return !holdingList.isEmpty() || this.getChildren().get(0).hasNext();
   }
 }
