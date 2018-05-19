@@ -2,8 +2,10 @@ package edu.buffalo.www.cse4562.operator;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +41,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
   private FileReader reader;
   private BufferedReader br;
   private final Config config;
+  private RandomAccessFile indexedFile;
+  int i=0;
   /**
    *
    * @param config
@@ -65,11 +69,53 @@ public class ScannerOperator extends Node implements UnaryOperator {
   public Collection<Tuple> getNext(Container container) throws IOException {
     // check for container and make index scan
     if (container != null && container instanceof ScannerContainer) {
-      return processIndexScan((ScannerContainer) container);
+      //return processIndexScan((ScannerContainer) container);
+      System.out.println("index scan"+ i++);
+      return processIndexScanRandomAccess((ScannerContainer)container);
     }
     return process();
   }
 
+  private Collection<Tuple> processIndexScanRandomAccess(ScannerContainer container) throws IOException
+  {
+    if(indexedFile == null) {
+      indexedFile = new RandomAccessFile(getIndexPath(container),"rw");
+      }
+    indexedFile.seek(container.getValue());
+    final String line = indexedFile.readLine();
+    String[] record = line.split(ApplicationConstants.DATA_DELIMITER);
+    final List<ColumnCell> columnCells = new ArrayList<>();
+    Collection<Tuple> tuples = new ArrayList<>();
+
+    final TableSchema tableSchema = SchemaManager
+        .getTableSchema(config.getTableName());
+    Integer tableId = SchemaManager.getTableId(config.getTableName());
+    
+      for (int j = 0; j < record.length; j++) {
+        final ColumnDefinition colDefinition = tableSchema
+            .getColumnDefinitions().get(j);
+
+        final ColumnCell colCell = new ColumnCell(
+            PrimitiveTypeConverter.getPrimitiveValueByColDataType(
+                colDefinition.getColDataType(), record[j]));
+
+        colCell.setTableId(tableId);
+        colCell.setColumnId(SchemaManager.getColumnIdByTableId(tableId,
+            colDefinition.getColumnName()));
+        columnCells.add(colCell);
+
+      } // for
+
+      tuples.add(new Tuple(columnCells));
+    
+    return tuples;
+  }
+  
+  private String getIndexPath(ScannerContainer container) {
+    // TODO Auto-generated method stub
+    return ApplicationConstants.INDEX_DIR_PATH + container.getTableName() + "_" +container.getColumnId() + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
+  }
+/*
   private Collection<Tuple> processIndexScan(ScannerContainer container)
       throws NumberFormatException, IOException {
     TableSchema tableSchema = SchemaManager
@@ -120,6 +166,7 @@ public class ScannerOperator extends Node implements UnaryOperator {
     return ApplicationConstants.INDEX_DIR_PATH + indexNo + "_" + bucketNo + "_"
         + tableName + ApplicationConstants.SUPPORTED_FILE_EXTENSION;
   }
+  */
   /**
    * process the request.
    *
@@ -211,6 +258,8 @@ public class ScannerOperator extends Node implements UnaryOperator {
     // reader.close();
     // scnr.close();
     // }
+    if(indexedFile!=null)
+    indexedFile.close();
 
   }
 

@@ -43,6 +43,7 @@ public class SchemaManager {
   private static final Map<String, Integer> tableName2Id = new HashMap<>();
   private static final Map<Integer, Map<String, Integer>> tableId2ColName2Id = new HashMap<>();
   private static final Map<Integer, Map<Integer, Integer>> tableId2ColId2Index = new HashMap<>();
+  private static final Map<Integer, Map<Integer, Map<Integer, Long>>> tableId2ColId2IndexNew = new HashMap<>();
 
   /**
    * Add table schema entry. Assign a table id to the table name and assign
@@ -275,9 +276,28 @@ public class SchemaManager {
       if (entry.getValue().containsKey(columnName)) {
         return entry.getKey();
       }
-    }// for
-    
+    } // for
+
     // no match found
     return null;
+  }
+
+  public static void addRandomIndex(
+      Map<Integer, Map<Integer, Map<Integer, Long>>> tableId2ColId2Offset) {
+
+    tableId2ColId2IndexNew.putAll(tableId2ColId2Offset);
+  }
+
+  public static long getRandomIndexOffset(Integer tableId, Integer columnId,
+      Integer columnValue) {
+
+    if (tableId2ColId2IndexNew.containsKey(tableId)
+        && tableId2ColId2IndexNew.get(tableId).containsKey(columnId)
+        && tableId2ColId2IndexNew.get(tableId).get(columnId)
+            .containsKey(columnValue)) {
+
+      return tableId2ColId2IndexNew.get(tableId).get(columnId).get(columnValue);
+    }
+    return -1;
   }
 }
