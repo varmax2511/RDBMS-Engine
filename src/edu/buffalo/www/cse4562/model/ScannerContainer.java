@@ -7,23 +7,13 @@ public class ScannerContainer implements Container{
   Class<? extends Node> receiver;
   private String tableName;
   private int columnId;
-  public int getColumnId() {
-    return columnId;
-  }
-
-  public void setColumnId(int columnId) {
-    this.columnId = columnId;
-  }
-
-  private int indexNo;
   private int value;
   
-  public ScannerContainer(Class sender, Class receiver,String tableName, int columnId,int indexNo) {
+  public ScannerContainer(Class sender, Class receiver,String tableName, int columnId) {
     this.sender = sender;
     this.receiver = receiver;
     this.tableName = tableName;
     this.columnId = columnId;
-    this.indexNo = indexNo;
   }
 
   public Class<? extends Node> getSender() {
@@ -50,14 +40,6 @@ public class ScannerContainer implements Container{
     this.tableName = tableName;
   }
 
-  public int getIndexNo() {
-    return indexNo;
-  }
-
-  public void setIndexNo(int indexNo) {
-    this.indexNo = indexNo;
-  }
-
   public int getValue() {
     return value;
   }
@@ -65,7 +47,14 @@ public class ScannerContainer implements Container{
   public void setValue(int value) {
     this.value = value;
   }
-  
+  public int getColumnId() {
+    return columnId;
+  }
+
+  public void setColumnId(int columnId) {
+    this.columnId = columnId;
+  }
+
   
   
 }

@@ -125,6 +125,7 @@ public class PushDownProjection {
     if (pushDownLevel instanceof BinaryOperator) {
       CrossToJoin.pushProjectDownJoin(root, projectNode, pushDownLevel);
     }
+     //removeNode(root, orignalProject);
 
     return root;
   }
@@ -149,6 +150,7 @@ public class PushDownProjection {
 
       if (child == projectNode) {
         parentNode.getChildren().set(index, orignalProject);
+        orignalProject.setParent(parentNode);
         break;
       }
       index++;
@@ -343,7 +345,7 @@ public class PushDownProjection {
     remove.setChildren(null);
     remove.setParent(null);
     remove = null;
-
+    //root.getBuiltSchema();
     return root;
   }
 

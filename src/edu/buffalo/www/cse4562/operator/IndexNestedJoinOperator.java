@@ -35,16 +35,19 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
   private ScannerContainer scannerContainer;
   private Integer leftTableId;
   private Integer leftColumnId;
-  
+  private Integer rightTableId;
+  private Integer rightColumnId;
 
   public IndexNestedJoinOperator(Expression expression,
-      ScannerContainer scannerContainer, Integer leftTableId, Integer leftColumnId) {
+      ScannerContainer scannerContainer, Integer leftTableId, Integer leftColumnId,Integer rightTableId, Integer rightColumnId) {
     Validate.notNull(expression);
 
     this.expression = expression;
     this.scannerContainer = scannerContainer;
     this.leftTableId = leftTableId;
     this.leftColumnId = leftColumnId;
+    this.rightTableId = rightTableId;
+    this.rightColumnId = rightColumnId;
   }
 
   @Override
@@ -137,7 +140,6 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
       outputTuples = newOutputTuple;
 
     } // while
-
     return outputTuples;
   }
 
@@ -192,6 +194,7 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
     Collection<Tuple> t=process(tuples);
 
     //System.out.println(t.size());
+    System.out.println(t.toString());
 
     return  t;
     }
@@ -200,7 +203,7 @@ public class IndexNestedJoinOperator extends Node implements BinaryOperator,Join
     for (ColumnCell columnCell : tuple.getColumnCells()) {
       if (columnCell.getTableId() == leftTableId
           && columnCell.getColumnId() == leftColumnId) {
-        scannerContainer.setValue((int)columnCell.getCellValue().toLong());
+        scannerContainer.setValue((int)SchemaManager.getRandomIndexOffset(rightTableId, rightColumnId, (int)columnCell.getCellValue().toLong()));
         return scannerContainer;
       }
     }

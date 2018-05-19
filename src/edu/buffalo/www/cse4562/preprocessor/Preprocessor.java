@@ -103,11 +103,11 @@ public class Preprocessor {
     /*
      * phase 2 : Index data
      */
-    indexData(
+    SchemaManager.addRandomIndex(RandomIndex.indexData(
         ApplicationConstants.DATA_DIR_PATH + tableSchema.getTableName()
             + ApplicationConstants.SUPPORTED_FILE_EXTENSION,
-        col2Index, stats.getColumnStats(), tableSchema.getTableName());
-
+        col2Index, stats.getColumnStats(), tableSchema.getTableName()));
+   
     // invoke GC
     System.gc();
   }
