@@ -18,6 +18,7 @@ import edu.buffalo.www.cse4562.model.SchemaManager;
 import edu.buffalo.www.cse4562.model.TableSchema;
 import edu.buffalo.www.cse4562.util.ApplicationConstants;
 import edu.buffalo.www.cse4562.util.CollectionUtils;
+import edu.buffalo.www.cse4562.util.MapUtils;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.Index;
 
@@ -76,8 +77,8 @@ public class Preprocessor {
         continue;
       }
 
-      if ((colDef.getColumnSpecStrings().get(0).equals(PRIMARY)
-          || colDef.getColumnSpecStrings().get(0).equals(REFERENCES))) {
+      if ((colDef.getColumnSpecStrings().get(0).equals(PRIMARY))){
+        //  || colDef.getColumnSpecStrings().get(0).equals(REFERENCES))) {
         // add column details to the map
         SchemaManager.addIndexToColumn(tableSchema.getTableName(),
             colDef.getColumnName());
@@ -100,6 +101,11 @@ public class Preprocessor {
     // update table schema with stats
     tableSchema.setTableStats(stats);
 
+    
+    if(MapUtils.isEmpty(col2Index)) {
+      return;
+    }
+    
     /*
      * phase 2 : Index data
      */

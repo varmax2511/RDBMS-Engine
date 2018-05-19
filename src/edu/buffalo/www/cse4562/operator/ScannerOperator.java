@@ -81,6 +81,11 @@ public class ScannerOperator extends Node implements UnaryOperator {
     if(indexedFile == null) {
       indexedFile = new RandomAccessFile(getIndexPath(container),"rw");
       }
+    
+    if(container.getValue() == -1) {
+      return new ArrayList<>();
+    }
+    
     indexedFile.seek(container.getValue());
     final String line = indexedFile.readLine();
     String[] record = line.split(ApplicationConstants.DATA_DELIMITER);
