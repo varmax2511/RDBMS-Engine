@@ -96,7 +96,7 @@ public class SelectQueryVisitor
      */
     // processCross(fromItem, joins);
     //:TODO
-    //orderJoinsOnCardinality(joins);
+    orderJoinsOnCardinality(joins);
     currentNode.addChild(processCross(fromItem, joins.iterator()));
 
   }
