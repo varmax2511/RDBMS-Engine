@@ -37,9 +37,8 @@ public class IndexJoinOptimizer {
       Expression expression = ((JoinOperator) root).getExpression();
       if(indexedColumnsExpression(root,expression) && !containsComplexChildren(root.getChildren().get(1))) {
         //make it INLJ
-        indexNo = SchemaManager.getIndexValueForColumnId(rightTableId, rightColumnId);
-        ScannerContainer scannerContainer = new ScannerContainer(IndexNestedJoinOperator.class, ScannerContainer.class, tableName, rightColumnId, indexNo);
-        IndexNestedJoinOperator indexJoin = new IndexNestedJoinOperator(expression, scannerContainer, leftTableId, leftColumnId);
+        ScannerContainer scannerContainer = new ScannerContainer(IndexNestedJoinOperator.class, ScannerContainer.class, tableName, rightColumnId);
+        IndexNestedJoinOperator indexJoin = new IndexNestedJoinOperator(expression, scannerContainer, leftTableId, leftColumnId, rightTableId, rightColumnId);
         indexJoin.setParent(root.getParent());
         indexJoin.setChildren(root.getChildren());
         for(Node child: indexJoin.getChildren()) {
